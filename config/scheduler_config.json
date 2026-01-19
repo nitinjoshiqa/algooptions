@@ -1,0 +1,23 @@
+{
+    "scheduler": {
+        "enabled": true,
+        "interval_minutes": 15,
+        "start_time": "09:15",
+        "end_time": "15:30",
+        "skip_weekends": true,
+        "max_retries": 3,
+        "retry_delay_seconds": 30
+    },
+    "screener": {
+        "universes": ["nifty100"],
+        "mode": "swing",
+        "force_yf": true,
+        "parallel_workers": 8,
+        "output_formats": ["html", "csv"]
+    },
+    "logging": {
+        "level": "INFO",
+        "max_backup_days": 7,
+        "log_file": "logs/scheduler.log"
+    }
+}
