@@ -1,1 +1,54 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs & Temporary
+logs/
+*.log
+*.tmp
+
+# Database backups (keep current DB for inspection)
+databases/*_backup*.db
+
+# Snapshot data (keep constituents)
+data/snapshots/*.csv
+data/snapshots/*.html
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# OS
+.DS_Store
+Thumbs.db
