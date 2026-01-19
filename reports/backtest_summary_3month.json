@@ -1,0 +1,16 @@
+{
+  "backtest_period": "2025-10-21 to 2026-01-19",
+  "total_stocks": 106,
+  "stocks_processed": 79,
+  "total_trades": 537,
+  "winning_trades": 206,
+  "losing_trades": 331,
+  "win_rate_pct": 38.361266294227185,
+  "avg_win_pct": 2.74465196005593,
+  "avg_loss_pct": -1.9860616891358196,
+  "total_pnl": -11231.08772783563,
+  "total_pnl_pct": -91.9881153324346,
+  "profit_factor": 0.47502030150712127,
+  "sharpe_ratio": -0.9442023517982284,
+  "max_drawdown_pct": -0.0
+}
