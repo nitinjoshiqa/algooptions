@@ -1,23 +1,25 @@
 {
     "scheduler": {
         "enabled": true,
-        "interval_minutes": 15,
-        "start_time": "09:15",
-        "end_time": "15:30",
+        "interval_minutes": 1440,
+        "start_time": "15:30",
+        "end_time": "15:35",
         "skip_weekends": true,
         "max_retries": 3,
-        "retry_delay_seconds": 30
+        "retry_delay_seconds": 60
     },
     "screener": {
-        "universes": ["nifty100"],
+        "universes": ["nifty200", "banknifty"],
         "mode": "swing",
         "force_yf": true,
-        "parallel_workers": 8,
-        "output_formats": ["html", "csv"]
+        "parallel_workers": 2,
+        "output_formats": ["html", "csv"],
+        "filter_confidence": 80,
+        "filter_risk_levels": ["LOW", "MEDIUM"]
     },
     "logging": {
         "level": "INFO",
-        "max_backup_days": 7,
+        "max_backup_days": 30,
         "log_file": "logs/scheduler.log"
     }
 }

@@ -1,0 +1,1579 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Complete documentation of the NIFTY Bearnness Screener business logic">
+      
+      
+      
+      
+        <link rel="prev" href="../position-sizing/">
+      
+      
+        <link rel="next" href="../../analysis/support-resistance/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Options Strategies - AlgoOptions Business Logic Wiki</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../css/print-site.css">
+    
+      <link rel="stylesheet" href="../../css/print-site-material.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#options-strategies" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AlgoOptions Business Logic Wiki" class="md-header__button md-logo" aria-label="AlgoOptions Business Logic Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AlgoOptions Business Logic Wiki
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Options Strategies
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/overview/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../scoring-engine/" class="md-tabs__link">
+          
+  
+  
+  Core Systems
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../analysis/support-resistance/" class="md-tabs__link">
+          
+  
+  
+  Technical Analysis
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../advanced/api-reference/" class="md-tabs__link">
+          
+  
+  
+  Advanced
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AlgoOptions Business Logic Wiki" class="md-nav__button md-logo" aria-label="AlgoOptions Business Logic Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AlgoOptions Business Logic Wiki
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Systems
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Systems
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scoring-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scoring Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../risk-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../position-sizing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Position Sizing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Options Strategies
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Options Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#system-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategy-selection-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategy Selection Matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-core-strategies-explained" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5 Core Strategies Explained
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5 Core Strategies Explained">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-long-put-bearish-buy-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 📉 Long Put (Bearish, Buy Protection)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-long-call-bullish-buy-upside" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 📈 Long Call (Bullish, Buy Upside)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-short-straddle-neutral-sell-time-decay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 🎢 Short Straddle (Neutral, Sell Time Decay)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-iron-butterfly-neutral-limited-risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 🦋 Iron Butterfly (Neutral, Limited Risk)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-short-strangle-neutral-selling-extremes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 🎪 Short Strangle (Neutral, Selling Extremes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implied-volatility-iv-and-strategy-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implied Volatility (IV) and Strategy Selection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implied Volatility (IV) and Strategy Selection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iv-rank-low-0-33-medium-33-67-high-67-100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IV Rank (Low = 0-33%, Medium = 33-67%, High = 67-100%)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples-by-stock-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples by Stock Type
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples by Stock Type">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1-high-conviction-bearish-adanigreen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 1: High-Conviction Bearish (ADANIGREEN)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2-neutral-signal-tcs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 2: Neutral Signal (TCS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3-high-conviction-bullish-infy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 3: High-Conviction Bullish (INFY)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-management-for-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Management for Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Risk Management for Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rule-1-position-sizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule 1: Position Sizing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rule-2-closing-positions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule 2: Closing Positions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rule-3-avoid-infinite-risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule 3: Avoid "Infinite" Risk
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Technical Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../analysis/support-resistance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support & Resistance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../analysis/timeframe-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timeframe Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../analysis/indicators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Indicators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/backtesting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backtesting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="options-strategies">Options Strategies</h1>
+<h2 id="system-overview">System Overview</h2>
+<p>The screener recommends <strong>5 core option strategies</strong> based on:
+1. <strong>Direction</strong>: Bullish, Bearish, or Neutral
+2. <strong>Volatility</strong>: Low, Normal, or High (IV)
+3. <strong>Confidence</strong>: How sure we are about direction
+4. <strong>Score</strong>: Signal strength (-1 to +1 scale)</p>
+<h2 id="strategy-selection-matrix">Strategy Selection Matrix</h2>
+<div class="highlight"><pre><span></span><code>Direction    Volatility    Confidence    Recommended Strategy
+─────────────────────────────────────────────────────────────
+Bearish      Low           High (&gt;70%)    Short Put Spread
+Bearish      Low           Med (50-70%)   Long Put or Straddle
+Bearish      Medium        High           Long Put Spread
+Bearish      High          High           Iron Butterfly or Short Strangle
+Bearish      High          Low            Wide Strangle or Skip
+
+Neutral      Low           Any            Short Straddle
+Neutral      Medium        Any            Short Strangle or Call Ratio Spread
+Neutral      High          Any            Iron Butterfly or Iron Condor
+
+Bullish      Low           High           Short Call Spread
+Bullish      Low           Med            Long Call or Straddle
+Bullish      Medium        High           Long Call Spread
+Bullish      High          High           Iron Butterfly or Long Strangle
+Bullish      High          Low            Wide Strangle or Skip
+</code></pre></div>
+<h2 id="5-core-strategies-explained">5 Core Strategies Explained</h2>
+<h3 id="1-long-put-bearish-buy-protection">1. 📉 Long Put (Bearish, Buy Protection)</h3>
+<p><strong>Setup:</strong>
+<div class="highlight"><pre><span></span><code>Buy 1 ATM Put
+Sell 1 OTM Put (to reduce cost)
+
+Example: RELIANCE @ ₹2,500
+Buy ₹2,500 Put
+Sell ₹2,450 Put
+Net Cost: ₹20 (spread cost)
+Width: ₹50
+</code></pre></div></p>
+<p><strong>When to Use:</strong>
+- Very bearish bias
+- High confidence (&gt;75%)
+- Want to limit downside
+- Earnings play (buy volatility)</p>
+<p><strong>Profit/Loss:</strong>
+<div class="highlight"><pre><span></span><code>Max Profit: Width - Cost = 50 - 20 = ₹30 per share
+Max Loss: Cost = ₹20 per share
+Break Even: Strike - Cost = 2,500 - 20 = ₹2,480
+</code></pre></div></p>
+<p><strong>Pros:</strong> Limited risk, defined profit, directional
+<strong>Cons:</strong> Time decay works against you, need sharp move</p>
+<hr />
+<h3 id="2-long-call-bullish-buy-upside">2. 📈 Long Call (Bullish, Buy Upside)</h3>
+<p><strong>Setup:</strong>
+<div class="highlight"><pre><span></span><code>Buy 1 ATM Call
+Sell 1 OTM Call (to reduce cost)
+
+Example: INFY @ ₹2,000
+Buy ₹2,000 Call
+Sell ₹2,050 Call
+Net Cost: ₹25
+Width: ₹50
+</code></pre></div></p>
+<p><strong>When to Use:</strong>
+- Very bullish bias
+- High confidence (&gt;75%)
+- Want unlimited upside
+- Earnings play (buy volatility)</p>
+<p><strong>Profit/Loss:</strong>
+<div class="highlight"><pre><span></span><code>Max Profit: Width - Cost = 50 - 25 = ₹25 per share
+Max Loss: Cost = ₹25 per share
+Break Even: Strike + Cost = 2,000 + 25 = ₹2,025
+</code></pre></div></p>
+<p><strong>Pros:</strong> Directional, clear profit target
+<strong>Cons:</strong> Loses money if stock doesn't move enough</p>
+<hr />
+<h3 id="3-short-straddle-neutral-sell-time-decay">3. 🎢 Short Straddle (Neutral, Sell Time Decay)</h3>
+<p><strong>Setup:</strong>
+<div class="highlight"><pre><span></span><code>Sell 1 ATM Call
+Sell 1 ATM Put (at same strike)
+
+Example: TCS @ ₹3,500
+Sell ₹3,500 Call @ ₹80
+Sell ₹3,500 Put @ ₹80
+Net Credit: ₹160
+</code></pre></div></p>
+<p><strong>When to Use:</strong>
+- Neutral signal (no clear direction)
+- Low IV environment
+- Stock consolidating
+- Want to collect time decay</p>
+<p><strong>Profit/Loss:</strong>
+<div class="highlight"><pre><span></span><code>Max Profit: Credit = ₹160 per share
+Max Loss: Unlimited above + Unlimited below
+Break Even Upper: 3,500 + 160 = ₹3,660
+Break Even Lower: 3,500 - 160 = ₹3,340
+</code></pre></div></p>
+<p><strong>Pros:</strong> High credit, money if stock stays still, time decay helps
+<strong>Cons:</strong> Unlimited risk both ways, need very good entry</p>
+<hr />
+<h3 id="4-iron-butterfly-neutral-limited-risk">4. 🦋 Iron Butterfly (Neutral, Limited Risk)</h3>
+<p><strong>Setup:</strong>
+<div class="highlight"><pre><span></span><code>Sell 1 ATM Call      (e.g., ₹100 strike)
+Buy 1 OTM Call       (e.g., ₹110 strike)
+Sell 1 ATM Put       (e.g., ₹100 strike)
+Buy 1 OTM Put        (e.g., ₹90 strike)
+
+Net: Credit if structured well
+</code></pre></div></p>
+<p><strong>When to Use:</strong>
+- Neutral bias, low IV
+- Want defined, small risk
+- Stock very stable
+- Earnings just passed (vega decay helps)</p>
+<p><strong>Profit/Loss:</strong>
+<div class="highlight"><pre><span></span><code>Max Profit: Credit received
+Max Loss: Width of wing (limited, defined)
+Break Even: Strike ± Credit
+</code></pre></div></p>
+<p><strong>Pros:</strong> Defined risk both sides, excellent risk/reward in low IV
+<strong>Cons:</strong> Complex, needs experience, multiple Greeks to manage</p>
+<hr />
+<h3 id="5-short-strangle-neutral-selling-extremes">5. 🎪 Short Strangle (Neutral, Selling Extremes)</h3>
+<p><strong>Setup:</strong>
+<div class="highlight"><pre><span></span><code>Sell 1 OTM Call  (higher strike, e.g., ₹110)
+Sell 1 OTM Put   (lower strike, e.g., ₹90)
+
+Example: Stock @ ₹100
+Sell ₹110 Call @ ₹20
+Sell ₹90 Put @ ₹20
+Net Credit: ₹40
+</code></pre></div></p>
+<p><strong>When to Use:</strong>
+- Neutral with range
+- IV is elevated (good premium)
+- Stock consolidating
+- Don't expect big moves</p>
+<p><strong>Profit/Loss:</strong>
+<div class="highlight"><pre><span></span><code>Max Profit: ₹40 (if stock stays ₹90-₹110)
+Max Loss: Unlimited outside range
+Break Even: 110 + 40 = ₹150 (up)
+            90 - 40 = ₹50 (down)
+</code></pre></div></p>
+<p><strong>Pros:</strong> Good credit, better than straddle (more room)
+<strong>Cons:</strong> Still has undefined risk, needs management</p>
+<hr />
+<h2 id="implied-volatility-iv-and-strategy-selection">Implied Volatility (IV) and Strategy Selection</h2>
+<h3 id="iv-rank-low-0-33-medium-33-67-high-67-100">IV Rank (Low = 0-33%, Medium = 33-67%, High = 67-100%)</h3>
+<div class="highlight"><pre><span></span><code>LOW IV (&lt;20 percentile):
+- Sell credit spreads
+- Short strangles/straddles
+- Avoid buying options (premiums cheap)
+
+MEDIUM IV (33-67):
+- Neutral → Strangles
+- Bullish/Bearish → Defined spreads
+- Balanced risk/reward
+
+HIGH IV (&gt;80 percentile):
+- Buy options (premiums expensive but move big)
+- Sell verticals/butterflies (IV crush helps)
+- Avoid naked short
+- Close positions if neutral signal
+</code></pre></div>
+<h2 id="examples-by-stock-type">Examples by Stock Type</h2>
+<h3 id="example-1-high-conviction-bearish-adanigreen">Example 1: High-Conviction Bearish (ADANIGREEN)</h3>
+<div class="highlight"><pre><span></span><code>Score: -0.45 (Very Bearish)
+Confidence: 88%
+IV: 65 (Medium)
+Current: ₹1,200
+ATR: ₹60
+
+Recommended: Long Put Spread
+- Buy ₹1,200 Put
+- Sell ₹1,150 Put
+- Cost: ₹15
+- Max Profit: ₹35
+- Risk/Reward: 35/15 = 2.3:1
+</code></pre></div>
+<h3 id="example-2-neutral-signal-tcs">Example 2: Neutral Signal (TCS)</h3>
+<div class="highlight"><pre><span></span><code>Score: -0.02 (Neutral)
+Confidence: 45%
+IV: 18 (Low)
+Current: ₹3,500
+ATR: ₹70
+
+Recommended: Short Strangle
+- Sell ₹3,600 Call @ ₹30
+- Sell ₹3,400 Put @ ₹30
+- Credit: ₹60
+- Max Profit: ₹60 (if stays 3,400-3,600)
+- Risk: Defined by management
+</code></pre></div>
+<h3 id="example-3-high-conviction-bullish-infy">Example 3: High-Conviction Bullish (INFY)</h3>
+<div class="highlight"><pre><span></span><code>Score: +0.42 (Very Bullish)
+Confidence: 75%
+IV: 42 (Medium)
+Current: ₹2,000
+ATR: ₹55
+
+Recommended: Long Call Spread
+- Buy ₹2,000 Call
+- Sell ₹2,050 Call
+- Cost: ₹20
+- Max Profit: ₹30
+- Risk/Reward: 30/20 = 1.5:1
+</code></pre></div>
+<h2 id="risk-management-for-options">Risk Management for Options</h2>
+<h3 id="rule-1-position-sizing">Rule 1: Position Sizing</h3>
+<div class="highlight"><pre><span></span><code>Max Loss per Trade = 2% of capital
+
+Example:
+- Capital: ₹1,00,000
+- Max Loss: ₹2,000
+- Long Put Spread Max Loss: ₹20 (spread cost)
+- Contracts: 2,000 / 2,000 = 1 contract max
+</code></pre></div>
+<h3 id="rule-2-closing-positions">Rule 2: Closing Positions</h3>
+<div class="highlight"><pre><span></span><code>- Close at 50% profit (don&#39;t be greedy)
+- Close at 21 DTE (days to expiration) if breakeven
+- Close if thesis changes
+- Never hold naked shorts to expiration
+</code></pre></div>
+<h3 id="rule-3-avoid-infinite-risk">Rule 3: Avoid "Infinite" Risk</h3>
+<div class="highlight"><pre><span></span><code>❌ NEVER:
+- Sell naked calls or puts (undefined loss)
+- Sell straddles/strangles without stop loss
+- Hold short premium to expiration
+
+✅ ALWAYS:
+- Buy protective options (caps risk)
+- Define exit before entry
+- Manage size for undefined risk
+</code></pre></div>
+<hr />
+<p>See also: <a href="../risk-management/">Risk Management</a>, <a href="../position-sizing/">Position Sizing</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.tabs", "navigation.top", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": 1.0}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../js/print-site.js"></script>
+      
+    
+  </body>
+</html>

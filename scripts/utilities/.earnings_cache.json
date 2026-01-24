@@ -1,0 +1,267 @@
+{
+  "AUBANK": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:22.538792"
+  },
+  "BANKBARODA": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:24.358430"
+  },
+  "CANBK": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:26.605613"
+  },
+  "FEDERALBNK": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:28.579298"
+  },
+  "AXISBANK": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:30.797502"
+  },
+  "ICICIBANK": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:32.622674"
+  },
+  "IDFCFIRSTB": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:34.748152"
+  },
+  "PNB": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:36.596125"
+  },
+  "INDUSINDBK": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:38.547896"
+  },
+  "KOTAKBANK": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:40.518496"
+  },
+  "SBIN": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:42.787783"
+  },
+  "HDFCBANK": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:44.862132"
+  },
+  "UNIONBANK": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:47.134159"
+  },
+  "YESBANK": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T21:37:49.554540"
+  },
+  "CAPLIPOINT": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 96,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CASTROLIND": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 157,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CANFINHOME": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 66,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CARBORUNIV": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 127,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CENTRALBK": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 96,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CHALET": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 66,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CGCL": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 35,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CERA": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 157,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CHAMBLFERT": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 96,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CHOICEIN": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 157,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CENTURYPLY": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 127,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CUB": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 127,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CLEAN": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 35,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "COHANCE": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 66,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CRAFTSMAN": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "CONCORDBIO": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 127,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "DCMSHRIRAM": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 157,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "DOMS": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 127,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "DEVYANI": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 96,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "DEEPAKFERT": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "AGARWALEYE": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 157,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "ELGIEQUIP": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 157,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "EIDPARRY": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 66,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "EIHOTEL": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 96,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "EMAMILTD": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "EMCURE": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 35,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "ENDURANCE": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 66,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "ENGINERSIN": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 96,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "ERIS": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 127,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "ESCORTS": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 157,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "EXIDEIND": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "FACT": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 35,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "FSL": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 66,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "FINCABLES": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 66,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "FINPIPE": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 96,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "FIVESTAR": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 157,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "FORCEMOT": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 35,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "GICRE": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 127,
+    "fetch_time": "2026-01-24T23:08:06.525738"
+  },
+  "DUMMYHDLVR": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-24T23:08:10.757459"
+  }
+}

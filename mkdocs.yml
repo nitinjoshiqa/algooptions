@@ -1,0 +1,56 @@
+site_name: AlgoOptions Business Logic Wiki
+site_description: Complete documentation of the NIFTY Bearnness Screener business logic
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: blue
+    accent: cyan
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - search.suggest
+    - search.highlight
+    - navigation.tabs
+    - navigation.top
+    - toc.integrate
+    - content.code.copy
+
+plugins:
+  - search
+  - print-site
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Overview: getting-started/overview.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+  - Core Systems:
+    - Scoring Engine: core/scoring-engine.md
+    - Risk Management: core/risk-management.md
+    - Position Sizing: core/position-sizing.md
+    - Options Strategies: core/options-strategies.md
+  - Technical Analysis:
+    - Support & Resistance: analysis/support-resistance.md
+    - Timeframe Analysis: analysis/timeframe-analysis.md
+    - Technical Indicators: analysis/indicators.md
+  - Advanced:
+    - API Reference: advanced/api-reference.md
+    - Configuration: advanced/configuration.md
+    - Backtesting: advanced/backtesting.md
+  - FAQ: faq.md
+
+markdown_extensions:
+  - pymdownx.emoji
+  - pymdownx.tasklist
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - tables
+  - admonition
+  - attr_list
+  - md_in_html
+
+extra:
+  version: 1.0

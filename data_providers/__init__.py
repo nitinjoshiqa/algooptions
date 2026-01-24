@@ -1,11 +1,28 @@
-"""Data providers: Breeze API and yFinance."""
+"""Data providers: Breeze API and yFinance.
+
+CACHING STRATEGY (Intraday signals decay):
+    - Intraday (5m, 15m): NEVER cached - always fetch fresh
+    - Daily (1d): Cached 24h - doesn't change intraday
+    - Prices: Cached 60s - refreshed frequently
+    
+This ensures intraday signals are always current while keeping 
+daily data fast. Fresh intraday every run = accurate signals.
+"""
+# -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 import os
+import sys
 import time
 import random
 import json
 import logging
 import threading
+import io
+
+# Ensure stdout handles Unicode properly on Windows
+if sys.platform == 'win32':
+    # For Windows, use UTF-8 encoding for console
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 # Suppress yfinance verbose logging
 logging.getLogger('yfinance').setLevel(logging.ERROR)
@@ -32,7 +49,7 @@ try:
 except Exception:
     HAVE_NSEPYTHON = False
 
-from breeze_api import get_breeze_instance
+from utils.breeze_api import get_breeze_instance
 from core.config import EXCHANGE, PRODUCT
 
 # Rate limiting configuration
@@ -44,19 +61,37 @@ _rate_limit_max_backoff = 300  # Max 5 minutes between attempts
 # Disk cache for candles (persistent across runs)
 _candle_cache_dir = os.path.join(os.path.dirname(__file__), '.candle_cache')
 os.makedirs(_candle_cache_dir, exist_ok=True)
-_candle_cache_ttl = 3600  # 1 hour for disk cache
+_candle_cache_ttl = 86400  # 24 hours for disk cache (1 day = intraday data changes daily)
 
 def _get_candle_cache_path(symbol, interval):
     """Get disk cache file path for candles."""
     return os.path.join(_candle_cache_dir, f"{symbol}_{interval}.json")
 
-def _load_candles_from_disk(symbol, interval):
-    """Load candles from disk cache if valid."""
+def _load_candles_from_disk(symbol, interval, ttl_hours=2):
+    """Load candles from disk cache if valid.
+    
+    Args:
+        symbol: Stock symbol
+        interval: Candle interval ('5minute', '15minute', '1day', etc.)
+        ttl_hours: Cache is valid if modified within this many hours
+    
+    Returns:
+        List of candles if cache valid, None otherwise
+        
+    NOTE: Intraday data (5m, 15m) is NOT cached - always fetched fresh
+          Daily data (1d) uses 24h cache since it doesn't change intraday
+    """
+    # IMPORTANT: Don't cache intraday data - signals decay, need fresh data every run
+    if '5minute' in interval or '15minute' in interval or 'minute' in interval:
+        return None  # Always fetch fresh intraday
+    
+    # Cache only daily and longer intervals
     cache_path = _get_candle_cache_path(symbol, interval)
     if os.path.exists(cache_path):
         try:
             stat = os.stat(cache_path)
-            if time.time() - stat.st_mtime < _candle_cache_ttl:
+            ttl_seconds = ttl_hours * 3600
+            if time.time() - stat.st_mtime < ttl_seconds:
                 with open(cache_path, 'r') as f:
                     return json.load(f)
         except Exception:
@@ -64,7 +99,11 @@ def _load_candles_from_disk(symbol, interval):
     return None
 
 def _save_candles_to_disk(symbol, interval, candles):
-    """Save candles to disk cache."""
+    """Save candles to disk cache (intraday excluded)."""
+    # Don't cache intraday - always fresh
+    if '5minute' in interval or '15minute' in interval or 'minute' in interval:
+        return  # Skip caching for intraday
+    
     cache_path = _get_candle_cache_path(symbol, interval)
     try:
         with open(cache_path, 'w') as f:
@@ -109,16 +148,34 @@ class DataProvider:
 
 
 class BreezeProvider(DataProvider):
-    """Breeze API data provider with proper error handling."""
+    """Breeze API data provider with connection resilience and retry logic."""
     
     def __init__(self):
         self.breeze = get_breeze_instance()
         # Check if we got a real connection or dummy
         self.is_dummy = self.breeze.__class__.__name__ == '_DummyBreeze'
+        self._max_retries = 2
+        self._retry_backoff = 2  # Exponential backoff multiplier
+    
+    def _is_breeze_available(self):
+        """Quick health check to see if Breeze is responding."""
+        try:
+            if self.is_dummy:
+                return False
+            # Try a simple call to verify connection
+            # This will fail fast if Breeze is down
+            result = self.breeze.get_portfolio_positions()
+            return result is not None or isinstance(result, dict)
+        except Exception:
+            return False
     
     def get_spot_price(self, symbol):
         try:
             if self.is_dummy:
+                return None
+            
+            # Quick availability check
+            if not self._is_breeze_available():
                 return None
             
             res = self.breeze.get_quotes(
@@ -150,20 +207,103 @@ class BreezeProvider(DataProvider):
         return None
     
     def get_candles(self, symbol, interval="5minute", max_bars=200):
+        """Fetch historical candles from Breeze using aggregation for unsupported intervals.
+        
+        Strategy for 15-minute data (not supported by Breeze):
+        - Request 5-minute candles from Breeze (supported)
+        - Aggregate 3x 5-minute candles into 15-minute candles
+        - This gives same data quality as native 15-min without API limitation
+        """
         try:
             breeze = get_breeze_instance()
-            end_time = datetime.now()
-            start_time = end_time - timedelta(days=3)
             
-            res = breeze.get_historical_data(
-                interval=interval,
-                from_date=start_time.strftime("%Y-%m-%d"),
-                to_date=end_time.strftime("%Y-%m-%d"),
-                stock_code=symbol,
-                exchange_code=EXCHANGE,
-                product_type=PRODUCT
-            )
-            raw = res.get("Success", []) if res else []
+            # Check if Breeze is actually available (not dummy)
+            if self.is_dummy:
+                return [], None
+            
+            # Breeze API actual support (tested 2026-01-24):
+            breeze_supported = ['1minute', '5minute', '30minute']
+            
+            # Validate interval before API call
+            valid_intervals = ['1minute', '5minute', '15minute', '30minute', '1hour', '1day', '1week']
+            if interval not in valid_intervals:
+                print(f"[WARN] {symbol}: Invalid interval '{interval}'")
+                return [], None
+            
+            # Handle 15-minute specially: fetch 5-min and aggregate
+            request_interval = interval
+            needs_aggregation = False
+            
+            if interval == '15minute' and interval not in breeze_supported:
+                # Strategy: Get 5-min candles and aggregate them (3x5min = 15min)
+                # But if 5min also unavailable from Breeze, just fall back to yFinance for native 15min
+                request_interval = '5minute'
+                needs_aggregation = True
+                # Need 3x more bars to aggregate
+                max_bars = max_bars * 3
+            
+            # Check if Breeze supports the actual request interval
+            if request_interval not in breeze_supported:
+                # Breeze doesn't support this interval - silently fall back to NSE/yFinance
+                return [], None  # Fall back to NSE/yFinance (no debug message)
+            
+            # Dynamic lookback based on interval (more data = better indicators)
+            if 'minute' in request_interval:
+                days_back = 10  # Intraday: 10 days = ~240-480 candles
+            elif 'hour' in request_interval:
+                days_back = 30  # Hourly: 30 days = ~720 candles
+            else:
+                days_back = 100  # Daily+: 100 days = full history
+            
+            end_time = datetime.now()
+            start_time = end_time - timedelta(days=days_back)
+            
+            # Use Breeze v1 API (proven to work with 1min, 5min, 30min)
+            # v1 API uses simple date format (YYYY-MM-DD)
+            try:
+                res = _call_with_timeout(
+                    breeze.get_historical_data,
+                    kwargs={
+                        'interval': request_interval,
+                        'from_date': start_time.strftime("%Y-%m-%d"),
+                        'to_date': end_time.strftime("%Y-%m-%d"),
+                        'stock_code': symbol,
+                        'exchange_code': EXCHANGE,
+                        'product_type': PRODUCT
+                    },
+                    timeout=5
+                )
+                api_version = "v1"
+            except Exception as e:
+                print(f"[WARN] {symbol}: Breeze API v1 error: {str(e)[:100]}")
+                return [], None
+            
+            # Validate response
+            if not res:
+                print(f"[WARN] {symbol}: No response from Breeze API {api_version} (timeout or connection issue)")
+                return [], None
+            
+            # Check API status
+            if res.get('Status') != 200:
+                error_msg = res.get('Error', 'Unknown error')
+                print(f"[WARN] {symbol}: Breeze API {api_version} error {res.get('Status')}: {error_msg}")
+                return [], None
+            
+            # Extract candles
+            raw = res.get("Success", [])
+            if raw is None:
+                # Breeze returns None when "No Data Found" instead of empty list
+                raw = []
+            
+            if not raw:
+                # If we were trying to aggregate 15min from 5min and it failed, let fallback handle it
+                if needs_aggregation:
+                    print(f"[DEBUG] {symbol}: No 5-min candles from Breeze, will fall back to yFinance for 15min")
+                else:
+                    print(f"[DEBUG] {symbol}: No candles returned for interval {interval}")
+                return [], None
+            
+            # Parse candles with error handling
             candles = []
             for c in raw:
                 try:
@@ -175,20 +315,63 @@ class BreezeProvider(DataProvider):
                     v_raw = c.get('volume', c.get('Volume', 0))
                     try:
                         v = int(v_raw) if v_raw is not None else 0
-                    except Exception:
+                    except (ValueError, TypeError):
                         v = 0
-                    candles.append({'datetime': dt, 'open': o, 'high': h, 'low': l, 'close': cc, 'volume': v})
-                except Exception:
+                    
+                    candles.append({
+                        'datetime': dt,
+                        'open': o,
+                        'high': h,
+                        'low': l,
+                        'close': cc,
+                        'volume': v
+                    })
+                except (KeyError, ValueError, TypeError) as e:
+                    # Skip malformed candles
                     continue
-            if candles:
+            
+            if not candles:
+                print(f"[WARN] {symbol}: No valid candles after parsing")
+                return [], None
+            
+            # Sort by datetime and return
+            try:
+                candles_sorted = sorted(candles, key=lambda c: c.get('datetime', ''))
+            except Exception:
+                candles_sorted = candles
+            
+            # Apply aggregation if needed (15-min from 5-min)
+            if needs_aggregation and candles_sorted:
+                from indicators.candle_aggregator import create_15min_from_5min
+                candles_sorted = create_15min_from_5min(candles_sorted)
                 try:
-                    candles_sorted = sorted(candles, key=lambda c: c.get('datetime', ''))
-                except Exception:
-                    candles_sorted = candles
-                return candles_sorted[-max_bars:], 'breeze'
-        except Exception:
-            pass
-        return [], None
+                    print(f"[OK] {symbol}: Aggregated {len(candles)} 5-min -> {len(candles_sorted)} 15-min")
+                except (UnicodeEncodeError, UnicodeDecodeError):
+                    print(f"[OK] {symbol}: Aggregated 5m to 15m: {len(candles_sorted)} bars")
+            
+            # Success!
+            result = candles_sorted[-max_bars:]
+            try:
+                print(f"[OK] {symbol}: Got {len(result)} candles from Breeze {api_version} ({interval})")
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                print(f"[OK] {symbol}: Got {len(result)} candles from Breeze")
+            return result, 'breeze'
+            
+        except TimeoutError:
+            try:
+                print(f"[TIMEOUT] {symbol}: Breeze API timeout after 5 seconds")
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                print(f"[TIMEOUT] {symbol}: API timeout")
+            return [], None
+        except Exception as e:
+            try:
+                err_msg = str(e)[:80]
+                # Replace unicode chars that cause encoding issues
+                err_msg = err_msg.replace('\u2192', '->').replace('\u2190', '<-').replace('\u2191', '^').replace('\u2193', 'v')
+                print(f"[ERROR] {symbol}: Breeze exception: {type(e).__name__}: {err_msg}")
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                print(f"[ERROR] {symbol}: Breeze API failed")
+            return [], None
 
 
 def _call_with_timeout(func, args=(), kwargs=None, timeout=10):
@@ -292,10 +475,15 @@ class YFinanceProvider(DataProvider):
         if not HAVE_YFINANCE:
             raise ImportError("yfinance not available")
     
-    def _get_with_retry(self, symbol, max_retries=3):
-        """Fetch from yfinance with automatic retry on rate limiting."""
+    def _get_with_retry(self, symbol, max_retries=1):
+        """Fetch from yfinance with retry ONLY on rate limiting.
+        
+        For non-rate-limit errors (stock not found), fail fast without retrying.
+        Only retry on 429/rate limit errors to avoid wasting API calls on non-existent stocks.
+        """
         backoff = _rate_limit_backoff
         last_error = None
+        is_rate_limit_error = False
         
         for attempt in range(max_retries + 1):
             try:
@@ -304,16 +492,18 @@ class YFinanceProvider(DataProvider):
                 return t
             except Exception as e:
                 last_error = e
-                # Check if this is a rate limit error
+                # Check if this is a rate limit error (ONLY error type we retry on)
                 error_str = str(e).lower()
                 if 'rate' in error_str or 'too many' in error_str or '429' in error_str:
+                    is_rate_limit_error = True
                     if attempt < max_retries:
-                        wait_time = min(backoff + random.uniform(0, 5), _rate_limit_max_backoff)
+                        wait_time = min(backoff + random.uniform(0, 2), _rate_limit_max_backoff)
                         print(f"    Rate limited on {symbol}. Waiting {wait_time:.1f}s before retry (attempt {attempt+1}/{max_retries})...")
                         time.sleep(wait_time)
                         backoff = min(backoff * 2.0, _rate_limit_max_backoff)
                         continue
-                # For other errors, try next symbol variant
+                # For non-rate-limit errors (stock doesn't exist, bad symbol, etc): fail immediately
+                # Don't waste retries on stocks that will never work
                 break
         
         raise last_error
@@ -330,12 +520,13 @@ class YFinanceProvider(DataProvider):
             # Index ticker - use as-is
             variants = [symbol]
         else:
-            # Regular stock - try with .NS suffix first
-            variants = [symbol + '.NS', symbol, symbol.replace('-', ''), symbol.replace('.', '') + '.NS']
+            # Regular stock - try with .NS suffix first (but avoid double .NS)
+            base_symbol = symbol.rstrip('.NS') if symbol.endswith('.NS') else symbol
+            variants = [base_symbol + '.NS', base_symbol, base_symbol.replace('-', ''), base_symbol.replace('.', '') + '.NS']
         
         for sym in variants:
             try:
-                t = self._get_with_retry(sym, max_retries=2)
+                t = self._get_with_retry(sym, max_retries=1)
                 try:
                     info = t.fast_info if hasattr(t, 'fast_info') else {}
                     if info:
@@ -377,12 +568,13 @@ class YFinanceProvider(DataProvider):
             # Index ticker - use as-is
             variants = [symbol]
         else:
-            # Regular stock - try with .NS suffix first
-            variants = [symbol + '.NS', symbol, symbol.replace('-', ''), symbol.replace('.', '') + '.NS']
+            # Regular stock - try with .NS suffix first (but avoid double .NS)
+            base_symbol = symbol.rstrip('.NS') if symbol.endswith('.NS') else symbol
+            variants = [base_symbol + '.NS', base_symbol, base_symbol.replace('-', ''), base_symbol.replace('.', '') + '.NS']
         
         for sym in variants:
             try:
-                t = self._get_with_retry(sym, max_retries=2)
+                t = self._get_with_retry(sym, max_retries=1)
                 period = '5d' if yf_interval.endswith('m') else '30d'
                 df = t.history(period=period, interval=yf_interval, auto_adjust=False)
                 if df is None or df.empty:
@@ -457,20 +649,45 @@ def get_spot_price(symbol, use_yf=False, force_yf=False):
 
 
 def get_intraday_candles_for(symbol, interval="5minute", max_bars=200, use_yf=False, force_yf=False):
-    """Fetch candles using appropriate provider fallback chain.
+    """Fetch candles using enhanced fallback chain with smart caching.
     
-    Fallback order:
-    1. Disk cache (1 hour TTL)
-    2. Breeze (ICICI Direct API) - if not forced to YF
-    3. NSE Direct API (nsepython) - with timeout protection
-    4. Yahoo Finance (yfinance) - global stock data with rate limiting
-    5. Return empty list if all fail
+    Caching Strategy:
+    - Daily intervals (1d, 1day): Cache enabled (2-hour TTL) - stable data
+    - Intraday intervals (5m, 15m): ALWAYS FRESH - no caching, real-time from API
+    
+    Fallback order (for INTRADAY):
+    1. Breeze (ICICI Direct API) - limited coverage but primary source
+    2. NSE Direct API (nsepython) - with timeout protection
+    3. Yahoo Finance (yfinance) - global coverage, rate limited
+    4. Return empty list if all fail
+    
+    Fallback order (for DAILY):
+    1. Database cache (2 hours TTL) - persistent, survives restarts
+    2. Disk cache (2 hours TTL) - fast, temporary per-process
+    3. Breeze/NSE/yFinance (same as intraday)
+    
+    Note: Intraday intervals require fresh data for accurate entry signals.
+    Daily intervals can use cache safely (ATR is stable over hours).
     """
     
-    # Check disk cache first (fastest, no API calls)
-    cached = _load_candles_from_disk(symbol, interval)
-    if cached:
-        return cached[-max_bars:], 'disk_cache'
+    # Determine if this is an intraday or daily interval
+    is_intraday = interval.lower() not in ('1day', '1d', '1D', '1DAY', 'daily', 'Daily')
+    
+    # ONLY use cache for daily/long-term intervals (not 5m, 15m, 1h, etc.)
+    if not is_intraday:
+        # Check database cache first (persistent, 2 hours TTL - Option B)
+        try:
+            from core.candle_cache import load_candles_from_db
+            cached, source = load_candles_from_db(symbol, interval, max_age_hours=2)
+            if cached:
+                return cached[-max_bars:], f'{source}_cache'
+        except Exception:
+            pass  # Fall through if DB not available
+        
+        # Check disk cache next (2 hours TTL)
+        cached = _load_candles_from_disk(symbol, interval, ttl_hours=2)
+        if cached:
+            return cached[-max_bars:], 'disk_cache'
     
     # If force_yf is set, skip Breeze and NSE, go straight to yFinance
     if not force_yf:
@@ -480,6 +697,12 @@ def get_intraday_candles_for(symbol, interval="5minute", max_bars=200, use_yf=Fa
             candles, src = provider.get_candles(symbol, interval, max_bars)
             if candles:
                 _save_candles_to_disk(symbol, interval, candles)
+                # Also save to database cache (Option B)
+                try:
+                    from core.candle_cache import save_candles_to_db
+                    save_candles_to_db(symbol, interval, candles, source=src)
+                except Exception:
+                    pass  # Continue even if DB save fails
                 return candles, src
         except Exception:
             pass  # Fall through to NSE
@@ -491,6 +714,12 @@ def get_intraday_candles_for(symbol, interval="5minute", max_bars=200, use_yf=Fa
                 candles, src = provider.get_candles(symbol, interval, max_bars)
                 if candles:
                     _save_candles_to_disk(symbol, interval, candles)
+                    # Also save to database cache
+                    try:
+                        from core.candle_cache import save_candles_to_db
+                        save_candles_to_db(symbol, interval, candles, source=src)
+                    except Exception:
+                        pass
                     return candles, src
             except Exception:
                 pass  # Fall through to yFinance
@@ -501,6 +730,14 @@ def get_intraday_candles_for(symbol, interval="5minute", max_bars=200, use_yf=Fa
             provider = YFinanceProvider()
             candles, src = provider.get_candles(symbol, interval, max_bars)
             if candles:
+                # CACHE yfinance results to disk to avoid repeated API calls
+                _save_candles_to_disk(symbol, interval, candles)
+                # Also save to database cache
+                try:
+                    from core.candle_cache import save_candles_to_db
+                    save_candles_to_db(symbol, interval, candles, source=src)
+                except Exception:
+                    pass
                 return candles, src
         except Exception:
             pass

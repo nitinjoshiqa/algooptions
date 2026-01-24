@@ -190,7 +190,15 @@ class OptionScorer:
                 if call_res and "Success" in call_res and call_res["Success"]:
                     call_data = call_res["Success"][0]
                     
-                    option_iv = float(call_data.get("iv", 0.15))
+                    # Get IV from Breeze, or fall back to volatility-based calculation if missing
+                    breeze_iv = call_data.get("iv")
+                    if breeze_iv and breeze_iv > 0:
+                        option_iv = float(breeze_iv)
+                    else:
+                        # Breeze didn't return IV (common near expiry) - use stock volatility instead
+                        vol_pct = (atr / spot) * 100 if spot > 0 and atr > 0 else 20
+                        option_iv = max(0.10, min(0.35, 0.15 + (vol_pct / 5.0) * 0.1))
+                    
                     option_volume = int(call_data.get("volume", 0))
                     option_oi = int(call_data.get("open_interest", 0))
                     ltp = float(call_data.get("ltp", 0))
@@ -218,7 +226,7 @@ class OptionScorer:
                         option_type="CALL",
                         strike=atm_strike,
                         expiry=expiry,
-                        source="Breeze",
+                        source="Breeze+Volatility",
                         option_volume=option_volume,
                         option_oi=option_oi,
                         option_delta=delta,

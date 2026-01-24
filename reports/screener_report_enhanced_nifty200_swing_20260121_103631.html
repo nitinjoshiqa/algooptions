@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIFTY NIFTY200 Screener - SWING Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 5px solid #2a5298;
+        }
+        
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #1e3c72;
+        }
+        
+        header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-top: 4px solid #2a5298;
+        }
+        
+        .stat-card.bullish {
+            border-top-color: #27ae60;
+        }
+        
+        .stat-card.bearish {
+            border-top-color: #e74c3c;
+        }
+        
+        .stat-card.index {
+            border-top-color: #f39c12;
+        }
+        
+        .stat-card h3 {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+        
+        .stat-card .subtext {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+        
+        .picks-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 2px solid #ecf0f1;
+            border-left: 5px solid #2a5298;
+        }
+        
+        .section-header h2 {
+            font-size: 20px;
+            color: #1e3c72;
+        }
+        
+        .picks-table {
+            background: white;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 14px;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .symbol {
+            font-weight: 600;
+            color: #1e3c72;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge.bullish {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge.bearish {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge.high {
+            background: #cfe2ff;
+            color: #084298;
+        }
+        
+        .badge.medium {
+            background: #fff3cd;
+            color: #664d03;
+        }
+        
+        .badge.low {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .score {
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .score.strong {
+            color: #27ae60;
+        }
+        
+        .score.moderate {
+            color: #f39c12;
+        }
+        
+        .score.weak {
+            color: #e74c3c;
+        }
+        
+        .metrics {
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .metric-label {
+            font-weight: 600;
+        }
+        
+        .risk-reward {
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .risk-reward .ratio {
+            font-weight: 600;
+            color: #1e3c72;
+            font-size: 16px;
+        }
+        
+        .no-picks {
+            background: white;
+            border-radius: 8px;
+            padding: 40px 25px;
+            text-align: center;
+            color: #999;
+        }
+        
+        .no-picks p {
+            font-size: 16px;
+        }
+        
+        footer {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 25px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 30px;
+            border-top: 1px solid #ecf0f1;
+        }
+        
+        .confidence-bar {
+            display: inline-block;
+            height: 20px;
+            border-radius: 3px;
+            margin: 2px;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .conf-high {
+            background: #d4edda;
+            color: #155724;
+            width: 80%;
+        }
+        
+        .conf-medium {
+            background: #fff3cd;
+            color: #664d03;
+            width: 60%;
+        }
+        
+        .conf-low {
+            background: #f8d7da;
+            color: #721c24;
+            width: 40%;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 10px;
+            }
+            
+            .metrics {
+                flex-direction: column;
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>NIFTY NIFTY200 Screener - SWING Mode</h1>
+            <p>Generated on 2026-01-21 10:36:31</p>
+        </header>
+        
+        <div class="stats-grid">
+            
+        <div class="stat-card">
+            <h3>Total Picks</h3>
+            <div class="value">109</div>
+        </div>
+        <div class="stat-card bullish">
+            <h3>Bullish</h3>
+            <div class="value" style="color: #27ae60;">17</div>
+            <div class="subtext">16% of picks</div>
+        </div>
+        <div class="stat-card bearish">
+            <h3>Bearish</h3>
+            <div class="value" style="color: #e74c3c;">92</div>
+            <div class="subtext">84% of picks</div>
+        </div>
+        <div class="stat-card index">
+            <h3>Market Bias</h3>
+            <div class="value" style="color: #e74c3c;">BEARISH</div>
+            <div class="subtext">Strength: 0.081</div>
+        </div>
+        </div>
+        
+        
+        <div class="picks-section">
+            <div class="section-header">
+                <h2>Bullish Picks</h2>
+            </div>
+            <div class="picks-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Direction</th>
+                            <th>Score</th>
+                            <th>Entry Price</th>
+                            <th>Confidence</th>
+                            <th>Technical</th>
+                            <th>Risk/Reward</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td><span class="symbol">ASIANPAINT</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.063</span></td>
+                <td><strong>₹2,660.30</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>39</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>18.62</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BAJAJ-AUTO</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.062</span></td>
+                <td><strong>₹9,135.50</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>42</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>72.23</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BANKBARODA</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.117</span></td>
+                <td><strong>₹303.15</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>73</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>2.33</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BANKINDIA</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.141</span></td>
+                <td><strong>₹159.30</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>61</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.01</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>1.65</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BHARATFORG</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.057</span></td>
+                <td><strong>₹1,387.30</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>45</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>11.48</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BHEL</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.080</span></td>
+                <td><strong>₹251.10</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>45</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>3.65</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BIOCON</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.068</span></td>
+                <td><strong>₹363.65</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>41</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.04</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>3.72</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">FEDERALBNK</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.054</span></td>
+                <td><strong>₹272.55</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>48</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.00</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>2.73</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">INDIANB</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.056</span></td>
+                <td><strong>₹845.80</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>63</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.02</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>7.62</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">INDIGO</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.121</span></td>
+                <td><strong>₹4,816.50</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>61</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>37.99</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">LICHSGFIN</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.055</span></td>
+                <td><strong>₹520.40</strong></td>
+                <td><span class="badge low">LOW</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>52</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.01</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>4.26</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">MARICO</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.114</span></td>
+                <td><strong>₹746.70</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>38</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.07</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>4.74</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">POLICYBZR</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.063</span></td>
+                <td><strong>₹1,648.50</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>33</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.09</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>15.94</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">PFC</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.065</span></td>
+                <td><strong>₹355.45</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>32</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.11</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>3.40</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">SBILIFE</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.130</span></td>
+                <td><strong>₹2,056.20</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>66</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.02</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>11.73</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">TATACONSUM</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.081</span></td>
+                <td><strong>₹1,183.20</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>55</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>8.40</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">TECHM</span></td>
+                <td><span class="badge bullish">BULLISH</span></td>
+                <td><span class="score weak">0.091</span></td>
+                <td><strong>₹1,677.00</strong></td>
+                <td><span class="badge low">LOW</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>50</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.01</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>13.91</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="picks-section">
+            <div class="section-header">
+                <h2>Bearish Picks</h2>
+            </div>
+            <div class="picks-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Direction</th>
+                            <th>Score</th>
+                            <th>Entry Price</th>
+                            <th>Confidence</th>
+                            <th>Technical</th>
+                            <th>Risk/Reward</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td><span class="symbol">ADANIENT</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.061</span></td>
+                <td><strong>₹2,041.30</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>39</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.08</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>17.89</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">ADANIGREEN</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.200</span></td>
+                <td><strong>₹881.20</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>40</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.06</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>9.49</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">360ONE</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.270</span></td>
+                <td><strong>₹1,107.90</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>40</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.07</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>13.39</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">ADANIENSOL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.196</span></td>
+                <td><strong>₹897.30</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>70</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>11.75</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">ADANIPORTS</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.259</span></td>
+                <td><strong>₹1,368.10</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>53</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.02</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>10.33</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">ABCAPITAL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.269</span></td>
+                <td><strong>₹350.65</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>34</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.07</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>3.28</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">APOLLOHOSP</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.183</span></td>
+                <td><strong>₹6,823.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>32</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.08</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>50.19</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">DMART</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.251</span></td>
+                <td><strong>₹3,646.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>44</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.04</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>34.09</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">AXISBANK</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.244</span></td>
+                <td><strong>₹1,284.20</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>39</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>7.89</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BSE</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.198</span></td>
+                <td><strong>₹2,627.70</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>36</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.08</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>28.67</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BAJAJFINSV</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.122</span></td>
+                <td><strong>₹1,951.00</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>46</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>12.25</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BAJFINANCE</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.185</span></td>
+                <td><strong>₹928.35</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>41</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.07</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>7.43</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BDL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.059</span></td>
+                <td><strong>₹1,438.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>30</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.10</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>16.00</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BEL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.194</span></td>
+                <td><strong>₹402.80</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>31</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.11</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>3.84</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">BHARTIARTL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score moderate">-0.304</span></td>
+                <td><strong>₹1,979.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>39</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>13.75</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">CIPLA</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.113</span></td>
+                <td><strong>₹1,374.20</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>52</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.00</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>9.74</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">CHOLAFIN</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.192</span></td>
+                <td><strong>₹1,639.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>36</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.06</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>13.74</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">COFORGE</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.180</span></td>
+                <td><strong>₹1,617.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>23</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.25</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>20.74</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">COLPAL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.220</span></td>
+                <td><strong>₹2,109.10</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>47</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>15.95</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">DIXON</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.265</span></td>
+                <td><strong>₹10,401.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>23</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.17</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>138.26</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">DRREDDY</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.168</span></td>
+                <td><strong>₹1,163.40</strong></td>
+                <td><span class="badge low">LOW</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>52</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.00</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>10.49</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">ETERNAL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.168</span></td>
+                <td><strong>₹272.40</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>54</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.02</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>3.66</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">FORTIS</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score moderate">-0.305</span></td>
+                <td><strong>₹843.90</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>22</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.12</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>7.78</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">GAIL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.160</span></td>
+                <td><strong>₹161.19</strong></td>
+                <td><span class="badge low">LOW</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>46</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>1.22</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">GMRAIRPORT</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.253</span></td>
+                <td><strong>₹94.31</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>30</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.11</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>0.89</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">GLENMARK</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.242</span></td>
+                <td><strong>₹1,937.40</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>53</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.00</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>18.73</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">GRASIM</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.228</span></td>
+                <td><strong>₹2,720.30</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>58</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.01</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>18.29</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">HCLTECH</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.062</span></td>
+                <td><strong>₹1,676.30</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>37</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.04</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>12.37</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">HDFCBANK</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.172</span></td>
+                <td><strong>₹925.00</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>35</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>5.13</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">HDFCLIFE</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.189</span></td>
+                <td><strong>₹736.15</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>60</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>5.26</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">HAVELLS</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score moderate">-0.311</span></td>
+                <td><strong>₹1,298.20</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>19</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.22</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>15.33</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">HEROMOTOCO</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.208</span></td>
+                <td><strong>₹5,528.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>43</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.06</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>50.58</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">HINDALCO</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.083</span></td>
+                <td><strong>₹931.10</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>62</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.01</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>8.11</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">HINDPETRO</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.226</span></td>
+                <td><strong>₹433.30</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>40</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>4.20</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">ICICIBANK</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.144</span></td>
+                <td><strong>₹1,348.40</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>16</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.11</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>9.25</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">IDFCFIRSTB</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.210</span></td>
+                <td><strong>₹80.97</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>29</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.04</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>0.69</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">IOC</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.120</span></td>
+                <td><strong>₹158.11</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>61</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>1.17</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">INDUSTOWER</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.276</span></td>
+                <td><strong>₹406.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>35</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.09</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>4.03</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">NAUKRI</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.250</span></td>
+                <td><strong>₹1,285.30</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>36</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.06</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>12.47</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">JSWSTEEL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.091</span></td>
+                <td><strong>₹1,166.90</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>70</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>8.86</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">JINDALSTEL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.147</span></td>
+                <td><strong>₹1,041.60</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>52</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>9.52</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">KPITTECH</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.209</span></td>
+                <td><strong>₹1,101.50</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>20</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.13</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>13.05</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">KALYANKJIL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.276</span></td>
+                <td><strong>₹415.10</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>10</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.45</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>7.97</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">KOTAKBANK</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.197</span></td>
+                <td><strong>₹423.30</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>45</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>2.88</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">LTF</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.111</span></td>
+                <td><strong>₹283.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>19</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.27</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>4.11</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">LTIM</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score moderate">-0.300</span></td>
+                <td><strong>₹5,787.50</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>12</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.18</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>61.18</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">LT</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.238</span></td>
+                <td><strong>₹3,763.60</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>33</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.06</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>28.62</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">LODHA</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.074</span></td>
+                <td><strong>₹977.50</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>45</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>12.19</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">LUPIN</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.094</span></td>
+                <td><strong>₹2,178.50</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>57</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>17.64</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">M&M</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.229</span></td>
+                <td><strong>₹3,544.80</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>44</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.04</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>26.49</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">MANKIND</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.292</span></td>
+                <td><strong>₹2,100.20</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>31</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>19.61</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">MARUTI</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.139</span></td>
+                <td><strong>₹15,769.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>40</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.04</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>115.46</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">MAXHEALTH</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.178</span></td>
+                <td><strong>₹984.80</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>45</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>8.32</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">MOTILALOFS</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.078</span></td>
+                <td><strong>₹779.90</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>26</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.20</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>10.58</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">NMDC</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.208</span></td>
+                <td><strong>₹78.23</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>47</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>0.82</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">NTPC</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.197</span></td>
+                <td><strong>₹339.30</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>55</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>2.63</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">NESTLEIND</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.180</span></td>
+                <td><strong>₹1,290.60</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>48</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.04</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>9.00</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">NATIONALUM</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.174</span></td>
+                <td><strong>₹356.40</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>48</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>4.34</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">ONGC</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.109</span></td>
+                <td><strong>₹240.79</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>62</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>1.88</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">OIL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.050</span></td>
+                <td><strong>₹430.60</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>58</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.01</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>4.67</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">PAYTM</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score moderate">-0.301</span></td>
+                <td><strong>₹1,248.50</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>26</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.12</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>15.03</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">PHOENIXLTD</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.284</span></td>
+                <td><strong>₹1,743.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>31</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.13</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>20.21</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">PERSISTENT</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.075</span></td>
+                <td><strong>₹6,119.50</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>20</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.25</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>96.04</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">PIDILITIND</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score moderate">-0.333</span></td>
+                <td><strong>₹1,422.70</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>29</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.07</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>9.39</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">POLYCAB</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.283</span></td>
+                <td><strong>₹6,909.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>25</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.12</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>73.03</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">POWERGRID</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.152</span></td>
+                <td><strong>₹256.50</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>80</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>1.65</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">PREMIERENE</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.198</span></td>
+                <td><strong>₹722.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>38</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.04</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>9.78</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">PNB</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.181</span></td>
+                <td><strong>₹124.80</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>34</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>1.13</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">RVNL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.180</span></td>
+                <td><strong>₹318.55</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>45</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.04</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>4.03</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">RELIANCE</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.209</span></td>
+                <td><strong>₹1,382.20</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>46</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>9.78</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">SBICARD</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.144</span></td>
+                <td><strong>₹799.75</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>24</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.10</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>6.70</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">SRF</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.107</span></td>
+                <td><strong>₹2,761.30</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>24</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.30</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>44.81</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">SHRIRAMFIN</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.143</span></td>
+                <td><strong>₹981.95</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>46</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.08</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>8.46</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">MOTHERSON</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.222</span></td>
+                <td><strong>₹108.45</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>57</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.01</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>1.29</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">SUNPHARMA</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.136</span></td>
+                <td><strong>₹1,622.90</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>62</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.02</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>13.85</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">SAIL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.120</span></td>
+                <td><strong>₹146.69</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>66</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>1.75</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">SWIGGY</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.183</span></td>
+                <td><strong>₹323.55</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>46</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.03</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>3.36</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">TVSMOTOR</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.274</span></td>
+                <td><strong>₹3,555.00</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>31</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.10</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>30.05</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">TCS</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score moderate">-0.309</span></td>
+                <td><strong>₹3,103.20</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>55</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.01</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>21.03</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">TMPV</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.153</span></td>
+                <td><strong>₹341.10</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>78</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.06</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>2.87</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">TATASTEEL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.242</span></td>
+                <td><strong>₹183.00</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>70</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.02</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>1.55</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">TITAN</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.139</span></td>
+                <td><strong>₹4,073.70</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>54</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.01</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>27.55</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">TRENT</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.275</span></td>
+                <td><strong>₹3,730.30</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>23</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.11</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>40.73</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">UPL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score moderate">-0.467</span></td>
+                <td><strong>₹688.85</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>33</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.11</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>10.63</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">UNIONBANK</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.104</span></td>
+                <td><strong>₹174.46</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>38</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.05</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>1.95</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">UNITDSPR</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.191</span></td>
+                <td><strong>₹1,289.50</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>25</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.16</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>12.56</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">VBL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.203</span></td>
+                <td><strong>₹478.20</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>22</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.13</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>4.45</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">VEDL</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.173</span></td>
+                <td><strong>₹667.10</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>38</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.08</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>6.30</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">IDEA</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.234</span></td>
+                <td><strong>₹10.07</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>48</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.04</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>0.15</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">VOLTAS</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.117</span></td>
+                <td><strong>₹1,289.30</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>28</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.19</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>15.13</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">WAAREEENER</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.242</span></td>
+                <td><strong>₹2,458.90</strong></td>
+                <td><span class="badge high">HIGH</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>27</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>-0.09</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>34.81</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+            <tr>
+                <td><span class="symbol">YESBANK</span></td>
+                <td><span class="badge bearish">BEARISH</span></td>
+                <td><span class="score weak">-0.184</span></td>
+                <td><strong>₹21.77</strong></td>
+                <td><span class="badge medium">MEDIUM</span></td>
+                <td>
+                <div class="metrics">
+                    <span class="metric"><span class="metric-label">RSI:</span>58</span>
+                    <span class="metric"><span class="metric-label">EMA:</span>0.02</span>
+                    <span class="metric"><span class="metric-label">ATR:</span>0.24</span>
+                </div>
+            </td>
+                <td><div class="risk-reward"><div class="ratio">2.0:1</div><small>R/R</small></div></td>
+            </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Report generated by AlgoOptions Screener | 2026-01-21 10:36:31</p>
+        </footer>
+    </div>
+</body>
+</html>

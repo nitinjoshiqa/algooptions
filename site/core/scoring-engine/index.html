@@ -1,0 +1,1481 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Complete documentation of the NIFTY Bearnness Screener business logic">
+      
+      
+      
+      
+        <link rel="prev" href="../../getting-started/quickstart/">
+      
+      
+        <link rel="next" href="../risk-management/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Scoring Engine - AlgoOptions Business Logic Wiki</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../css/print-site.css">
+    
+      <link rel="stylesheet" href="../../css/print-site-material.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#scoring-engine" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AlgoOptions Business Logic Wiki" class="md-header__button md-logo" aria-label="AlgoOptions Business Logic Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AlgoOptions Business Logic Wiki
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Scoring Engine
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/overview/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Core Systems
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../analysis/support-resistance/" class="md-tabs__link">
+          
+  
+  
+  Technical Analysis
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../advanced/api-reference/" class="md-tabs__link">
+          
+  
+  
+  Advanced
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  FAQ
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AlgoOptions Business Logic Wiki" class="md-nav__button md-logo" aria-label="AlgoOptions Business Logic Wiki" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AlgoOptions Business Logic Wiki
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Systems
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Systems
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scoring Engine
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scoring Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-signals-are-generated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Signals Are Generated
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-timeframe-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Timeframe Scoring
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multi-Timeframe Scoring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-five-minute-analysis-intraday" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Five-Minute Analysis (Intraday)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-fifteen-minute-analysis-swing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Fifteen-Minute Analysis (Swing)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-one-hour-analysis-long-term" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. One-Hour Analysis (Long-term)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#composite-score-calculation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composite Score Calculation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-indicators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component Indicators
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Component Indicators">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-opening-range-or" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Opening Range (OR)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-vwap-volume-weighted-average-price" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. VWAP (Volume-Weighted Average Price)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-rsi-relative-strength-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. RSI (Relative Strength Index)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-volume-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Volume Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-price-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Price Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-ema-exponential-moving-average" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. EMA (Exponential Moving Average)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-macd-moving-average-convergence-divergence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. MACD (Moving Average Convergence Divergence)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-bollinger-bands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Bollinger Bands
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#confidence-calculation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence Calculation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risk-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk Scoring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-analyzing-infy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: Analyzing INFY
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../risk-management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Risk Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../position-sizing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Position Sizing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../options-strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Options Strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Analysis
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Technical Analysis
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../analysis/support-resistance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support & Resistance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../analysis/timeframe-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timeframe Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../analysis/indicators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Technical Indicators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/backtesting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backtesting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="scoring-engine">Scoring Engine</h1>
+<h2 id="how-signals-are-generated">How Signals Are Generated</h2>
+<p>The scoring engine is the <strong>heart of the system</strong>. It analyzes multiple technical indicators across three timeframes and produces a single composite "bearness score" (-1 to +1).</p>
+<h2 id="multi-timeframe-scoring">Multi-Timeframe Scoring</h2>
+<h3 id="1-five-minute-analysis-intraday">1. Five-Minute Analysis (Intraday)</h3>
+<p>Captures <strong>short-term momentum</strong> and quick reversals:</p>
+<div class="highlight"><pre><span></span><code>5m Score = (OR + VWAP + RSI + Volume) / 4
+OR = Opening Range score (-1 to +1)
+VWAP = Volume-Weighted Average Price score
+RSI = Relative Strength Index momentum
+Volume = Volume trend strength
+</code></pre></div>
+<p><strong>Use Case:</strong> Intraday scalpers, entry timing</p>
+<h3 id="2-fifteen-minute-analysis-swing">2. Fifteen-Minute Analysis (Swing)</h3>
+<p>Captures <strong>swing trading opportunities</strong> (4-8 hour moves):</p>
+<div class="highlight"><pre><span></span><code>15m Score = (Structure + EMA + MACD + BB) / 4
+Structure = Price structure quality (reversal patterns)
+EMA = Exponential Moving Average trend
+MACD = Momentum Divergence
+BB = Bollinger Band extremes
+</code></pre></div>
+<p><strong>Use Case:</strong> Swing traders, day traders</p>
+<h3 id="3-one-hour-analysis-long-term">3. One-Hour Analysis (Long-term)</h3>
+<p>Captures <strong>longer-term trend direction</strong> (1-3 day moves):</p>
+<div class="highlight"><pre><span></span><code>1h Score = (Trend + Support/Resistance + Volume Profile) / 3
+Trend = Overall directional bias
+S/R = Proximity to support/resistance levels
+Volume Profile = Volume at different price levels
+</code></pre></div>
+<p><strong>Use Case:</strong> Position traders, swing traders</p>
+<h2 id="composite-score-calculation">Composite Score Calculation</h2>
+<div class="highlight"><pre><span></span><code>Final Score = (5m_score × 20%) + (15m_score × 30%) + (1h_score × 50%)
+
+Weights (by default mode):
+- Intraday Mode:    5m: 50%,  15m: 30%, 1h: 20%
+- Swing Mode:       5m: 20%,  15m: 30%, 1h: 50%  ← Current Default
+- Long-term Mode:   5m: 10%,  15m: 20%, 1h: 70%
+</code></pre></div>
+<h2 id="component-indicators">Component Indicators</h2>
+<h3 id="1-opening-range-or">1. Opening Range (OR)</h3>
+<p><strong>What:</strong> Price position relative to first 30-minute high/low</p>
+<div class="highlight"><pre><span></span><code>OR_High = Max(price[0:30 minutes])
+OR_Low = Min(price[0:30 minutes])
+
+If price &gt; OR_High: +1 (bullish breakout)
+If price &lt; OR_Low:  -1 (bearish breakdown)
+Otherwise: Interpolate (-1 to +1)
+</code></pre></div>
+<p><strong>Signal:</strong> Strong intraday moves start with OR breakouts</p>
+<h3 id="2-vwap-volume-weighted-average-price">2. VWAP (Volume-Weighted Average Price)</h3>
+<p><strong>What:</strong> Average price weighted by volume - the "true fair value"</p>
+<div class="highlight"><pre><span></span><code>VWAP = Sum(Price × Volume) / Sum(Volume)
+
+If price &gt; VWAP: +1 (bullish, price above fair value)
+If price &lt; VWAP: -1 (bearish, price below fair value)
+</code></pre></div>
+<p><strong>Signal:</strong> Price above VWAP = institutional buying, bullish</p>
+<h3 id="3-rsi-relative-strength-index">3. RSI (Relative Strength Index)</h3>
+<p><strong>What:</strong> Momentum indicator measuring overbought/oversold conditions</p>
+<div class="highlight"><pre><span></span><code>RSI = 100 - (100 / (1 + RS))
+RS = Average Gain / Average Loss (14 periods)
+
+RSI &gt; 70: +1 (Overbought, potential reversal down)
+RSI &lt; 30: -1 (Oversold, potential reversal up)
+RSI = 50: 0 (Neutral)
+</code></pre></div>
+<p><strong>Signal:</strong> Extreme RSI often precedes reversals</p>
+<h3 id="4-volume-analysis">4. Volume Analysis</h3>
+<p><strong>What:</strong> Trend confirmation by volume</p>
+<div class="highlight"><pre><span></span><code>Volume Trend = (Current Vol - MA_Vol) / MA_Vol × 100
+
+High Volume + Up = +1 (Strong buying)
+High Volume + Down = -1 (Strong selling)
+Low Volume + Any = ±0.3 (Weak signal)
+</code></pre></div>
+<p><strong>Signal:</strong> Price moves with volume are more reliable</p>
+<h3 id="5-price-structure">5. Price Structure</h3>
+<p><strong>What:</strong> Quality of price action patterns</p>
+<div class="highlight"><pre><span></span><code>Strong Reversal Pattern: +/- 0.8
+Double Top/Bottom: +/- 0.6
+Support/Resistance Touch: +/- 0.4
+Random Walk: ±0.2
+</code></pre></div>
+<p><strong>Signal:</strong> High-quality patterns = higher probability moves</p>
+<h3 id="6-ema-exponential-moving-average">6. EMA (Exponential Moving Average)</h3>
+<p><strong>What:</strong> Trend direction using weighted moving averages</p>
+<div class="highlight"><pre><span></span><code>If price &gt; EMA_50: +0.5 (Bullish trend)
+If price &gt; EMA_200: +0.5 (Long-term bullish)
+
+Score = Combines short + long EMA alignment
+</code></pre></div>
+<p><strong>Signal:</strong> Prices above EMAs = bullish, below = bearish</p>
+<h3 id="7-macd-moving-average-convergence-divergence">7. MACD (Moving Average Convergence Divergence)</h3>
+<p><strong>What:</strong> Momentum trend changes</p>
+<div class="highlight"><pre><span></span><code>MACD = 12 EMA - 26 EMA
+Signal Line = 9 EMA of MACD
+
+MACD &gt; Signal: +0.5 (Bullish momentum)
+MACD &lt; Signal: -0.5 (Bearish momentum)
+</code></pre></div>
+<p><strong>Signal:</strong> Crossovers often precede big moves</p>
+<h3 id="8-bollinger-bands">8. Bollinger Bands</h3>
+<p><strong>What:</strong> Volatility and extremes</p>
+<div class="highlight"><pre><span></span><code>BB_Upper = SMA_20 + (2 × StdDev_20)
+BB_Lower = SMA_20 - (2 × StdDev_20)
+
+If price &gt; BB_Upper: +1 (Overbought/breakout)
+If price &lt; BB_Lower: -1 (Oversold/breakdown)
+If price near Mid: 0 (Fair value)
+</code></pre></div>
+<p><strong>Signal:</strong> Touching bands shows volatility extremes</p>
+<h2 id="confidence-calculation">Confidence Calculation</h2>
+<p>Confidence measures how "sure" we are about the signal:</p>
+<div class="highlight"><pre><span></span><code>Base Confidence = Average of:
+  - Indicator agreement (how many indicators align?)
+  - Pattern quality (strong vs weak patterns)
+  - Volume confirmation (is volume backing the move?)
+  - Timeframe alignment (are multiple timeframes aligned?)
+
+Confidence Adjustment:
+  - If all indicators agree: +20%
+  - If RSI is in extreme zone: +15%
+  - If volume &gt; 150% of average: +10%
+  - If at support/resistance: +15%
+  - If price just broke key level: +20%
+</code></pre></div>
+<h2 id="risk-scoring">Risk Scoring</h2>
+<p>Risk assessment determines position size and stop-loss width:</p>
+<div class="highlight"><pre><span></span><code>Volatility Risk = ATR / Price × 100%
+
+Risk Level Classification:
+- &lt; 1.5%: LOW RISK (tight stops, larger positions)
+- 1.5-3%: NORMAL RISK (standard stops, standard positions)
+- 3-5%: MEDIUM RISK (wider stops, smaller positions)
+- &gt; 5%: HIGH RISK (very wide stops, tiny positions)
+</code></pre></div>
+<hr />
+<h2 id="example-analyzing-infy">Example: Analyzing INFY</h2>
+<div class="highlight"><pre><span></span><code>5m Score:  +0.12  (Price above VWAP, RSI=52, normal volume)
+15m Score: +0.08  (Small uptrend, MACD positive)
+1h Score:  +0.02  (Price near 50 EMA, weak structure)
+
+Final Score = (0.12×20%) + (0.08×30%) + (0.02×50%)
+            = 0.024 + 0.024 + 0.010
+            = +0.058 ✓ Weak Bullish Signal
+
+Confidence: 62% (Most indicators slightly bullish, but not strongly aligned)
+</code></pre></div>
+<p>See also: <a href="../risk-management/">Risk Management</a>, <a href="../../analysis/indicators/">Technical Indicators</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["search.suggest", "search.highlight", "navigation.tabs", "navigation.top", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": 1.0}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../js/print-site.js"></script>
+      
+    
+  </body>
+</html>

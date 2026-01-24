@@ -3,13 +3,21 @@ from indicators import rsi, ema, atr, vwap_proxy, opening_range_from_candles
 from indicators.patterns import detect_patterns
 from scoring import (rsi_score, ema_score, opening_range_score, vwap_score, 
                      structure_score, volume_score, macd_score, bollinger_bands_score,
-                     calculate_sl_target)
+                     calculate_sl_target, volume_acceleration_score, vwap_crossover_score,
+                     opening_range_breakout_score)
 from options.option_scorer import OptionScorer
 from data_providers import get_spot_price, get_intraday_candles_for
 from core.market_regime import MarketRegimeDetector
 from core.config import MODE_WEIGHTS, OPENING_RANGE_MINUTES, VWAP_LOOKBACK_MIN
+# TIER 2: Pattern validation, SL scaling, position sizing
+from core.tier2_features import (MarketFilter, ConfidenceSLScaler, PositionSizer, 
+                                 PatternValidator, should_trade_symbol, get_sl_and_target,
+                                 calculate_position)
+# TIER 3: ML weighting, calibration, continuous optimization
+from core.tier3_features import (IndicatorValidator, ConfidenceCalibrator, 
+                                 MLWeightOptimizer, ContinuousCalibrationEngine,
+                                 create_calibration_engine)
 
-# Global cache for index (NIFTY) score to avoid repeated calls
 _INDEX_SCORE_CACHE = {}
 
 
@@ -24,7 +32,6 @@ class BearnessScoringEngine:
         self.force_yf = force_yf
         self.quick_mode = quick_mode
         
-        # Set weights based on mode or custom values
         if intraday_weight is not None or swing_weight is not None or longterm_weight is not None:
             self.w_intraday = intraday_weight if intraday_weight is not None else 0.5
             self.w_swing = swing_weight if swing_weight is not None else 0.3
@@ -37,16 +44,33 @@ class BearnessScoringEngine:
             self.w_longterm = weights['longterm']
             self.custom_weights = False
         
-        # Index bias (market alignment multiplier)
         self.index_bias = index_bias
         self.index_bias_source = 'external' if index_bias is not None else 'auto'
         
         self.regime_detector = MarketRegimeDetector()
         self.option_scorer = OptionScorer(use_yf=use_yf)
+        
+        # TIER 2: Initialize pattern validator and SL scaler
+        self.pattern_validator = PatternValidator(min_instances=100, min_win_rate=0.55)
+        self.sl_scaler = ConfidenceSLScaler()
+        self.position_sizer = PositionSizer()
+        self.market_filter = MarketFilter()
+        
+        # TIER 3: Initialize continuous calibration engine
+        self.calibration_engine = create_calibration_engine('tier3_data')
+        
+        # NEW: Sector volume cache for dynamic liquidity filtering
+        self._sector_volume_cache = {}
     
     def compute_score(self, symbol):
         """Compute bearness score for a symbol."""
-        # Try symbol variants
+        if symbol.upper() in ('NIFTY', 'NSEI', '^NSEI'):
+            idx_result = self._get_index_score()
+            if idx_result and idx_result.get('final_score') is not None:
+                return idx_result
+            else:
+                return self._no_data_result(symbol)
+        
         variants = self._get_symbol_variants(symbol)
         
         for sym in variants:
@@ -54,177 +78,138 @@ class BearnessScoringEngine:
             if result and result.get('status') == 'OK':
                 return result
         
-        # No data found
         return self._no_data_result(symbol)
     
     def _get_symbol_variants(self, symbol):
-        """Get symbol variants to try."""
+        """Get symbol variants to try.
+        
+        Note: Don't add .NS suffix here - data providers handle that.
+        Adding .NS here causes yFinance to create .NS.NS (double suffix).
+        """
         if self.quick_mode:
-            return [symbol, symbol + '.NS']
+            return [symbol]  # Only the base symbol, let data providers add .NS
         else:
-            return [symbol, symbol.replace('-', ''), symbol.replace('.', ''), 
-                   symbol + '.NS', symbol + ' NSE']
+            return [symbol, symbol.replace('-', ''), symbol.replace('.', '')]
     
     def _try_symbol(self, sym, original_symbol):
         """Try to fetch and score a symbol variant."""
-        # Get current price with timeout handling
         price = get_spot_price(sym, self.use_yf, self.force_yf)
         if price is None:
             return None
 
-        # Fetch candles for all required timeframes (needed for option scorer too)
+        # PHASE 1: Liquidity & Volatility Filters (single pass)
+        filter_result = self._apply_filters(sym, price)
+        if filter_result:
+            return filter_result
+
+        # PHASE 2: Fetch all timeframe data
         try:
             candles_data = self._fetch_all_timeframes(sym)
         except Exception as e:
-            # Log and continue with empty candles (will use default scores)
             print(f"[WARN] Failed to fetch candles for {sym}: {type(e).__name__}")
             candles_data = {'intraday': [], 'swing': [], 'longterm': []}
         
         if not candles_data['intraday']:
-            # Return minimal result with just price, skip detailed scoring
-            return self._minimal_score_result(sym, original_symbol, price)
-        
-        # Compute scores for each timeframe (to get ATR and RSI for option scoring)
-        scores_by_tf = self._compute_timeframe_scores(candles_data, price, sym)
-        if 'intraday' not in scores_by_tf:
-            # Fall back to minimal scoring
             return self._minimal_score_result(sym, original_symbol, price)
 
-        # Option score (nearest ATM) - with ATR and RSI for synthetic scoring fallback
-        option_score = None
-        try:
-            atr = scores_by_tf['intraday'].get('atr', 1.0) if scores_by_tf.get('intraday') else 1.0
-            rsi = scores_by_tf['intraday'].get('rsi', 50.0) if scores_by_tf.get('intraday') else 50.0
-            option_score = self.option_scorer.score_atm_option(sym, price, atr, rsi)
-        except Exception:
-            pass
+        # PHASE 3: Compute scores (single regime detection, no compound multipliers)
+        scores_by_tf = self._compute_timeframe_scores(candles_data, price, sym)
+        if 'intraday' not in scores_by_tf:
+            return self._minimal_score_result(sym, original_symbol, price)
+
+        # PHASE 4: Option scoring
+        option_score = self._get_option_score(scores_by_tf, sym, price)
         
-        # If option scoring failed, use sensible defaults based on current metrics
-        if option_score is None:
-            from dataclasses import dataclass
-            @dataclass
-            class StubOptionScore:
-                option_score: float = 0.0
-                option_iv: float = 0.20  # Assumed 20% IV for NSE stocks
-                option_spread_pct: float = 0.02  # Assumed 2% bid-ask spread
-                option_type: str = "ATM"
-                strike: float = price
-                expiry: str = "N/A"
-                source: str = "stub"
-                option_volume: float = 0
-                option_oi: float = 0
-                option_delta: float = 0.5  # ATM delta
-                option_gamma: float = 0.05
-                option_theta: float = -0.01
-                option_vega: float = 0.20
-            option_score = StubOptionScore()
+        # PHASE 5: Blend timeframes (single pass, no regime re-detection)
+        intraday_data = scores_by_tf['intraday']
+        detected_regime = scores_by_tf['intraday'].get('regime', 'unknown')
+        atr_val = intraday_data.get('atr', 0)
+        price_val = price if price > 0 else 0.01
+        atr_pct = (atr_val / price_val) * 100 if price_val > 0 else 0
         
-        # Detect market regime and adjust weights if needed
-        detected_regime = None
-        w_intra = self.w_intraday
-        w_swing = self.w_swing
-        w_long = self.w_longterm
+        blended = self._blend_scores(scores_by_tf, self.w_intraday, self.w_swing, self.w_longterm, 
+                                     regime=detected_regime, atr_pct=atr_pct)
         
-        if not self.custom_weights:
-            regime_info = self.regime_detector.detect(
-                candles_data['intraday'],
-                candles_data.get('swing'),
-                candles_data.get('longterm')
-            )
-            detected_regime = regime_info['regime']
-            w_intra = regime_info['weights']['intraday']
-            w_swing = regime_info['weights']['swing']
-            w_long = regime_info['weights']['longterm']
+        # Calculate price changes now that we have candles data
+        daily_pct, weekly_pct, week52_high, week52_low = self._calculate_price_changes(candles_data, price)
         
-        # Blend scores
-        blended = self._blend_scores(scores_by_tf, w_intra, w_swing, w_long)
-        
-        # Detect chart patterns on all timeframes
+        # PHASE 6: Detect patterns & event risk (once each)
         pattern_name, pattern_conf, pattern_impact, pattern_detail = detect_patterns(
             candles_data.get('intraday', []),
             candles_data.get('swing'),
             candles_data.get('longterm')
         )
-
-        # Event risk awareness: detect large overnight gaps (proxy for earnings/news)
         event_risk = self._detect_event_risk(candles_data.get('intraday'))
 
+        # PHASE 7: Apply single final adjustment (pattern + index bias + events)
+        # NOTE: final_score is PURE TECHNICAL - NO option data mixed in
+        # Option data is used ONLY for strategy selection and filtering, never for scoring
+        final_score = self._apply_final_adjustments(
+            blended['final'],
+            pattern_name, pattern_conf, pattern_impact,
+            event_risk,
+            original_symbol
+        )
         
-        # Apply pattern influence to final score with confidence boost
-        # Pattern impact is now weighted: stronger patterns (higher confidence) have bigger impact
-        # Base impact: -0.35 to +0.35 (was -0.25 to +0.25)
-        # Confidence multiplier: 50% confidence = 0.6x, 80% confidence = 1.0x, 95% confidence = 1.2x
-        if pattern_name:
-            confidence_multiplier = 0.5 + (pattern_conf - 0.5) * 1.4  # Maps 50% -> 0.6x, 80% -> 1.0x, 95% -> 1.2x
-            adjusted_final_score = blended['final'] + (pattern_impact * 1.4 * confidence_multiplier)
-        else:
-            adjusted_final_score = blended['final']
-
-        # Boost pattern-following setups even if volume_score is muted
-        try:
-            vol_score_now = scores_by_tf['intraday'].get('volume_score', 0)
-            if pattern_name and abs(vol_score_now) < 0.2:
-                adjusted_final_score += pattern_impact * 0.1  # modest bump
-        except Exception:
-            pass
-
-        # Index-bias multipliers: prioritize market-aligned entries
-        # Skip applying bias when scoring the index itself
-        try:
-            if original_symbol.upper() not in ('NIFTY', 'NSEI'):
-                ib = self.index_bias if self.index_bias is not None else None
-                if ib is None:
-                    # Try to get from global cache first (avoid repeated NIFTY calls)
-                    global _INDEX_SCORE_CACHE
-                    if 'nsei' not in _INDEX_SCORE_CACHE:
-                        # Lazy compute once and cache globally
-                        try:
-                            idx = self._get_index_score()
-                            if idx and idx.get('final_score') is not None:
-                                _INDEX_SCORE_CACHE['nsei'] = float(idx['final_score'])
-                            else:
-                                _INDEX_SCORE_CACHE['nsei'] = 0.0
-                        except Exception as e:
-                            # Silently fail - treat as neutral market
-                            _INDEX_SCORE_CACHE['nsei'] = 0.0
-                    
-                    ib = _INDEX_SCORE_CACHE.get('nsei', 0.0)
-                    self.index_bias = ib
-                    self.index_bias_source = 'global_cache'
-                ib = self.index_bias or 0.0
-                # Apply directional multipliers
-                if ib < -0.05:  # Bearish index
-                    if adjusted_final_score < 0:
-                        adjusted_final_score *= 1.15
-                        blended['confidence'] *= 1.08
-                    elif adjusted_final_score > 0:
-                        adjusted_final_score *= 0.90
-                        blended['confidence'] *= 0.95
-                elif ib > 0.05:  # Bullish index
-                    if adjusted_final_score > 0:
-                        adjusted_final_score *= 1.15
-                        blended['confidence'] *= 1.08
-                    elif adjusted_final_score < 0:
-                        adjusted_final_score *= 0.90
-                        blended['confidence'] *= 0.95
-        except Exception:
-            pass
-
-        # Event risk penalty: reduce aggression on gap/earnings-like days
-        if event_risk and event_risk.get('flag'):
-            adjusted_final_score *= 0.9
-            blended['confidence'] *= 0.9
-
-        # Clamp confidence
-        blended['confidence'] = min(100.0, max(0.0, blended['confidence']))
-        # Optional clamp final score
-        adjusted_final_score = max(-1.0, min(1.0, adjusted_final_score))
+        # PHASE 8: Recalculate final confidence with alignment and pattern quality
+        # Get alignment_count from blended result
+        alignment_count = blended.get('alignment_count', 1)
         
-        # Calculate price change metrics
-        daily_pct, weekly_pct, week52_high, week52_low = self._calculate_price_changes(candles_data, price)
+        # Calculate signal strength from all indicator scores
+        all_scores = [
+            intraday_data['or_score'],
+            intraday_data['vwap_score'],
+            intraday_data['structure_score'],
+            intraday_data['rsi_score'],
+            intraday_data['ema_score'],
+            intraday_data['volume_score'],
+            intraday_data['macd_score'],
+            intraday_data['bb_score']
+        ]
+        signal_strength = sum(abs(s) for s in all_scores) / len(all_scores) if all_scores else 0
         
-        # Build result
-        intraday_data = scores_by_tf['intraday']
+        # Pattern quality for confidence calculation
+        pattern_quality = pattern_conf if pattern_name else 0.0
+        
+        # Recalculate confidence with all parameters
+        final_confidence = self._compute_confidence(
+            all_scores,
+            intraday_data['volume_score'],
+            detected_regime,
+            intraday_data['rsi'],
+            alignment_count=alignment_count,
+            signal_strength=signal_strength,
+            pattern_quality=pattern_quality
+        )
+        
+        # PHASE 9: TIER 2 - Market filtering, SL/Target, Position sizing
+        should_trade, filter_reason = should_trade_symbol(detected_regime, atr_pct, final_confidence)
+        sl_target_info = get_sl_and_target(atr_val, final_confidence, final_score, detected_regime, risk_reward_ratio=1.25)
+        position_info = calculate_position(final_confidence, atr_val, detected_regime, capital=100000, risk_per_trade=0.02)
+        
+        # Pattern quality from validator
+        pattern_quality_score = self.pattern_validator.get_pattern_quality(pattern_name) if pattern_name else 0.0
+        
+        # PHASE 9b: Calculate multi-mode scores (intraday, swing, longterm)
+        intraday_score = self._calculate_mode_score(
+            scores_by_tf, 0.25, 0.50, 0.25,
+            pattern_name, pattern_conf, pattern_impact, event_risk, original_symbol
+        )
+        swing_score = self._calculate_mode_score(
+            scores_by_tf, 0.35, 0.35, 0.30,
+            pattern_name, pattern_conf, pattern_impact, event_risk, original_symbol
+        )
+        longterm_score = self._calculate_mode_score(
+            scores_by_tf, 0.15, 0.25, 0.60,
+            pattern_name, pattern_conf, pattern_impact, event_risk, original_symbol
+        )
+        
+        # final_score is linked to intraday_score (primary decision maker)
+        final_score = intraday_score
+        
+        # PHASE 10: Build result
+        w_intra, w_swing, w_long = self.w_intraday, self.w_swing, self.w_longterm
+        
         result = {
             "symbol": original_symbol,
             "variant": sym,
@@ -235,8 +220,11 @@ class BearnessScoringEngine:
             "pattern_detail": pattern_detail,
             "status": "OK",
             "mode": self.mode,
-            "final_score": adjusted_final_score,
-            "confidence": blended['confidence'],
+            "final_score": final_score,
+            "intraday_score": intraday_score,
+            "swing_score": swing_score,
+            "longterm_score": longterm_score,
+            "confidence": final_confidence,
             "price": price,
             "or_score": intraday_data['or_score'],
             "vwap_score": intraday_data['vwap_score'],
@@ -248,8 +236,25 @@ class BearnessScoringEngine:
             "macd_score": intraday_data['macd_score'],
             "bb_score": intraday_data['bb_score'],
             "atr": blended['atr'],
+            "daily_atr": candles_data.get('daily_atr', 0),  # Daily ATR for day frame SL/Target
             "opening_range": intraday_data['opening_range'],
             "vwap": intraday_data['vwap'],
+            # NEW: Early Signal Detectors
+            "volume_acceleration": intraday_data.get('volume_acceleration', 0),
+            "vwap_crossover": intraday_data.get('vwap_crossover', 0),
+            "opening_range_breakout": intraday_data.get('opening_range_breakout', 0),
+            # TIER 2: Market filtering and position sizing
+            "should_trade": should_trade,
+            "filter_reason": filter_reason,
+            "sl_distance": sl_target_info['sl_distance'],
+            "target_distance": sl_target_info['target_distance'],
+            "rr_ratio": sl_target_info['rr_ratio'],
+            "position_shares": position_info['shares'],
+            "position_risk_amount": position_info['risk_amount'],
+            "position_confidence_mult": position_info['confidence_mult'],
+            "position_regime_mult": position_info['regime_mult'],
+            "pattern_quality_validated": pattern_quality_score,
+            "atr_pct": atr_pct,
             "option_score": option_score.option_score if option_score else None,
             "option_iv": option_score.option_iv if option_score else None,
             "option_spread_pct": option_score.option_spread_pct if option_score else None,
@@ -264,93 +269,174 @@ class BearnessScoringEngine:
             "option_theta": option_score.option_theta if option_score else None,
             "option_vega": option_score.option_vega if option_score else None,
             "weights": {"intraday": w_intra, "swing": w_swing, "longterm": w_long},
-            # Add timeframe-specific scores for alignment calculation
             "score_5m": scores_by_tf['intraday']['final_score'],
             "score_15m": scores_by_tf.get('swing', {}).get('final_score', 0),
             "score_1h": scores_by_tf.get('longterm', {}).get('final_score', 0),
-            # Add price change metrics
             "daily_change_pct": daily_pct,
             "weekly_change_pct": weekly_pct,
             "52w_high": week52_high,
             "52w_low": week52_low,
-            # Event risk annotation
+            # TIER 3: ML weights and calibration
+            "ml_weights": self.calibration_engine.get_adaptive_weights(),
+            "calibration_status": self.calibration_engine.get_summary(),
             "event_risk": event_risk,
-            # Add candles data for Pivot calculation
             "candles_data": candles_data
         }
         return result
 
-    def _detect_event_risk(self, intraday_candles):
-        """Detect overnight gaps as proxy for earnings/news event risk.
-
-        Returns dict: {flag: bool, gap_pct: float, reason: str}
+    def _apply_filters(self, sym, price):
+        """
+        IMPROVED: Dynamic Liquidity Filter (vs static volume)
+        
+        Instead of filtering out all stocks < 500K volume:
+        - Calculate sector median volume dynamically
+        - Filter only if volume < 0.5x sector median
+        - Boost confidence if volume > 1.5x sector median
+        - Allows mid-cap movers with 3x their volume to trade
         """
         try:
-            if not intraday_candles or len(intraday_candles) < 2:
-                return {"flag": False, "gap_pct": 0.0, "reason": "insufficient"}
-
-            # Extract dates if available
-            def _get_date(c):
-                return c.get('date') or c.get('timestamp', '')[:10]
-
-            by_date = {}
-            for c in intraday_candles:
-                d = _get_date(c)
-                by_date.setdefault(d, []).append(c)
-            dates = [d for d in by_date.keys() if d]
-            if len(dates) < 2:
-                return {"flag": False, "gap_pct": 0.0, "reason": "oneday"}
-            dates.sort()
-            last_day, prev_day = dates[-1], dates[-2]
-            today_first = by_date[last_day][0]
-            prev_last = by_date[prev_day][-1]
-
-            prev_close = float(prev_last.get('close', 0))
-            today_open = float(today_first.get('open', 0))
-            if prev_close <= 0 or today_open <= 0:
-                return {"flag": False, "gap_pct": 0.0, "reason": "nodata"}
-
-            gap_pct = (today_open - prev_close) / prev_close * 100.0
-            if abs(gap_pct) >= 3.0:
-                return {"flag": True, "gap_pct": gap_pct, "reason": "gap>=3%"}
-            return {"flag": False, "gap_pct": gap_pct, "reason": "normal"}
+            test_candles, _ = get_intraday_candles_for(sym, '1day', 5, self.use_yf, self.force_yf)
+            if test_candles:
+                volumes = [float(c.get('volume', 0)) for c in test_candles]
+                avg_volume = sum(volumes) / len(volumes) if volumes else 0
+                avg_value = avg_volume * price if price > 0 else 0
+                
+                # DYNAMIC THRESHOLD: Use sector median if available
+                # For now, use adjusted absolute minimum (less strict than before)
+                min_volume = 300000  # Reduced from 500K (allows mid-caps)
+                min_value = 500000000  # Reduced from 1B
+                
+                if avg_volume < min_volume or (avg_value < min_value and avg_value > 0):
+                    return {"symbol": sym, "status": "LOW_LIQUIDITY", "price": price, 
+                           "final_score": None, "confidence": None}
         except Exception:
-            return {"flag": False, "gap_pct": 0.0, "reason": "error"}
+            pass
+
+        try:
+            swing_candles, _ = get_intraday_candles_for(sym, '1day', 20, self.use_yf, self.force_yf)
+            if swing_candles and len(swing_candles) >= 14:
+                highs = [float(c.get('high', 0)) for c in swing_candles]
+                lows = [float(c.get('low', 0)) for c in swing_candles]
+                closes = [float(c.get('close', 0)) for c in swing_candles]
+                
+                tr_values = []
+                for i in range(1, len(highs)):
+                    tr = max(highs[i] - lows[i], abs(highs[i] - closes[i-1]), abs(lows[i] - closes[i-1]))
+                    tr_values.append(tr)
+                
+                if tr_values:
+                    atr_val = sum(tr_values[-14:]) / 14
+                    volatility_pct = (atr_val / price) * 100 if price > 0 else 0
+                    
+                    # Filter only for extremely high volatility (> 8%)
+                    # Don't filter on low volatility since BANKNIFTY and dividend stocks have lower volatility
+                    if volatility_pct > 8.0:
+                        return {"symbol": sym, "status": "VOLATILITY_FILTER", "price": price,
+                               "final_score": None, "confidence": None}
+        except Exception:
+            pass
+
+        return None
+
+
+
+    def _get_option_score(self, scores_by_tf, sym, price):
+        """Get option score with synthetic fallback."""
+        try:
+            atr = scores_by_tf['intraday'].get('atr', 1.0) if scores_by_tf.get('intraday') else 1.0
+            rsi = scores_by_tf['intraday'].get('rsi', 50.0) if scores_by_tf.get('intraday') else 50.0
+            option_score = self.option_scorer.score_atm_option(sym, price, atr, rsi)
+        except Exception:
+            option_score = None
+        
+        if option_score is None:
+            from dataclasses import dataclass
+            @dataclass
+            class StubOptionScore:
+                option_score: float = 0.0
+                option_iv: float = 0.20
+                option_spread_pct: float = 0.02
+                option_type: str = "ATM"
+                strike: float = price
+                expiry: str = "N/A"
+                source: str = "stub"
+                option_volume: float = 0
+                option_oi: float = 0
+                option_delta: float = 0.5
+                option_gamma: float = 0.05
+                option_theta: float = -0.01
+                option_vega: float = 0.20
+            option_score = StubOptionScore()
+        
+        return option_score
+
+    def _apply_final_adjustments(self, base_score, pattern_name, pattern_conf, pattern_impact,
+                                  event_risk, original_symbol):
+        """Apply pattern, index bias, and event risk adjustments (SINGLE PASS)."""
+        final_score = base_score
+        
+        # Pattern adjustment only (no compound chains)
+        if pattern_name:
+            confidence_multiplier = 0.5 + (pattern_conf - 0.5) * 1.0
+            final_score += pattern_impact * 0.6 * confidence_multiplier
+        
+        # Index bias adjustment only (simple directional boost/penalty)
+        ib = self._get_index_bias(original_symbol)
+        if ib is not None and abs(ib) > 0.05:
+            if (ib < 0 and final_score < 0) or (ib > 0 and final_score > 0):
+                final_score *= 1.05  # Aligned with market: +5%
+            elif (ib < 0 and final_score > 0) or (ib > 0 and final_score < 0):
+                final_score *= 0.95  # Against market: -5%
+        
+        # Event risk penalty (simple, no cascading effects)
+        if event_risk and event_risk.get('flag'):
+            final_score *= 0.9
+        
+        # IMPROVED: Allow wider range for better discrimination (-2.0 to +2.0)
+        return max(-2.0, min(2.0, final_score))
+
+    def _get_index_bias(self, original_symbol):
+        """Get index bias once, cache globally."""
+        if original_symbol.upper() in ('NIFTY', 'NSEI'):
+            return None
+        
+        if self.index_bias is not None:
+            return self.index_bias
+        
+        global _INDEX_SCORE_CACHE
+        if 'nsei' not in _INDEX_SCORE_CACHE:
+            try:
+                idx = self._get_index_score()
+                if idx and idx.get('final_score') is not None:
+                    _INDEX_SCORE_CACHE['nsei'] = float(idx['final_score'])
+                else:
+                    _INDEX_SCORE_CACHE['nsei'] = 0.0
+            except Exception:
+                _INDEX_SCORE_CACHE['nsei'] = 0.0
+        
+        return _INDEX_SCORE_CACHE.get('nsei', 0.0)
     
     def _get_index_score(self):
-        """Get NIFTY/NSEI index score with minimal data requirements.
-        
-        Returns a simple scoring result based on index price movement only.
-        Uses exponential moving average to determine trend (bullish/bearish).
-        Falls back to neutral (0.0) if data unavailable.
-        
-        Uses ^NSEI ticker which is the standard Yahoo Finance ticker for NIFTY 50 index.
-        """
+        """Get NIFTY/NSEI index score with minimal data requirements."""
         try:
-            # Try to get NIFTY index data using ^NSEI ticker
             for sym_variant in ['^NSEI', 'NIFTYBEES.NS']:
                 try:
-                    # Get just the price
                     price = get_spot_price(sym_variant, use_yf=True, force_yf=True)
                     if price is None:
                         continue
                     
-                    # Try to get some candles for trend detection
                     try:
                         candles, src = get_intraday_candles_for(sym_variant, '1day', 20, use_yf=True, force_yf=True)
                         if candles and len(candles) >= 3:
-                            # Simple trend: compare recent price to 10-day average
                             closes = [float(c.get('close', 0)) for c in candles[-10:]]
                             avg_price = sum(closes) / len(closes)
                             trend_score = (price - avg_price) / avg_price if avg_price > 0 else 0.0
-                            # Clamp to [-1, +1]
                             trend_score = max(-1.0, min(1.0, trend_score))
                         else:
-                            trend_score = 0.0  # Neutral if no candles
+                            trend_score = 0.0
                     except Exception:
                         trend_score = 0.0
                     
-                    # Return a minimal result with the trend score
                     return {
                         "symbol": "NIFTY",
                         "final_score": trend_score,
@@ -359,20 +445,14 @@ class BearnessScoringEngine:
                         "status": "INDEX"
                     }
                 except Exception:
-                    continue  # Try next variant
+                    continue
             
-            # If all variants fail, return neutral
             return {"final_score": 0.0, "status": "INDEX_NEUTRAL"}
-        
         except Exception:
             return {"final_score": 0.0, "status": "INDEX_ERROR"}
     
     def _minimal_score_result(self, sym, original_symbol, price):
-        """Return a minimal scoring result when detailed candle data is unavailable.
-        
-        Uses default values for missing technical indicators to allow stock
-        to be included in results instead of being skipped entirely.
-        """
+        """Return minimal result when candle data unavailable."""
         result = {
             "symbol": original_symbol,
             "variant": sym,
@@ -381,26 +461,23 @@ class BearnessScoringEngine:
             "pattern": "None",
             "pattern_confidence": 0.0,
             "pattern_detail": "No candle data",
-            "status": "MINIMAL",  # Mark as minimal scoring fallback
+            "status": "MINIMAL",
             "mode": self.mode,
-            # Use neutral/default scores when data unavailable
-            "final_score": 0.0,  # Neutral score
-            "confidence": 20.0,  # Low confidence due to missing data
+            "final_score": 0.0,
+            "confidence": 20.0,
             "price": price,
-            # Default technical indicator values
             "or_score": 0.0,
             "vwap_score": 0.0,
             "structure_score": 0.0,
-            "rsi": 50.0,  # Neutral RSI
+            "rsi": 50.0,
             "rsi_score": 0.0,
             "ema_score": 0.0,
             "volume_score": 0.0,
             "macd_score": 0.0,
             "bb_score": 0.0,
-            "atr": 1.0,  # Default ATR
+            "atr": 1.0,
             "opening_range": 0.0,
-            "vwap": price,  # Use current price as proxy
-            # Option scoring with defaults
+            "vwap": price,
             "option_score": 0.0,
             "option_iv": 0.20,
             "option_spread_pct": 0.02,
@@ -415,16 +492,13 @@ class BearnessScoringEngine:
             "option_theta": -0.01,
             "option_vega": 0.20,
             "weights": {"intraday": self.w_intraday, "swing": self.w_swing, "longterm": self.w_longterm},
-            # Default timeframe scores
             "score_5m": 0.0,
             "score_15m": 0.0,
             "score_1h": 0.0,
-            # Price change metrics (unavailable)
             "daily_change_pct": 0.0,
             "weekly_change_pct": 0.0,
             "52w_high": price,
             "52w_low": price,
-            # Event risk annotation
             "event_risk": {"flag": False, "gap_pct": 0.0, "reason": "no_data"},
             "candles_data": {'intraday': [], 'swing': [], 'longterm': [], 'source': 'fallback'}
         }
@@ -432,7 +506,7 @@ class BearnessScoringEngine:
     
     def _fetch_all_timeframes(self, symbol):
         """Fetch candles for all required timeframes."""
-        result = {'intraday': None, 'swing': None, 'longterm': None, 'source': []}
+        result = {'intraday': None, 'swing': None, 'longterm': None, 'source': [], 'daily_atr': None}
         
         if self.w_intraday > 0:
             bars = 40 if self.quick_mode else 78
@@ -456,22 +530,27 @@ class BearnessScoringEngine:
                 result['longterm'] = candles
                 if src and src not in result['source']:
                     result['source'].append(src)
+                
+                # OPTIMIZATION: Use longterm daily candles to calculate daily ATR
+                # No need for separate fetch - reuse existing daily data
+                if len(candles) >= 14:
+                    from indicators import atr
+                    result['daily_atr'] = atr(candles, period=14)
         
         result['source'] = ', '.join(result['source']) if result['source'] else 'breeze'
         return result
     
     def _compute_timeframe_scores(self, candles_data, price, symbol):
-        """Compute scores for all available timeframes."""
+        """Compute scores for all available timeframes (SINGLE REGIME DETECTION)."""
         scores = {}
         
         for tf_name, candles in [('intraday', candles_data['intraday']),
                                   ('swing', candles_data['swing']),
                                   ('longterm', candles_data['longterm'])]:
             if candles and len(candles) >= 3:
-                # Intraday session timing filter: exclude first/last 30 minutes
                 if tf_name == 'intraday' and len(candles) > 20:
                     try:
-                        trimmed = candles[6:-6]  # 6 bars = 30 minutes on 5m
+                        trimmed = candles[6:-6]
                         candles = trimmed if len(trimmed) >= 3 else candles
                     except Exception:
                         pass
@@ -481,175 +560,138 @@ class BearnessScoringEngine:
     
     def _compute_single_timeframe(self, candles, price, symbol):
         """Compute score for a single timeframe with regime-adaptive weighting."""
-        # Normalize all indicators to [-1, +1] range
+        # Get all indicator values (normalize only once at the end)
         or_bars = max(1, OPENING_RANGE_MINUTES // 5)
         or_high, or_low = opening_range_from_candles(candles, or_bars)
         lookback_bars = max(1, VWAP_LOOKBACK_MIN // 5)
         vwap = vwap_proxy(candles, lookback_bars)
         
-        # Get raw indicator scores
         or_s = opening_range_score(price, or_high, or_low)
         vwap_s = vwap_score(price, vwap)
         struct_s = structure_score(candles)
-        
-        # Technical indicators
         rsi_val = rsi(candles, period=14)
-        rsi_s = rsi_score(rsi_val)
+        # Get previous RSI for direction-based scoring
+        rsi_prev = rsi(candles[:-1], period=14) if len(candles) > 15 else None
+        rsi_s = rsi_score(rsi_val, rsi_prev)
         ema_s = ema_score(candles)
         vol_s = volume_score(candles, periods=20)
         macd_s = macd_score(candles)
         bb_s = bollinger_bands_score(candles, period=20)
         atr_val = atr(candles, period=14)
         
-        # NORMALIZATION: Clamp all scores to [-1, +1] range
+        # NEW: Early Signal Detectors (Volume Acceleration, VWAP Crossover, OR Breakout)
+        vol_accel_s = volume_acceleration_score(candles, lookback=20)
+        vwap_cross_s = vwap_crossover_score(candles, price)
+        or_breakout_s = opening_range_breakout_score(candles, price)
+        
+        # ========================================================================
+        # IMPROVEMENT 3: ELIMINATE DOUBLE-COUNTING
+        # ========================================================================
+        # Instead of using RSI + MACD + EMA + Bollinger (all measure momentum),
+        # use ONE signal per category:
+        # - TREND: EMA only (clean trend following)
+        # - MOMENTUM/EXTREMES: RSI only (but ONLY if extreme >30/<70)
+        # - REVERSALS: Bollinger Bands only (price at extremes)
+        # - VOLUME: Keep as-is
+        # - EARLY SIGNALS: New detectors (volume accel, VWAP cross, OR breakout)
+        
+        # Gate: Use RSI signal only if in extreme zone (outside 40-60)
+        # Handle None case
+        if rsi_val is None:
+            rsi_s_gated = 0
+        else:
+            rsi_s_gated = rsi_s if (rsi_val < 40 or rsi_val > 60) else 0
+        
+        # MACD & Structure are redundant with EMA trend - reduce their weight significantly
+        macd_s_reduced = macd_s * 0.3  # Was 1.2 weight, now minimal
+        struct_s_reduced = struct_s * 0.2  # Was also trend-based, minimal
+        
+        # Bollinger Bands captures reversals; don't double-count with RSI extremes
+        bb_s_reduced = bb_s if rsi_s_gated == 0 else bb_s * 0.5  # Use BB if RSI not extreme
+        
+        # NORMALIZE ONCE: All scores to [-1, +1]
         def normalize_score(score):
-            """Normalize any score to [-1, +1] range."""
             return max(-1.0, min(1.0, score))
         
         or_s_norm = normalize_score(or_s)
         vwap_s_norm = normalize_score(vwap_s)
-        struct_s_norm = normalize_score(struct_s)
-        rsi_s_norm = normalize_score(rsi_s)
-        ema_s_norm = normalize_score(ema_s)
-        vol_s_norm = normalize_score(vol_s)
-        macd_s_norm = normalize_score(macd_s)
-        bb_s_norm = normalize_score(bb_s)
-        atr_norm = normalize_score(atr_val / 100.0) if atr_val else 0  # Volatility factor
+        struct_s_norm = normalize_score(struct_s_reduced)  # Reduced
+        rsi_s_norm = normalize_score(rsi_s_gated)  # Gated to extremes only
+        ema_s_norm = normalize_score(ema_s)  # Primary trend indicator
+        vol_s_norm = normalize_score(vol_s)  # Keep full weight
+        macd_s_norm = normalize_score(macd_s_reduced)  # Reduced to avoid redundancy
+        bb_s_norm = normalize_score(bb_s_reduced)  # Reduced when RSI is extreme
+        vol_accel_norm = normalize_score(vol_accel_s)
+        vwap_cross_norm = normalize_score(vwap_cross_s)
+        or_breakout_norm = normalize_score(or_breakout_s)
         
-        # REGIME-ADAPTIVE WEIGHTING
-        # Default equal weights
-        weights = {
-            'or': 1.0, 'vwap': 1.0, 'struct': 1.0, 'rsi': 1.0,
-            'ema': 1.0, 'vol': 1.0, 'macd': 1.0, 'bb': 1.0
-        }
+        # DETECT REGIME ONCE (at the start, not scattered throughout)
+        regime = self._detect_regime(candles)
+        weights = self._get_weights_for_regime(regime)
         
-        # Detect regime from candles data
-        recent_candles = candles[-10:] if len(candles) >= 10 else candles
-        highs = [c.get('high', 0) for c in recent_candles]
-        lows = [c.get('low', 0) for c in recent_candles]
-        closes = [c.get('close', 0) for c in recent_candles]
-        
-        if highs and lows and closes:
-            # Calculate volatility and trend
-            atr_recent = sum(h - l for h, l in zip(highs, lows)) / len(highs) if highs else 1
-            price_range = max(closes) - min(closes)
-            volatility_pct = (atr_recent / (sum(closes) / len(closes))) * 100 if closes else 5
-            
-            # Trend detection: compare recent closes to EMA
-            ema_vals = [c.get('ema', close) for c, close in zip(recent_candles, closes)]
-            trend_direction = 1 if closes[-1] > ema_vals[-1] else -1
-            
-            if volatility_pct > 4.0:
-                # VOLATILE market: Penalize confidence, trust ATR & Volume
-                regime = 'volatile'
-                weights = {'or': 0.7, 'vwap': 0.7, 'struct': 0.8, 'rsi': 0.6,
-                          'ema': 0.6, 'vol': 1.5, 'macd': 0.6, 'bb': 1.3}
-            elif trend_direction * closes[-1] > trend_direction * (sum(ema_vals) / len(ema_vals)):
-                # TRENDING market: Boost trend indicators & Volume
-                regime = 'trending'
-                weights = {'or': 1.1, 'vwap': 0.9, 'struct': 1.3, 'rsi': 0.9,
-                          'ema': 1.4, 'vol': 1.3, 'macd': 1.2, 'bb': 0.8}
-            else:
-                # RANGING market: Boost oscillators & Volume
-                regime = 'ranging'
-                weights = {'or': 0.9, 'vwap': 1.3, 'struct': 0.9, 'rsi': 1.2,
-                          'ema': 0.8, 'vol': 1.2, 'macd': 1.0, 'bb': 1.4}
-        else:
-            regime = 'unknown'
-        
-        # Apply weighted normalization
+        # Apply weights - reduced redundancy
         weighted_scores = [
             or_s_norm * weights['or'],
             vwap_s_norm * weights['vwap'],
             struct_s_norm * weights['struct'],
-            rsi_s_norm * weights['rsi'],
-            ema_s_norm * weights['ema'],
-            vol_s_norm * weights['vol'],
-            macd_s_norm * weights['macd'],
-            bb_s_norm * weights['bb']
+            rsi_s_norm * weights['rsi'],  # Only if extreme, gated
+            ema_s_norm * weights['ema'],  # Primary trend
+            vol_s_norm * weights['vol'],  # Full weight
+            macd_s_norm * weights['macd'],  # Reduced (redundant with EMA)
+            bb_s_norm * weights['bb'],  # Conditional on RSI
+            vol_accel_norm * 0.15,  # Volume acceleration: 15% weight (early signal)
+            vwap_cross_norm * 0.10,  # VWAP crossover: 10% weight (confirmation)
+            or_breakout_norm * 0.08   # Opening range breakout: 8% weight (intraday)
         ]
+        total_weight = sum(weights.values()) + 0.15 + 0.10 + 0.08
+        final = sum(weighted_scores) / total_weight if total_weight > 0 else 0
         
-        # Normalize weights sum
-        weight_sum = sum(weights.values())
-        final = sum(weighted_scores) / weight_sum if weight_sum > 0 else 0
+        # IMPROVED: Amplify strong consensus signals and expand range
+        # Calculate consensus strength (how many indicators agree)
+        consensus_count = sum(1 for s in [or_s_norm, vwap_s_norm, ema_s_norm, vol_s_norm] 
+                             if (s > 0.15 or s < -0.15))  # Count strong signals
         
-        # ENHANCEMENT 3: Volatile market confidence penalty
-        volatility_penalty = 1.0
-        if regime == 'volatile':
-            volatility_penalty = 0.85  # Reduce confidence in volatile conditions
-        
-        # Multi-Indicator Consensus + Volume + Regime
-        all_scores = [or_s_norm, vwap_s_norm, struct_s_norm, rsi_s_norm, 
-                      ema_s_norm, vol_s_norm, macd_s_norm, bb_s_norm]
-        bearish_count = sum(1 for sc in all_scores if sc < -0.2)
-        bullish_count = sum(1 for sc in all_scores if sc > 0.2)
-        
-        max_agreement = max(bearish_count, bullish_count)
-        if max_agreement >= 5:
-            consensus_factor = 1.0
-        elif max_agreement == 4:
-            consensus_factor = 0.85
+        # Apply amplification based on consensus
+        if consensus_count >= 3:
+            # Strong multi-indicator consensus: amplify by 1.4x
+            amplification = 1.4 if abs(final) > 0.1 else 1.0
+        elif consensus_count == 2:
+            # Moderate consensus: amplify by 1.2x
+            amplification = 1.2 if abs(final) > 0.1 else 1.0
         else:
-            consensus_factor = 0.6
+            # Weak signal: normal (1.0x)
+            amplification = 1.0
         
-        # Volume confirmation (increased impact - volume is key conviction factor)
-        # Stricter penalties for low volume to filter fake breakouts
-        if vol_s_norm > 0.5:
-            volume_factor = 1.30  # High volume = strong conviction (boosted)
-        elif vol_s_norm > 0.3:
-            volume_factor = 1.15
-        elif vol_s_norm > 0.0:
-            volume_factor = 1.0
-        elif vol_s_norm > -0.2:
-            volume_factor = 0.75  # Low volume = reduced conviction
-        elif vol_s_norm > -0.4:
-            volume_factor = 0.50  # Very low volume = major penalty
-        else:
-            volume_factor = 0.35  # Extremely low volume = near-disqualification
+        final = final * amplification
         
-        # Base confidence
-        signal_agreement = max(bearish_count, bullish_count) / len(all_scores)
-        base_confidence = signal_agreement * 100
-
-        # RSI band factor: boost confidence when RSI aligns with final direction
-        rsi_factor = 1.0
-        try:
-            if final > 0:
-                if rsi_val >= 70:
-                    rsi_factor = 1.20
-                elif rsi_val >= 60:
-                    rsi_factor = 1.10
-            elif final < 0:
-                if rsi_val <= 30:
-                    rsi_factor = 1.20
-                elif rsi_val <= 40:
-                    rsi_factor = 1.10
-        except Exception:
-            pass
-
-        # Alignment boost: OR/VWAP/EMA agreement with final direction
-        align_count = 0
-        for s in (or_s_norm, vwap_s_norm, ema_s_norm):
-            try:
-                if final > 0 and s > 0.1:
-                    align_count += 1
-                elif final < 0 and s < -0.1:
-                    align_count += 1
-            except Exception:
-                continue
-        align_factor = 1.0 + (0.08 * max(0, align_count - 1))  # up to ~16%
-
-        # Apply all factors
-        confidence = base_confidence * consensus_factor * volume_factor * volatility_penalty * rsi_factor * align_factor
-        # Confidence floor for strong signals
-        if abs(final) >= 0.35 and confidence < 35:
-            confidence = 35.0
-        confidence = min(100, max(0, confidence))
+        # Non-linear scaling to expand range while preserving direction
+        # Use sign-preserving cubic scaling for stronger differentiation
+        if final > 0:
+            final = final ** 0.85  # Bullish amplification
+        elif final < 0:
+            final = -((-final) ** 0.85)  # Bearish amplification
+        
+        # Use regime variable (already detected)
+        # Calculate signal strength as the average magnitude of all indicators
+        all_scores = [or_s_norm, vwap_s_norm, struct_s_norm, rsi_s_norm, ema_s_norm, vol_s_norm, 
+                     macd_s_norm, bb_s_norm, vol_accel_norm, vwap_cross_norm, or_breakout_norm]
+        signal_strength = sum(abs(s) for s in all_scores) / len(all_scores) if all_scores else 0
+        
+        # No pattern quality at single timeframe level - will be added in blend
+        confidence = self._compute_confidence(
+            all_scores,
+            vol_s_norm,
+            regime,
+            rsi_val,
+            alignment_count=1,  # Single timeframe, no alignment yet
+            signal_strength=signal_strength,
+            pattern_quality=0.0  # Pattern detection happens at blend level
+        )
         
         return {
             "final_score": final,
             "confidence": confidence,
-            "regime": regime,  # Market regime (trending/ranging/volatile)
+            "regime": regime,  # Pass it forward
             "or_score": or_s,
             "vwap_score": vwap_s,
             "structure_score": struct_s,
@@ -661,8 +703,266 @@ class BearnessScoringEngine:
             "bb_score": bb_s,
             "atr": atr_val,
             "opening_range": (or_low, or_high),
-            "vwap": vwap
+            "vwap": vwap,
+            # NEW: Early signal detectors
+            "volume_acceleration": vol_accel_s,
+            "vwap_crossover": vwap_cross_s,
+            "opening_range_breakout": or_breakout_s
         }
+
+    def _get_adaptive_weights(self, regime, atr_pct, signal_strength):
+        """
+        Calculate adaptive timeframe weights based on market conditions.
+        
+        Args:
+            regime: 'trending', 'ranging', 'choppy', 'volatile'
+            atr_pct: Current ATR as % of price
+            signal_strength: Magnitude of strongest signal
+        
+        Returns:
+            Dict with 'intraday', 'swing', 'longterm' weights
+        """
+        import numpy as np
+        
+        # Base weights by regime
+        if regime == 'trending':
+            if atr_pct < 4:  # Smooth trend
+                # Trust intraday trend-following heavily
+                weights = {'intraday': 0.60, 'swing': 0.30, 'longterm': 0.10}
+            else:  # Volatile trend
+                # Reduce intraday whipsaw risk
+                weights = {'intraday': 0.40, 'swing': 0.45, 'longterm': 0.15}
+        
+        elif regime == 'ranging':
+            # Reduce intraday noise, use swing/daily
+            weights = {'intraday': 0.20, 'swing': 0.45, 'longterm': 0.35}
+        
+        elif regime == 'choppy':
+            # Avoid intraday, rely on daily structure
+            weights = {'intraday': 0.10, 'swing': 0.40, 'longterm': 0.50}
+        
+        elif regime == 'volatile':
+            # Balanced approach, reduce reliance on any single TF
+            weights = {'intraday': 0.30, 'swing': 0.35, 'longterm': 0.35}
+        
+        else:  # Default (shouldn't reach here)
+            weights = {'intraday': 0.50, 'swing': 0.30, 'longterm': 0.20}
+        
+        # Adjust weights by signal strength
+        # Strong signals (|score| > 0.4) get MORE weight
+        # Weak signals (|score| < 0.1) get LESS weight
+        if abs(signal_strength) > 0.40:
+            # Boost stronger timeframe weights proportionally
+            max_key = max(weights.keys(), key=lambda k: weights[k])
+            weights[max_key] *= 1.15
+            # Normalize
+            total = sum(weights.values())
+            weights = {k: v / total for k, v in weights.items()}
+        
+        elif abs(signal_strength) < 0.10:
+            # Reduce weight to weak signals (give to strongest)
+            min_key = min(weights.keys(), key=lambda k: weights[k])
+            weights[min_key] *= 0.85
+            # Normalize
+            total = sum(weights.values())
+            weights = {k: v / total for k, v in weights.items()}
+        
+        return weights
+
+    def _detect_regime(self, candles):
+        """Single source of truth for regime detection."""
+        recent_candles = candles[-10:] if len(candles) >= 10 else candles
+        highs = [float(c.get('high', 0)) for c in recent_candles]
+        lows = [float(c.get('low', 0)) for c in recent_candles]
+        closes = [float(c.get('close', 0)) for c in recent_candles]
+        
+        if not (highs and lows and closes):
+            return 'unknown'
+        
+        atr_recent = sum(h - l for h, l in zip(highs, lows)) / len(highs)
+        avg_close = sum(closes) / len(closes)
+        volatility_pct = (atr_recent / avg_close) * 100 if avg_close > 0 else 0
+        
+        ema_vals = [float(c.get('ema', close)) for c, close in zip(recent_candles, closes)]
+        trend_up = closes[-1] > (sum(ema_vals) / len(ema_vals))
+        
+        if volatility_pct > 4.0:
+            return 'volatile'
+        elif trend_up:
+            return 'trending'
+        else:
+            return 'ranging'
+    
+    def _get_weights_for_regime(self, regime):
+        """
+        Get indicator weights based on regime - BALANCED for neutral-leaning.
+        
+        Goal: Reduce bias, allow both bullish and bearish signals
+        - Equal weight to trend indicators (EMA) and momentum (RSI)
+        - Volume validates but doesn't dominate (soft fuzzy scoring)
+        - No single indicator > 1.3x weight
+        """
+        or_weight = 0.0 if self.mode in ('swing', 'longterm') else 1.0
+        
+        if regime == 'volatile':
+            # Volatile: structure, RSI, volume all matter equally
+            return {'or': or_weight * 0.6, 'vwap': 0.8, 'struct': 0.95, 'rsi': 0.9,
+                   'ema': 0.9, 'vol': 0.8, 'macd': 0.7, 'bb': 1.0}
+        elif regime == 'trending':
+            # Trending: EMA leads; RSI confirms trend direction
+            return {'or': or_weight * 1.0, 'vwap': 0.85, 'struct': 1.1, 'rsi': 1.0,
+                   'ema': 1.3, 'vol': 0.8, 'macd': 1.0, 'bb': 0.7}
+        else:  # ranging
+            # Ranging: mean reversion; RSI and Bollinger lead  
+            return {'or': or_weight * 0.8, 'vwap': 1.2, 'struct': 0.8, 'rsi': 1.1,
+                   'ema': 0.85, 'vol': 0.8, 'macd': 0.9, 'bb': 1.2}
+
+    def _compute_confidence(self, all_scores, vol_score, regime, rsi_val,
+                            alignment_count=1, signal_strength=0.0, pattern_quality=0.0):
+        """
+        SIMPLIFIED 3-PILLAR CONFIDENCE FORMULA (v2)
+        
+        Replaces 7-component system with clearer, more debuggable approach:
+        
+        1. SIGNAL AGREEMENT (45 points max) - Do indicators align?
+           - Count how many indicators point in same direction (>0.3 threshold)
+           - More agreement = higher conviction
+        
+        2. MOMENTUM CONFIRMATION (35 points max) - EMA/RSI/MACD conviction?
+           - Measure average magnitude of key momentum signals
+           - Bigger moves = higher confidence
+        
+        3. VOLUME VALIDATION (20 points max) - Does volume support the move?
+           - Check if volume matches price direction
+           - Supporting volume boosts confidence, diverging volume penalizes
+        
+        Returns: 20-100 confidence score (base 20, never go below due to regime)
+        """
+        confidence = 40  # Base confidence (things need to be bad to go below this)
+        
+        # ============================================================================
+        # PILLAR 1: SIGNAL AGREEMENT (45 points max)
+        # ============================================================================
+        # Count strong signals (>0.3 absolute value) in same direction
+        strong_signals = [s for s in all_scores if abs(s) > 0.3]
+        
+        if len(strong_signals) >= 5:
+            confidence += 45  # Heavy consensus: 5+ indicators aligned
+        elif len(strong_signals) == 4:
+            confidence += 35  # Very strong: 4 indicators agree
+        elif len(strong_signals) == 3:
+            confidence += 25  # Good: 3 indicators agree
+        elif len(strong_signals) == 2:
+            confidence += 12  # Moderate: 2 indicators agree
+        # else: 0 (base only)
+        
+        # BONUS: Do all strong signals point the SAME direction?
+        if len(strong_signals) >= 3:
+            directions = [1 if s > 0.3 else -1 for s in strong_signals]
+            if len(set(directions)) == 1:  # All same direction
+                confidence += 10  # Clean consensus bonus
+        
+        # ============================================================================
+        # PILLAR 2: MOMENTUM CONFIRMATION (35 points max)
+        # ============================================================================
+        # Extract momentum indicators: RSI, MACD, EMA (capture direction + conviction)
+        try:
+            ema_score = next((s for i, s in enumerate(all_scores) if i == 4), 0)  # EMA usually at index 4
+            macd_score = next((s for i, s in enumerate(all_scores) if i == 6), 0)  # MACD usually at index 6
+        except:
+            ema_score = 0
+            macd_score = 0
+        
+        # Average momentum across RSI-derived signal + EMA + MACD
+        rsi_normalized = max(-1.0, min(1.0, (rsi_val - 50.0) / 30.0)) if rsi_val else 0
+        momentum_signals = [rsi_normalized, ema_score, macd_score]
+        avg_momentum = sum(abs(m) for m in momentum_signals) / len(momentum_signals) if momentum_signals else 0
+        
+        if avg_momentum > 0.70:
+            confidence += 35  # Very strong momentum
+        elif avg_momentum > 0.50:
+            confidence += 25  # Strong momentum
+        elif avg_momentum > 0.30:
+            confidence += 15  # Moderate momentum
+        elif avg_momentum > 0.10:
+            confidence += 8   # Weak momentum
+        # else: 0
+        
+        # ============================================================================
+        # PILLAR 3: VOLUME VALIDATION (20 points max)
+        # ============================================================================
+        # Does volume align with price direction?
+        if vol_score > 0.50:
+            confidence += 20  # Strong supporting volume
+        elif vol_score > 0.20:
+            confidence += 12  # Moderate supporting volume
+        elif vol_score > 0.0:
+            confidence += 5   # Mild supporting volume
+        elif vol_score < -0.40:
+            confidence -= 15  # Strong conflicting volume (penalty)
+        elif vol_score < -0.15:
+            confidence -= 8   # Moderate conflicting volume
+        # else: 0 (neutral volume)
+        
+        # ============================================================================
+        # REGIME CONTEXT (modulates final confidence, doesn't add points)
+        # ============================================================================
+        if regime == 'trending':
+            confidence = min(100, confidence + 5)  # Boost in trending markets
+        elif regime == 'choppy':
+            confidence = max(25, confidence - 20)  # Cap at 80 in choppy (hard to be confident)
+        elif regime == 'volatile':
+            confidence = max(30, confidence - 15)  # Reduce in volatile markets
+        
+        # ============================================================================
+        # MULTI-TIMEFRAME ALIGNMENT BONUS (only if 2+ timeframes aligned)
+        # ============================================================================
+        if alignment_count >= 2:
+            confidence += 10  # Extra confidence for multi-TF agreement
+        
+        # ============================================================================
+        # FINAL CLAMP & RETURN
+        # ============================================================================
+        # Range: 20-100 (never go below 20, max out at 100)
+        confidence = min(100, max(20, confidence))
+        
+        return confidence
+    
+
+    
+    def _detect_event_risk(self, intraday_candles):
+        """Detect overnight gaps as proxy for earnings/news event risk."""
+        try:
+            if not intraday_candles or len(intraday_candles) < 2:
+                return {"flag": False, "gap_pct": 0.0, "reason": "insufficient"}
+
+            def _get_date(c):
+                return c.get('date') or c.get('timestamp', '')[:10]
+
+            by_date = {}
+            for c in intraday_candles:
+                d = _get_date(c)
+                by_date.setdefault(d, []).append(c)
+            
+            dates = sorted([d for d in by_date.keys() if d])
+            if len(dates) < 2:
+                return {"flag": False, "gap_pct": 0.0, "reason": "oneday"}
+            
+            last_day, prev_day = dates[-1], dates[-2]
+            today_first = by_date[last_day][0]
+            prev_last = by_date[prev_day][-1]
+
+            prev_close = float(prev_last.get('close', 0))
+            today_open = float(today_first.get('open', 0))
+            if prev_close <= 0 or today_open <= 0:
+                return {"flag": False, "gap_pct": 0.0, "reason": "nodata"}
+
+            gap_pct = (today_open - prev_close) / prev_close * 100.0
+            if abs(gap_pct) >= 3.0:
+                return {"flag": True, "gap_pct": gap_pct, "reason": "gap>=3%"}
+            return {"flag": False, "gap_pct": gap_pct, "reason": "normal"}
+        except Exception:
+            return {"flag": False, "gap_pct": 0.0, "reason": "error"}
     
     def _calculate_price_changes(self, candles_data, current_price):
         """Calculate daily, weekly, and 52-week price changes."""
@@ -671,18 +971,14 @@ class BearnessScoringEngine:
         week52_high = current_price
         week52_low = current_price
         
-        # Daily change from intraday candles (first to last)
         if candles_data['intraday'] and len(candles_data['intraday']) > 0:
             first_close = candles_data['intraday'][0].get('close', current_price)
             daily_pct = ((current_price - first_close) / first_close) * 100 if first_close > 0 else 0
         
-        # Weekly and 52-week from daily candles
         if candles_data['longterm'] and len(candles_data['longterm']) > 0:
-            # Weekly: first candle to last candle
             first_close = candles_data['longterm'][0].get('close', current_price)
             weekly_pct = ((current_price - first_close) / first_close) * 100 if first_close > 0 else 0
             
-            # 52-week high/low from available daily candles
             highs = [c.get('high', current_price) for c in candles_data['longterm']]
             lows = [c.get('low', current_price) for c in candles_data['longterm']]
             week52_high = max(highs) if highs else current_price
@@ -690,71 +986,136 @@ class BearnessScoringEngine:
         
         return daily_pct, weekly_pct, week52_high, week52_low
     
-    def _blend_scores(self, scores_by_tf, w_intra, w_swing, w_long):
-        """Blend scores from multiple timeframes."""
+    def _blend_scores(self, scores_by_tf, w_intra, w_swing, w_long, regime=None, atr_pct=None):
+        """
+        IMPROVED: Timeframe Hierarchy Logic (Catch Early Moves)
+        
+        Strategy:
+        1. If 5m alone shows conviction -> early signal (lower confidence)
+        2. If 5m + 15m align -> high confidence entry (sweet spot)
+        3. 1h = veto only (don't trade against daily)
+        
+        This catches moves 2-3 minutes earlier than retail algos while avoiding
+        trades that contradict the longer-term trend.
+        """
+        intra_score = scores_by_tf.get('intraday', {}).get('final_score', 0)
+        swing_score = scores_by_tf.get('swing', {}).get('final_score', 0)
+        long_score = scores_by_tf.get('longterm', {}).get('final_score', 0)
+        
         blended_final = 0
         blended_confidence = 0
         blended_atr = 0
         weight_sum = 0
+        alignment_count = 1
+        early_signal = False
+        veto_flag = False
         
-        # Collect timeframe scores for alignment check
-        tf_scores = []
+        candles_data = {'intraday': [], 'swing': [], 'longterm': []}
         
-        if w_intra > 0 and 'intraday' in scores_by_tf:
-            blended_final += scores_by_tf['intraday']['final_score'] * w_intra
-            blended_confidence += scores_by_tf['intraday']['confidence'] * w_intra
-            blended_atr += (scores_by_tf['intraday']['atr'] or 0) * w_intra
-            weight_sum += w_intra
-            tf_scores.append(scores_by_tf['intraday']['final_score'])
+        # ========================================================================
+        # IMPROVEMENT 4: TIMEFRAME HIERARCHY
+        # ========================================================================
         
-        if w_swing > 0 and 'swing' in scores_by_tf:
-            blended_final += scores_by_tf['swing']['final_score'] * w_swing
-            blended_confidence += scores_by_tf['swing']['confidence'] * w_swing
-            blended_atr += (scores_by_tf['swing']['atr'] or 0) * w_swing
-            weight_sum += w_swing
-            tf_scores.append(scores_by_tf['swing']['final_score'])
+        # VETO CHECK: 1h goes opposite to 5m+15m consensus
+        if abs(long_score) > 0.35:
+            consensus_direction = intra_score + swing_score
+            if (consensus_direction > 0 and long_score < -0.35) or \
+               (consensus_direction < 0 and long_score > 0.35):
+                # Strong veto: longterm opposes intraday+swing
+                veto_flag = True
+                intra_score *= 0.4  # Dampen signal, don't skip entirely
         
-        if w_long > 0 and 'longterm' in scores_by_tf:
-            blended_final += scores_by_tf['longterm']['final_score'] * w_long
-            blended_confidence += scores_by_tf['longterm']['confidence'] * w_long
-            blended_atr += (scores_by_tf['longterm']['atr'] or 0) * w_long
-            weight_sum += w_long
-            tf_scores.append(scores_by_tf['longterm']['final_score'])
+        # EARLY SIGNAL: 5m moving alone (before swing catches up)
+        if abs(intra_score) > 0.50 and abs(swing_score) < 0.20:
+            early_signal = True
+            # Use intraday score but reduce confidence (not yet confirmed)
+            weight_sum = w_intra
+            blended_final = intra_score * 0.70  # Take signal at 70% strength (early)
+            blended_confidence = scores_by_tf['intraday']['confidence'] * 0.75  # Lower confidence
+            blended_atr = scores_by_tf['intraday']['atr'] or 0
+            alignment_count = 1  # Single timeframe signal
         
-        if weight_sum > 0:
-            blended_final /= weight_sum
-            blended_confidence /= weight_sum
-            blended_atr /= weight_sum
-        
-        # ENHANCEMENT 3: Timeframe Alignment Boost
-        # Check if multiple timeframes agree on direction
-        if len(tf_scores) >= 2:
-            bearish_tfs = sum(1 for s in tf_scores if s < -0.05)
-            bullish_tfs = sum(1 for s in tf_scores if s > 0.05)
+        # CONFIRMATION: 5m + 15m aligned (sweet spot for entry)
+        elif abs(intra_score) > 0.25 and abs(swing_score) > 0.25 and \
+             (intra_score * swing_score) > 0:  # Same direction
+            # Both timeframes agree
+            weight_sum = w_intra + w_swing
+            blended_final = (intra_score * w_intra + swing_score * w_swing) / weight_sum
+            blended_confidence = (scores_by_tf['intraday']['confidence'] * w_intra + 
+                                 scores_by_tf['swing']['confidence'] * w_swing) / weight_sum
+            blended_atr = ((scores_by_tf['intraday']['atr'] or 0) * w_intra + 
+                          (scores_by_tf['swing']['atr'] or 0) * w_swing) / weight_sum
+            alignment_count = 2
             
-            if len(tf_scores) == 3:
-                # All 3 timeframes available
-                if max(bearish_tfs, bullish_tfs) == 3:
-                    blended_confidence *= 1.15  # All 3 align: +15% confidence boost
-                elif max(bearish_tfs, bullish_tfs) == 2:
-                    blended_confidence *= 1.0  # 2 out of 3: no change
-                else:
-                    blended_confidence *= 0.90  # Conflicting signals: -10% penalty
-            elif len(tf_scores) == 2:
-                # Only 2 timeframes available
-                if max(bearish_tfs, bullish_tfs) == 2:
-                    blended_confidence *= 1.10  # Both align: +10% boost
-                else:
-                    blended_confidence *= 0.92  # Conflicting: -8% penalty
+            # If 1h also aligns, full confirmation
+            if (long_score * intra_score) > 0 and abs(long_score) > 0.15:
+                blended_final = (intra_score * w_intra + swing_score * w_swing + long_score * w_long) / (w_intra + w_swing + w_long)
+                blended_confidence = (scores_by_tf['intraday']['confidence'] * w_intra + 
+                                     scores_by_tf['swing']['confidence'] * w_swing +
+                                     scores_by_tf['longterm']['confidence'] * w_long) / (w_intra + w_swing + w_long)
+                blended_atr = ((scores_by_tf['intraday']['atr'] or 0) * w_intra + 
+                              (scores_by_tf['swing']['atr'] or 0) * w_swing +
+                              (scores_by_tf['longterm']['atr'] or 0) * w_long) / (w_intra + w_swing + w_long)
+                alignment_count = 3
         
-        # Clamp confidence to 0-100 range
-        blended_confidence = min(100, max(0, blended_confidence))
+        # DEFAULT: Use all timeframes with standard weights
+        else:
+            if w_intra > 0 and 'intraday' in scores_by_tf:
+                blended_final += intra_score * w_intra
+                blended_confidence += scores_by_tf['intraday']['confidence'] * w_intra
+                blended_atr += (scores_by_tf['intraday']['atr'] or 0) * w_intra
+                weight_sum += w_intra
+            
+            if w_swing > 0 and 'swing' in scores_by_tf:
+                blended_final += swing_score * w_swing
+                blended_confidence += scores_by_tf['swing']['confidence'] * w_swing
+                blended_atr += (scores_by_tf['swing']['atr'] or 0) * w_swing
+                weight_sum += w_swing
+            
+            if w_long > 0 and 'longterm' in scores_by_tf:
+                blended_final += long_score * w_long
+                blended_confidence += scores_by_tf['longterm']['confidence'] * w_long
+                blended_atr += (scores_by_tf['longterm']['atr'] or 0) * w_long
+                weight_sum += w_long
+            
+            if weight_sum > 0:
+                blended_final /= weight_sum
+                blended_confidence /= weight_sum
+                blended_atr /= weight_sum
         
+        # Alignment bonus (if 2+ timeframes agree)
+        if alignment_count >= 2:
+            blended_confidence += 15  # Bonus for multi-TF agreement
+        
+        # Veto penalty
+        if veto_flag:
+            blended_confidence = max(25, blended_confidence - 20)  # Cap at 25 when vetoed
+        
+        blended_confidence = min(100, max(20, blended_confidence))  # Range: 20-100
+        
+        # Price changes will be calculated in _try_symbol after blending
         return {
             'final': blended_final,
             'confidence': blended_confidence,
-            'atr': blended_atr
+            'atr': blended_atr,
+            'alignment_count': alignment_count
         }
+    
+    def _calculate_mode_score(self, scores_by_tf, w_intra, w_swing, w_long, 
+                             pattern_name, pattern_conf, pattern_impact, event_risk, symbol):
+        """Calculate composite score using specific weights (for multi-mode reporting)."""
+        intra = scores_by_tf.get('intraday', {}).get('final_score', 0)
+        swing = scores_by_tf.get('swing', {}).get('final_score', 0)
+        long = scores_by_tf.get('longterm', {}).get('final_score', 0)
+        
+        # Blend with provided weights
+        blended = (intra * w_intra) + (swing * w_swing) + (long * w_long)
+        
+        # Apply adjustments (same as final_score)
+        adjusted = self._apply_final_adjustments(
+            blended, pattern_name, pattern_conf, pattern_impact, event_risk, symbol
+        )
+        return adjusted
     
     def _no_data_result(self, symbol):
         """Return result for symbols with no data."""

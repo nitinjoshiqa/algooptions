@@ -8,7 +8,8 @@ def save_csv(results, output_path, args, suggest_option_strategy, strategy_toolt
     with open(output_path, "w", newline='', encoding='utf-8') as csvf:
         writer = csv.writer(csvf)
         writer.writerow([
-            "rank", "symbol", "sector", "index", "market_regime", "final_score",
+            "rank", "symbol", "sector", "index", "market_regime", "score",
+            "swing_score", "longterm_score",
             "confidence", "price", "pct_below_high", "pct_above_low", "mode", "strategy", "strategy_reason",
             "or_score", "vwap_score", "structure_score", "rsi", "rsi_score", "ema_score",
             "volume_score", "macd_score", "bb_score", "atr",
@@ -54,6 +55,8 @@ def save_csv(results, output_path, args, suggest_option_strategy, strategy_toolt
                 r.get('index', ''),
                 r.get('market_regime', ''),
                 f"{r['final_score']:.4f}" if r.get('final_score') is not None else '',
+                f"{r.get('swing_score', 0):.4f}" if r.get('swing_score') is not None else '',
+                f"{r.get('longterm_score', 0):.4f}" if r.get('longterm_score') is not None else '',
                 f"{r['confidence']:.1f}" if r.get('confidence') is not None else '',
                 f"{r['price']:.2f}" if r.get('price') is not None else '',
                 pct_below_high,

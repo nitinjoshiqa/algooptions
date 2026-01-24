@@ -1,4 +1,5 @@
 import os
+import time
 from dotenv import load_dotenv
 
 # BreezeConnect may be unavailable; handle gracefully
@@ -15,6 +16,10 @@ API_KEY = os.getenv("BREEZE_API_KEY")
 API_SECRET = os.getenv("BREEZE_API_SECRET")
 SESSION_TOKEN = os.getenv("BREEZE_SESSION_TOKEN")
 
+# Retry configuration
+BREEZE_RETRY_ATTEMPTS = 3
+BREEZE_RETRY_DELAY = 2  # seconds
+
 class _DummyBreeze:
     def get_quotes(self, *args, **kwargs):
         return None
@@ -29,8 +34,56 @@ class _DummyBreeze:
 _breeze_instance = None
 _breeze_initialized = False
 
+def _attempt_breeze_connection(attempt=1):
+    """Attempt to connect to Breeze with error details."""
+    try:
+        print(f"[Attempt {attempt}/{BREEZE_RETRY_ATTEMPTS}] Initializing BreezeConnect...")
+        breeze_obj = BreezeConnect(api_key=API_KEY)
+        
+        print(f"[Attempt {attempt}/{BREEZE_RETRY_ATTEMPTS}] Generating session...")
+        result = breeze_obj.generate_session(
+            api_secret=API_SECRET,
+            session_token=SESSION_TOKEN
+        )
+        
+        # Check if session generation was successful
+        if result and isinstance(result, dict):
+            status = result.get('Status')
+            if status == 200 or status == 201:
+                print("[OK] Breeze session established successfully")
+                return breeze_obj, True
+            else:
+                error = result.get('Error', 'Unknown error')
+                print(f"[FAIL] Breeze session failed with status {status}: {error}")
+                return None, False
+        else:
+            # generate_session() returned None - test with actual API call
+            print(f"[?] Session result was None - verifying with API test...")
+            try:
+                test_result = breeze_obj.get_portfolio_positions()
+                if test_result is not None:
+                    print("[OK] Breeze API verified working")
+                    return breeze_obj, True
+                else:
+                    print("[FAIL] Breeze API test returned None - session invalid")
+                    return None, False
+            except Exception as test_error:
+                print(f"[FAIL] Breeze API test failed: {type(test_error).__name__}: {str(test_error)[:80]}")
+                return None, False
+            
+    except ConnectionError as e:
+        print(f"[FAIL] Connection error (attempt {attempt}): {str(e)[:100]}")
+        return None, False
+    except TimeoutError as e:
+        print(f"[FAIL] Timeout error (attempt {attempt}): {str(e)[:100]}")
+        return None, False
+    except Exception as e:
+        print(f"[FAIL] Error (attempt {attempt}): {type(e).__name__}: {str(e)[:80]}")
+        return None, False
+
+
 def get_breeze_instance():
-    """Lazy-initialize Breeze connection."""
+    """Lazy-initialize Breeze connection with retry logic."""
     global _breeze_instance, _breeze_initialized
     
     if _breeze_initialized:
@@ -43,56 +96,26 @@ def get_breeze_instance():
         print("BreezeConnect module not available [INFO]")
         return _breeze_instance
     
-    try:
-        if not API_KEY or not API_SECRET:
-            print("Breeze credentials missing [WARN]: API_KEY or API_SECRET not in .env")
-            _breeze_instance = _DummyBreeze()
+    if not API_KEY or not API_SECRET:
+        print("Breeze credentials missing [WARN]: API_KEY or API_SECRET not in .env")
+        _breeze_instance = _DummyBreeze()
+        return _breeze_instance
+    
+    # Retry connection attempts
+    for attempt in range(1, BREEZE_RETRY_ATTEMPTS + 1):
+        breeze_obj, success = _attempt_breeze_connection(attempt)
+        if success:
+            _breeze_instance = breeze_obj
             return _breeze_instance
         
-        print(f"Initializing BreezeConnect with API Key: {API_KEY[:10]}...")
-        _breeze_instance = BreezeConnect(api_key=API_KEY)
-        
-        print(f"Generating session with token: {SESSION_TOKEN}...")
-        result = _breeze_instance.generate_session(
-            api_secret=API_SECRET,
-            session_token=SESSION_TOKEN
-        )
-        
-        # Check if session generation was successful
-        if result and isinstance(result, dict):
-            status = result.get('Status')
-            if status == 200 or status == 201:
-                print("Breeze session established successfully [OK]")
-                return _breeze_instance
-            else:
-                error = result.get('Error', 'Unknown error')
-                print(f"Breeze session failed with status {status} [ERROR]: {error}")
-                _breeze_instance = _DummyBreeze()
-                return _breeze_instance
-        else:
-            # generate_session() returned None - but that doesn't mean it failed!
-            # Test with actual API call to verify session is valid
-            print(f"Breeze session result was None - testing with API call [INFO]...")
-            try:
-                # Test with a simple read-only call
-                test_result = _breeze_instance.get_portfolio_positions()
-                if test_result is not None:
-                    print("Breeze session is valid (verified with API call) [OK]")
-                    return _breeze_instance
-                else:
-                    # API call returned None too - session is not working
-                    print("Breeze session test failed - API returned None [ERROR]")
-                    _breeze_instance = _DummyBreeze()
-                    return _breeze_instance
-            except Exception as test_error:
-                print(f"Breeze session test failed - API error: {type(test_error).__name__}: {test_error} [ERROR]")
-                _breeze_instance = _DummyBreeze()
-                return _breeze_instance
-            
-    except Exception as e:
-        print(f"Breeze session exception [ERROR]: {type(e).__name__}: {e}")
-        _breeze_instance = _DummyBreeze()
+        # Wait before retry (except after last attempt)
+        if attempt < BREEZE_RETRY_ATTEMPTS:
+            print(f"[RETRY] Waiting {BREEZE_RETRY_DELAY}s before retry...")
+            time.sleep(BREEZE_RETRY_DELAY)
     
+    # All retries exhausted
+    print(f"[WARN] Failed to connect to Breeze after {BREEZE_RETRY_ATTEMPTS} attempts - falling back to alternative providers")
+    _breeze_instance = _DummyBreeze()
     return _breeze_instance
 
 # Initialize breeze lazily - call get_breeze_instance() to get the real instance

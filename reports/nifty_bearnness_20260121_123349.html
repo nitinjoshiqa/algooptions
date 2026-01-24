@@ -1,0 +1,2117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="900">  <!-- Auto-refresh every 15 min -->
+    <title>Nifty Stock Analyser - 2026-01-21 12:33:49</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 16px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 0 20px; }
+        h2 { color: #1a202c; margin: 0 0 8px 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+        h3 { color: #2d3748; margin: 24px 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        h4 { color: #2d3748; margin: 0 0 12px 0; font-size: 15px; font-weight: 600; }
+        p.info { color: #718096; margin: 8px 0; font-size: 14px; display: flex; gap: 24px; flex-wrap: wrap; }
+        p.info strong { color: #2d3748; font-weight: 600; }
+        p.info strong { color: #2d3748; font-weight: 600; }
+        
+        /* DASHBOARD SECTIONS */
+        .dashboard { background: transparent; border-radius: 0; padding: 0; margin-bottom: 0; box-shadow: none; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 16px 0; }
+        .metric-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15); transition: transform 0.2s, box-shadow 0.2s; cursor: default; }
+        .metric-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.25); }
+        .metric-card.bullish { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .metric-card.bearish { background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%); }
+        .metric-card.neutral { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .metric-value { font-size: 28px; font-weight: 700; margin: 8px 0; font-family: 'JetBrains Mono', monospace; }
+        .metric-label { font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+        .metric-subtext { font-size: 11px; opacity: 0.8; margin-top: 6px; }
+        
+        .insights-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
+        .insight-box { background: white; border-left: 5px solid #667eea; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: all 0.2s; }
+        .insight-box:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-2px); }
+        .insight-box.bull { border-left-color: #38ef7d; }
+        .insight-box.bear { border-left-color: #ff6a00; }
+        .insight-title { font-weight: 600; color: #2d3748; font-size: 13px; text-transform: uppercase; margin-bottom: 8px; }
+        .insight-content { font-size: 13px; color: #4a5568; line-height: 1.6; }
+        .insight-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+        .insight-item:last-child { border-bottom: none; }
+        .insight-name { font-weight: 500; color: #2d3748; }
+        .insight-value { font-weight: 600; color: #667eea; font-family: 'JetBrains Mono', monospace; }
+        
+        .risk-matrix { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 16px 0; }
+        .risk-card { background: white; border: 2px solid #e2e8f0; border-radius: 10px; padding: 16px; text-align: center; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .risk-card:hover { border-color: #667eea; box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15); transform: translateY(-3px); }
+        .risk-symbol { font-weight: 700; font-size: 16px; font-family: 'JetBrains Mono', monospace; color: #2d3748; }
+        .risk-metric { font-size: 11px; color: #718096; margin-top: 4px; }
+        .risk-rr { font-weight: 600; color: #11998e; font-family: 'JetBrains Mono', monospace; }
+        
+        /* TOP PICKS SECTION */
+        .top-picks-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+        
+        .picks-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 5px solid;
+        }
+        
+        .picks-card.bullish {
+            border-left-color: #38ef7d;
+            background: linear-gradient(to right, rgba(56, 239, 125, 0.03), transparent);
+        }
+        
+        .picks-card.bearish {
+            border-left-color: #ff6a00;
+            background: linear-gradient(to right, rgba(255, 106, 0, 0.03), transparent);
+        }
+        
+        .picks-card h4 {
+            margin: 0 0 12px 0;
+            color: #2d3748;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .pick-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 13px;
+        }
+        
+        .pick-item:last-child {
+            border-bottom: none;
+        }
+        
+        .pick-symbol {
+            font-weight: 600;
+            color: #2d3748;
+            font-family: 'JetBrains Mono', monospace;
+            min-width: 70px;
+        }
+        
+        .pick-score {
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .pick-score.bull {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .pick-score.bear {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .pick-details {
+            color: #718096;
+            font-size: 12px;
+            text-align: right;
+        }
+        
+        .sector-heatmap {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+        
+        .sector-card {
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: default;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .sector-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+        
+        .sector-name {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+        
+        .sector-score {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .sector-count {
+            font-size: 12px;
+            opacity: 0.85;
+            line-height: 1.4;
+        }
+        
+        /* MAIN TABLE STYLES */
+        #screener-wrapper { overflow-x: auto; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
+        table { border-collapse: collapse; width: 100%; font-size: 11px; background-color: white; box-shadow: none; }
+        th, td { border: 1px solid #e8eef7; padding: 8px 6px; text-align: left; }
+        th { background: #f5f8fc; cursor: pointer; position: relative; font-weight: 600; color: #2d3748; font-family: 'Inter', sans-serif; white-space: nowrap; }
+        th.sort-asc::after { content: " ▲"; font-size: 9px; color: #667eea; }
+        th.sort-desc::after { content: " ▼"; font-size: 9px; color: #667eea; }
+        tr:hover { background-color: #f9fbfd; }
+        td { font-family: 'Inter', sans-serif; color: #4a5568; }
+        td.mono { font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+        
+        .badge { display: inline-block; padding: 3px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+        .tag-bear { background: #fed7d7; color: #742a2a; }
+        .tag-bull { background: #c6f6d5; color: #22543d; }
+        .tag-neutral { background: #e2e8f0; color: #2d3748; }
+        
+        .controls { margin-bottom: 12px; padding: 12px; background: white; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .search { padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; width: 250px; font-family: 'Inter', sans-serif; font-size: 12px; transition: border-color 0.3s; }
+        .search:focus { outline: none; border-color: #667eea; background: #f9fbfd; }
+        .control-group { margin: 6px 0; display: inline-block; margin-right: 12px; }
+        input[type="range"] { vertical-align: middle; margin: 0 6px; height: 4px; }
+        label { margin-right: 6px; font-size: 12px; font-weight: 500; color: #2d3748; }
+        select { padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 12px; cursor: pointer; transition: border-color 0.3s; }
+        select:focus { outline: none; border-color: #667eea; background: #f7fafc; }
+        
+        .no-data { color: #a0aec0; font-style: italic; margin-top: 15px; padding: 10px; }
+        .score { font-weight: 700; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+        .grade-a { background-color: #11998e; color: white; }
+        .grade-b { background-color: #38ef7d; color: #22543d; }
+        .grade-c { background-color: #f6ad55; color: white; }
+        .grade-d { background-color: #fc8181; color: white; }
+        .grade-f { background-color: #f56565; color: white; }
+        
+        .trend-strong-bull { background-color: #11998e; color: white; }
+        .trend-bull { background-color: #38ef7d; color: #22543d; }
+        .trend-neutral { background-color: #cbd5e0; color: #2d3748; }
+        .trend-bear { background-color: #fc8181; color: white; }
+        .trend-strong-bear { background-color: #f56565; color: white; }
+        
+        .regime-trending { background-color: #4299e1; color: white; }
+        .regime-ranging { background-color: #a0aec0; color: white; }
+        .regime-volatile { background-color: #f56565; color: white; }
+        .regime-quiet { background-color: #cbd5e0; color: #2d3748; }
+        
+        /* Strategy Badge Styles */
+        .long-call { background-color: #11998e; color: white; font-weight: 600; }
+        .bull-call { background-color: #38ef7d; color: #22543d; font-weight: 600; }
+        .lcall-spread { background-color: #81e6d9; color: #234e52; font-weight: 600; }
+        .atm-call { background-color: #4299e1; color: white; font-weight: 600; }
+        .call-diagonal { background-color: #63b3ed; color: white; font-weight: 600; }
+        .call-calendar { background-color: #90cdf4; color: #2c5282; font-weight: 600; }
+        
+        .long-put { background-color: #f56565; color: white; font-weight: 600; }
+        .bear-put { background-color: #fc8181; color: white; font-weight: 600; }
+        .put-spread { background-color: #ed8936; color: white; font-weight: 600; }
+        
+        /* Support/Resistance Styles */
+        .method-sr { background-color: #4299e1; color: white; font-weight: 600; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+        .method-atr { background-color: #a0aec0; color: white; font-weight: 600; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+        .level-support { color: #22863a; font-weight: 600; background-color: #f0fff4; padding: 4px 6px; border-radius: 3px; }
+        .level-resistance { color: #cb2431; font-weight: 600; background-color: #fff0f0; padding: 4px 6px; border-radius: 3px; }
+        
+        /* Risk Zone Styles */
+        .risk-normal { background-color: #c6f6d5; color: #22543d; font-weight: 600; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+        .risk-medium { background-color: #feebc8; color: #7c2d12; font-weight: 600; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+        .risk-high { background-color: #fed7d7; color: #742a2a; font-weight: 600; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+        .zone-label { font-size: 10px; opacity: 0.8; }
+        .atm-put { background-color: #f6ad55; color: white; font-weight: 600; }
+        .put-diagonal { background-color: #fbd38d; color: #7c2d12; font-weight: 600; }
+        .put-calendar { background-color: #feebc8; color: #7c2d12; font-weight: 600; }
+        
+        .iron-condor { background-color: #9f7aea; color: white; font-weight: 600; }
+        .straddle { background-color: #b794f6; color: white; font-weight: 600; }
+        .strangle { background-color: #d6bcfa; color: #44337a; font-weight: 600; }
+        .covered-call { background-color: #ecc94b; color: #7c2d12; font-weight: 600; }
+        .neutral-strategy { background-color: #e2e8f0; color: #2d3748; font-weight: 600; }
+        
+        .strategy-trending-short { background-color: #f56565; color: white; font-weight: 600; }
+        .strategy-trending-long { background-color: #11998e; color: white; font-weight: 600; }
+        .strategy-pullback-short { background-color: #f6ad55; color: white; }
+        .strategy-pullback-long { background-color: #4299e1; color: white; }
+        .strategy-fade { background-color: #9f7aea; color: white; }
+        .strategy-range { background-color: #38b6a8; color: white; }
+        .strategy-breakout { background-color: #ed8936; color: white; }
+        .strategy-swing-short { background-color: #c53030; color: white; }
+        .strategy-swing-long { background-color: #0f7938; color: white; }
+        .strategy-avoid { background-color: #4a5568; color: white; font-weight: 600; }
+        .strategy-wait { background-color: #a0aec0; color: white; }
+        .strategy-watch { background-color: #718096; color: white; }
+        .strategy-neutral { background-color: #cbd5e0; color: #2d3748; }
+        
+        /* Tooltip styling */
+        .tooltip-trigger {
+            position: relative;
+            cursor: help;
+            border-bottom: 2px dotted #667eea;
+            transition: all 0.2s ease;
+        }
+        
+        .tooltip-trigger:hover {
+            background-color: rgba(102, 126, 234, 0.08);
+        }
+        
+        .tooltip-trigger .tooltiptext {
+            visibility: hidden;
+            background-color: #2d3748;
+            color: white;
+            text-align: left;
+            border-radius: 6px;
+            padding: 12px 14px;
+            position: absolute;
+            z-index: 1000;
+            font-size: 12px;
+            font-weight: 400;
+            white-space: normal;
+            text-decoration: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            border: 1px solid #4a5568;
+            bottom: 125%;
+            transition: visibility 0.2s ease;
+            pointer-events: none;
+            line-height: 1.5;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .tooltip-trigger:hover .tooltiptext {
+            visibility: visible;
+        }
+        
+        .tooltip-trigger .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 12px;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #2d3748 transparent transparent transparent;
+        }
+        
+        .align-strong { color: #11998e; font-weight: 700; }
+        .align-medium { color: #f6ad55; font-weight: 700; }
+        .align-weak { color: #f56565; font-weight: 700; }
+        
+        .tooltip { position: relative; cursor: help; }
+        .tooltip .tooltiptext { visibility: hidden; background-color: #2d3748; color: #fff; text-align: left; padding: 10px 12px; border-radius: 6px; position: absolute; z-index: 1000; bottom: 125%; left: 50%; margin-left: -80px; width: 160px; opacity: 0; transition: opacity 0.3s; font-size: 11px; line-height: 1.4; font-family: 'Inter', sans-serif; }
+        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #2d3748 transparent transparent transparent; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        
+        .quick-actions { background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-top: 20px; }
+        .action-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 12px 0; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 2px; }
+        .legend-dot.bull { background: #38ef7d; }
+        .legend-dot.bear { background: #ff6a00; }
+        .legend-dot.neutral { background: #cbd5e0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Nifty Stock Analyser</h2>
+        <p class="info"><strong>Universe:</strong> banknifty | <strong>Mode:</strong> swing | <strong>Stocks Analyzed:</strong> 14 | <strong>No Data:</strong> 0 | <strong>Generated:</strong> 2026-01-21 12:33:49</p>
+
+    
+    <!-- SCREENER TABLE SECTION (FIRST) -->
+    <h3>Full Screener Results</h3>
+    <div class="controls">
+        <div class="control-group">
+            <input class="search" id="search" placeholder="Filter symbols or text..." onkeyup="filterTable()" />
+        </div>
+        <div class="control-group">
+            <label for="sectorFilter">Sector:</label>
+            <select id="sectorFilter" onchange="filterTable()">
+                <option value="all">All</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label><input type="checkbox" id="enableMinConf" onchange="filterTable()" /> Min Conf%</label>
+            <input type="range" id="minConf" min="0" max="100" step="1" value="0" oninput="document.getElementById('minConfVal').innerText=this.value;filterTable()" />
+            <span id="minConfVal">0</span>
+        </div>
+    </div>
+    
+    <div id="screener-wrapper">
+    <table id="screener">
+        <thead>
+            <tr>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Position rank by bearness score"><span class="tooltip">Rank<span class="tooltiptext">Position rank ordered by bearness score (most bearish first)</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Stock symbol"><span class="tooltip">Symbol<span class="tooltiptext">NSE stock symbol/ticker</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Industry sector"><span class="tooltip">Sector<span class="tooltiptext">Industry classification (Banking, IT, Auto, etc.)</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Price pattern"><span class="tooltip">Pattern<span class="tooltiptext">Technical pattern: golden cross, death cross, consolidation, etc.</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Trend direction"><span class="tooltip">Trend<span class="tooltiptext">Overall trend: uptrend, downtrend, or sideways</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Timeframe alignment"><span class="tooltip">TF Align<span class="tooltiptext">Alignment across timeframes (intraday/swing/longterm)</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Trading strategy"><span class="tooltip">Strategy<span class="tooltiptext">Recommended strategy (swing, breakout, mean reversion)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Bearness score -1 to +1"><span class="tooltip">Score<span class="tooltiptext">Bearness score: -1 (bullish) to +1 (bearish), 0 (neutral)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Signal confidence 0-100%"><span class="tooltip">Conf%<span class="tooltiptext">Confidence in signal (0-100%): higher = more reliable</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Risk zone status"><span class="tooltip">Risk Zone<span class="tooltiptext">NORMAL: Safe entry | MEDIUM: Caution zone | HIGH: Extreme overbought/oversold</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Position size adjustment"><span class="tooltip">Pos Adj<span class="tooltiptext">Position size multiplier: 1.0 (normal) to 0.5 (danger zone)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Current price"><span class="tooltip">Price<span class="tooltiptext">Current closing price in rupees</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Suggested stop loss"><span class="tooltip">Stop Loss<span class="tooltiptext">Suggested stop loss price (2.5× ATR from entry)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Suggested target"><span class="tooltip">Target<span class="tooltiptext">Suggested profit target (4.5× ATR from entry)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Risk to reward ratio"><span class="tooltip">R:R<span class="tooltiptext">Risk-to-reward ratio (target gain vs stop loss risk)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Position size"><span class="tooltip">Pos Size<span class="tooltiptext">Suggested position size (shares) at 2% risk</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="52-week high"><span class="tooltip">52W High<span class="tooltiptext">52-week high price</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="52-week low"><span class="tooltip">52W Low<span class="tooltiptext">52-week low price</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Daily % change"><span class="tooltip">Daily%<span class="tooltiptext">Percentage change from yesterday's close</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Weekly % change"><span class="tooltip">Weekly%<span class="tooltiptext">Percentage change from last week's close</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="% below 52-week high"><span class="tooltip">52W High %<span class="tooltiptext">Percentage below 52-week high (pullback magnitude)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="% above 52-week low"><span class="tooltip">52W Low %<span class="tooltiptext">Percentage above 52-week low (recovery distance)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Opening range score -1 to +1"><span class="tooltip">OR<span class="tooltiptext">Opening range score: price vs first 30min high/low (-1 to +1)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="VWAP score -1 to +1"><span class="tooltip">VWAP<span class="tooltiptext">Volume-weighted average price score (-1: below, +1: above)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Price structure score -1 to +1"><span class="tooltip">Structure<span class="tooltiptext">Price structure quality (-1: weak, +1: strong reversal pattern)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="RSI momentum score"><span class="tooltip">RSI<span class="tooltiptext">Relative Strength Index score (-1 oversold to +1 overbought)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="EMA trend score -1 to +1"><span class="tooltip">EMA<span class="tooltiptext">Exponential moving average trend score (-1: bearish, +1: bullish)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Volume score -1 to +1"><span class="tooltip">Vol<span class="tooltiptext">Volume analysis score (-1: low/decreasing, +1: high/increasing)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="MACD momentum -1 to +1"><span class="tooltip">MACD<span class="tooltiptext">MACD momentum score (-1: bearish divergence, +1: bullish)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Bollinger Band score -1 to +1"><span class="tooltip">BB<span class="tooltiptext">Bollinger Band score (-1: at lower band, +1: at upper band)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Average true range"><span class="tooltip">ATR<span class="tooltiptext">Average True Range: volatility measure (stop/target distance)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Nearest support level"><span class="tooltip">Support<span class="tooltiptext">Nearest support level: swing low, pivot S1/S2, or moving average</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Nearest resistance level"><span class="tooltip">Resistance<span class="tooltiptext">Nearest resistance level: swing high, pivot R1/R2, or moving average</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Option pricing score -1 to +1"><span class="tooltip">Opt Score<span class="tooltiptext">Option attractiveness (-1: expensive/high IV, +1: cheap/low IV)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Option implied volatility"><span class="tooltip">Opt IV<span class="tooltiptext">Implied volatility (0-1 scale, lower = more stable)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Option bid-ask spread %"><span class="tooltip">Opt Spread%<span class="tooltiptext">Bid-ask spread % (lower = more liquid)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Option delta"><span class="tooltip">Opt Delta<span class="tooltiptext">Delta: directional sensitivity (0.5 = ATM, >0.5 = ITM)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Option gamma"><span class="tooltip">Opt Gamma<span class="tooltiptext">Gamma: rate of delta change (higher = more sensitive)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Option theta daily decay"><span class="tooltip">Opt Theta<span class="tooltiptext">Theta: daily time decay (negative = cost to buyer)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Option vega volatility sensitivity"><span class="tooltip">Opt Vega<span class="tooltiptext">Vega: volatility sensitivity (per 1% IV change)</span></span></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td><strong>HDFCBANK</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #c0392b; font-weight: bold; cursor: help; border-bottom: 2px dashed #c0392b; white-space: nowrap;'>📉 Double Top<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #c0392b; max-width: 400px;">
+                <div style="font-weight: bold; color: #c0392b; margin-bottom: 8px; font-size: 13px;">
+                    📉 Double Top (5m)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 85% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 5m
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price rejects resistance twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #e74c3c; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #e74c3c;">│  ◡       ◡  │</span><br/><span style="color: #e74c3c;">│ ╱ ╲     ╱ ╲ │</span><br/><span style="color: #3498db;">│╱───╲───╱───╲│</span><br/><span style="color: #e74c3c; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #c0392b;'>Conf: 85%</small></td>
+                <td><span class="badge trend-bear">Bear</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-put-diagonal tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Long longer-dated put, sell shorter put. Low risk, good for declining markets.">Put Diagonal<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Long longer-dated put, sell shorter put. Low risk, good for declining markets.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(53.974189401595325, 80%, 92%);" data-score="-0.1004"><span style="color: #c0392b; font-weight: bold;">↑</span> -0.1004<span class="tooltiptext">5m: +0.078
+15m: -0.020
+1h: -0.127</span></td>
+                <td data-conf="70.0">70</td>
+                <td><span class="risk-medium tooltip" title="Alert OVERBOUGHT: RSI 75 (>75)">MEDIUM<span class="tooltiptext" style="width: 280px;">Alert OVERBOUGHT: RSI 75 (>75)</span></span></td>
+                <td data-price="924.65">924.65</td>
+                <td data-sl="970.88" style="font-weight: bold; color: #e74c3c;">970.88</td>
+                <td data-target="855.30" style="font-weight: bold; color: #27ae60;">855.30</td>
+                <td data-rr="1.50" style="font-weight: bold; color: #f39c12;">1:1.5</td>
+                <td data-pos="21" style="font-weight: bold; color: #3498db;">21</td>
+                <td data-score="1006.40" style="font-weight: bold; color: #27ae60;">1006.40</td>
+                <td data-score="915.50" style="font-weight: bold; color: #c0392b;">915.50</td>
+                <td data-score="-0.76" style="color: #e74c3c; font-weight: bold;">-0.76%</td>
+                <td data-score="-7.28" style="color: #e74c3c; font-weight: bold;">-7.28%</td>
+                <td data-score="8.12" style="font-weight: bold; color: #e67e22;">8.12%</td>
+                <td data-score="1.00" style="font-weight: bold; color: #3498db;">1.00%</td>
+                <td>-1.0000</td>
+                <td>+0.0018</td>
+                <td>+0.0405</td>
+                <td>75.27</td>
+                <td>+0.0082</td>
+                <td>-0.2000</td>
+                <td>-0.0320</td>
+                <td>-0.6456</td>
+                <td>5.46</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2218</td>
+                <td>0.1548</td>
+                <td>3.9761</td>
+                <td>+0.5186</td>
+                <td>0.020105</td>
+                <td>-0.6417</td>
+                <td>+51.0288</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td><strong>YESBANK</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #c0392b; font-weight: bold; cursor: help; border-bottom: 2px dashed #c0392b; white-space: nowrap;'>📉 Double Top<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #c0392b; max-width: 400px;">
+                <div style="font-weight: bold; color: #c0392b; margin-bottom: 8px; font-size: 13px;">
+                    📉 Double Top (15m)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 77% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 15m
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price rejects resistance twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #e74c3c; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #e74c3c;">│  ◡       ◡  │</span><br/><span style="color: #e74c3c;">│ ╱ ╲     ╱ ╲ │</span><br/><span style="color: #3498db;">│╱───╲───╱───╲│</span><br/><span style="color: #e74c3c; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #c0392b;'>Conf: 77%</small></td>
+                <td><span class="badge trend-bear">Bear</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-put-diagonal tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Long longer-dated put, sell shorter put. Low risk, good for declining markets.">Put Diagonal<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Long longer-dated put, sell shorter put. Low risk, good for declining markets.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(55.885152427628626, 80%, 92%);" data-score="-0.0686"><span style="color: #c0392b; font-weight: bold;">↑</span> -0.0686<span class="tooltiptext">5m: +0.147
+15m: -0.086
+1h: -0.140</span></td>
+                <td data-conf="83.0">83</td>
+                <td><span class="risk-low tooltip" title="Normal zone: RSI 70 (approaching overbought)">LOW<span class="tooltiptext" style="width: 280px;">Normal zone: RSI 70 (approaching overbought)</span></span></td>
+                <td data-price="21.82">21.82</td>
+                <td data-sl="21.26" style="font-weight: bold; color: #e74c3c;">21.26</td>
+                <td data-target="23.50" style="font-weight: bold; color: #27ae60;">23.50</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="916" style="font-weight: bold; color: #3498db;">916</td>
+                <td data-score="23.99" style="font-weight: bold; color: #27ae60;">23.99</td>
+                <td data-score="21.15" style="font-weight: bold; color: #c0392b;">21.15</td>
+                <td data-score="-0.55" style="color: #e74c3c; font-weight: bold;">-0.55%</td>
+                <td data-score="0.60" style="color: #27ae60; font-weight: bold;">+0.60%</td>
+                <td data-score="9.05" style="font-weight: bold; color: #e67e22;">9.05%</td>
+                <td data-score="3.17" style="font-weight: bold; color: #3498db;">3.17%</td>
+                <td>-1.0000</td>
+                <td>+0.1078</td>
+                <td>+0.2532</td>
+                <td>70.37</td>
+                <td>-0.0163</td>
+                <td>+0.1000</td>
+                <td>-0.0054</td>
+                <td>-0.4641</td>
+                <td>0.22</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2121</td>
+                <td>0.1568</td>
+                <td>3.9660</td>
+                <td>+1.0000</td>
+                <td>0.000209</td>
+                <td>-0.0033</td>
+                <td>+0.0003</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td><strong>FEDERALBNK</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #c0392b; font-weight: bold; cursor: help; border-bottom: 2px dashed #c0392b; white-space: nowrap;'>📉 Rising Wedge<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #c0392b; max-width: 400px;">
+                <div style="font-weight: bold; color: #c0392b; margin-bottom: 8px; font-size: 13px;">
+                    📉 Rising Wedge (1h)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 75% | <strong>Reliability:</strong> Medium-High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 1h
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Both highs and lows rising, but range expanding - typically breaks down
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #e74c3c; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #e74c3c;">│         ╱   │</span><br/><span style="color: #e74c3c;">│        ╱ ╲  │</span><br/><span style="color: #e74c3c;">│       ╱   ╲ │</span><br/><span style="color: #3498db;">│──────╱─────╲▼</span><br/><span style="color: #e74c3c; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #c0392b;'>Conf: 75%</small></td>
+                <td><span class="badge trend-bear">Bear</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-put-diagonal tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Long longer-dated put, sell shorter put. Low risk, good for declining markets.">Put Diagonal<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Long longer-dated put, sell shorter put. Low risk, good for declining markets.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(56.0000358812382, 80%, 92%);" data-score="-0.0667"><span style="color: #f39c12; font-weight: bold;">↔</span> -0.0667<span class="tooltiptext">5m: +0.085
+15m: -0.098
+1h: +0.025</span></td>
+                <td data-conf="70.0">70</td>
+                <td><span class="risk-low tooltip" title="Normal zone: RSI 72 (approaching overbought), BB approaching lower (-0.76)">LOW<span class="tooltiptext" style="width: 280px;">Normal zone: RSI 72 (approaching overbought), BB approaching lower (-0.76)</span></span></td>
+                <td data-price="273.20">273.20</td>
+                <td data-sl="266.93" style="font-weight: bold; color: #e74c3c;">266.93</td>
+                <td data-target="292.01" style="font-weight: bold; color: #27ae60;">292.01</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="73" style="font-weight: bold; color: #3498db;">73</td>
+                <td data-score="280.25" style="font-weight: bold; color: #27ae60;">280.25</td>
+                <td data-score="242.30" style="font-weight: bold; color: #c0392b;">242.30</td>
+                <td data-score="-0.47" style="color: #e74c3c; font-weight: bold;">-0.47%</td>
+                <td data-score="4.37" style="color: #27ae60; font-weight: bold;">+4.37%</td>
+                <td data-score="2.52" style="font-weight: bold; color: #e67e22;">2.52%</td>
+                <td data-score="12.75" style="font-weight: bold; color: #3498db;">12.75%</td>
+                <td>-1.0000</td>
+                <td>+0.1406</td>
+                <td>+0.2486</td>
+                <td>71.80</td>
+                <td>-0.0113</td>
+                <td>-0.2500</td>
+                <td>-0.0524</td>
+                <td>-0.7649</td>
+                <td>2.51</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2169</td>
+                <td>0.1558</td>
+                <td>3.9710</td>
+                <td>+0.4051</td>
+                <td>0.065753</td>
+                <td>-0.1811</td>
+                <td>+14.6643</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td><strong>IDFCFIRSTB</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #c0392b; font-weight: bold; cursor: help; border-bottom: 2px dashed #c0392b; white-space: nowrap;'>📉 Double Top<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #c0392b; max-width: 400px;">
+                <div style="font-weight: bold; color: #c0392b; margin-bottom: 8px; font-size: 13px;">
+                    📉 Double Top (1h)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 78% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 1h
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price rejects resistance twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #e74c3c; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #e74c3c;">│  ◡       ◡  │</span><br/><span style="color: #e74c3c;">│ ╱ ╲     ╱ ╲ │</span><br/><span style="color: #3498db;">│╱───╲───╱───╲│</span><br/><span style="color: #e74c3c; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #c0392b;'>Conf: 78%</small></td>
+                <td><span class="badge trend-bear">Bear</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-put-diagonal tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Long longer-dated put, sell shorter put. Low risk, good for declining markets.">Put Diagonal<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Long longer-dated put, sell shorter put. Low risk, good for declining markets.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(56.1795287434298, 80%, 92%);" data-score="-0.0637"><span style="color: #c0392b; font-weight: bold;">↑</span> -0.0637<span class="tooltiptext">5m: +0.190
+15m: -0.070
+1h: -0.234</span></td>
+                <td data-conf="90.0">90</td>
+                <td><span class="risk-medium tooltip" title="Alert OVERBOUGHT: RSI 81 (>75), BB approaching lower (-0.76)">MEDIUM<span class="tooltiptext" style="width: 280px;">Alert OVERBOUGHT: RSI 81 (>75), BB approaching lower (-0.76)</span></span></td>
+                <td data-price="81.43">81.43</td>
+                <td data-sl="79.72" style="font-weight: bold; color: #e74c3c;">79.72</td>
+                <td data-target="86.56" style="font-weight: bold; color: #27ae60;">86.56</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="245" style="font-weight: bold; color: #3498db;">245</td>
+                <td data-score="87.00" style="font-weight: bold; color: #27ae60;">87.00</td>
+                <td data-score="79.62" style="font-weight: bold; color: #c0392b;">79.62</td>
+                <td data-score="-0.63" style="color: #e74c3c; font-weight: bold;">-0.63%</td>
+                <td data-score="-3.34" style="color: #e74c3c; font-weight: bold;">-3.34%</td>
+                <td data-score="6.40" style="font-weight: bold; color: #e67e22;">6.40%</td>
+                <td data-score="2.27" style="font-weight: bold; color: #3498db;">2.27%</td>
+                <td>-1.0000</td>
+                <td>+0.2090</td>
+                <td>+0.2412</td>
+                <td>81.11</td>
+                <td>-0.0155</td>
+                <td>+0.1000</td>
+                <td>-0.0308</td>
+                <td>-0.7632</td>
+                <td>0.68</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2126</td>
+                <td>0.1567</td>
+                <td>3.9665</td>
+                <td>+0.8107</td>
+                <td>0.153241</td>
+                <td>-0.0448</td>
+                <td>+3.0537</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td><strong>PNB</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #c0392b; font-weight: bold; cursor: help; border-bottom: 2px dashed #c0392b; white-space: nowrap;'>📉 Double Top<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #c0392b; max-width: 400px;">
+                <div style="font-weight: bold; color: #c0392b; margin-bottom: 8px; font-size: 13px;">
+                    📉 Double Top (15m)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 73% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 15m
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price rejects resistance twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #e74c3c; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #e74c3c;">│  ◡       ◡  │</span><br/><span style="color: #e74c3c;">│ ╱ ╲     ╱ ╲ │</span><br/><span style="color: #3498db;">│╱───╲───╱───╲│</span><br/><span style="color: #e74c3c; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #c0392b;'>Conf: 73%</small></td>
+                <td><span class="badge trend-neutral">Neutral</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-covered-call tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Own stock, sell call. Generate income. Capped upside. Neutral/slightly bullish.">Covered Call<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Own stock, sell call. Generate income. Capped upside. Neutral/slightly bullish.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(57.20411374681618, 80%, 92%);" data-score="-0.0466"><span style="color: #c0392b; font-weight: bold;">↑</span> -0.0466<span class="tooltiptext">5m: +0.080
+15m: +0.048
+1h: -0.105</span></td>
+                <td data-conf="70.0">70</td>
+                <td><span class="risk-low tooltip" title="No extreme indicators detected">LOW<span class="tooltiptext" style="width: 280px;">No extreme indicators detected</span></span></td>
+                <td data-price="124.34">124.34</td>
+                <td data-sl="121.59" style="font-weight: bold; color: #e74c3c;">121.59</td>
+                <td data-target="132.60" style="font-weight: bold; color: #27ae60;">132.60</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="160" style="font-weight: bold; color: #3498db;">160</td>
+                <td data-score="135.15" style="font-weight: bold; color: #27ae60;">135.15</td>
+                <td data-score="116.60" style="font-weight: bold; color: #c0392b;">116.60</td>
+                <td data-score="-0.98" style="color: #e74c3c; font-weight: bold;">-0.98%</td>
+                <td data-score="2.82" style="color: #27ae60; font-weight: bold;">+2.82%</td>
+                <td data-score="8.00" style="font-weight: bold; color: #e67e22;">8.00%</td>
+                <td data-score="6.64" style="font-weight: bold; color: #3498db;">6.64%</td>
+                <td>-1.0000</td>
+                <td>+0.0681</td>
+                <td>+0.2382</td>
+                <td>69.26</td>
+                <td>-0.0367</td>
+                <td>-0.2500</td>
+                <td>-0.0601</td>
+                <td>-0.3445</td>
+                <td>1.10</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2141</td>
+                <td>0.1564</td>
+                <td>3.9680</td>
+                <td>+0.4284</td>
+                <td>0.145743</td>
+                <td>-0.0841</td>
+                <td>+6.7585</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td><strong>ICICIBANK</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #27ae60; font-weight: bold; cursor: help; border-bottom: 2px dashed #27ae60; white-space: nowrap;'>📈 Double Bottom<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #27ae60; max-width: 400px;">
+                <div style="font-weight: bold; color: #27ae60; margin-bottom: 8px; font-size: 13px;">
+                    📈 Double Bottom (1h)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 89% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 15m, 1h
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price bounces from support twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #27ae60; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #3498db;">│───╱───╱───╱─│</span><br/><span style="color: #27ae60;">│ ╲ ╱     ╲ ╱ │</span><br/><span style="color: #27ae60;">│  ⌒       ⌒  │</span><br/><span style="color: #27ae60; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #27ae60;'>Conf: 89%</small></td>
+                <td><span class="badge trend-neutral">Neutral</span></td>
+                <td><span class="align-strong tooltip-trigger" title="All 3 timeframes (5m, 15m, 1h) aligned - Strongest signal. High probability. +30% R:R boost.">✓✓✓<span class="tooltiptext" style="width: 300px; bottom: 125%;">All 3 timeframes (5m, 15m, 1h) aligned - Strongest signal. High probability. +30% R:R boost.</span></span></td>
+                <td><span class="badge badge-covered-call tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Own stock, sell call. Generate income. Capped upside. Neutral/slightly bullish.">Covered Call<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Own stock, sell call. Generate income. Capped upside. Neutral/slightly bullish.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(58.440479028332646, 80%, 92%);" data-score="-0.0260"><span style="color: #95a5a6; font-weight: bold;">→</span> -0.0260<span class="tooltiptext">5m: -0.176
+15m: -0.129
+1h: -0.095</span></td>
+                <td data-conf="80.0">80</td>
+                <td><span class="risk-low tooltip" title="No extreme indicators detected">LOW<span class="tooltiptext" style="width: 280px;">No extreme indicators detected</span></span></td>
+                <td data-price="1347.40">1347.40</td>
+                <td data-sl="1324.46" style="font-weight: bold; color: #e74c3c;">1324.46</td>
+                <td data-target="1416.23" style="font-weight: bold; color: #27ae60;">1416.23</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="14" style="font-weight: bold; color: #3498db;">14</td>
+                <td data-score="1443.90" style="font-weight: bold; color: #27ae60;">1443.90</td>
+                <td data-score="1336.00" style="font-weight: bold; color: #c0392b;">1336.00</td>
+                <td data-score="-2.78" style="color: #e74c3c; font-weight: bold;">-2.78%</td>
+                <td data-score="-0.91" style="color: #e74c3c; font-weight: bold;">-0.91%</td>
+                <td data-score="6.68" style="font-weight: bold; color: #e67e22;">6.68%</td>
+                <td data-score="0.85" style="font-weight: bold; color: #3498db;">0.85%</td>
+                <td>-1.0000</td>
+                <td>+0.0284</td>
+                <td>+0.0594</td>
+                <td>56.12</td>
+                <td>-0.0240</td>
+                <td>-0.2000</td>
+                <td>-0.5964</td>
+                <td>-0.5024</td>
+                <td>9.18</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2216</td>
+                <td>0.1548</td>
+                <td>3.9759</td>
+                <td>+0.5586</td>
+                <td>0.013660</td>
+                <td>-0.9358</td>
+                <td>+73.6347</td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td><strong>AUBANK</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #c0392b; font-weight: bold; cursor: help; border-bottom: 2px dashed #c0392b; white-space: nowrap;'>📉 Rising Wedge<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #c0392b; max-width: 400px;">
+                <div style="font-weight: bold; color: #c0392b; margin-bottom: 8px; font-size: 13px;">
+                    📉 Rising Wedge (1h)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 75% | <strong>Reliability:</strong> Medium-High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 1h
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Both highs and lows rising, but range expanding - typically breaks down
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #e74c3c; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #e74c3c;">│         ╱   │</span><br/><span style="color: #e74c3c;">│        ╱ ╲  │</span><br/><span style="color: #e74c3c;">│       ╱   ╲ │</span><br/><span style="color: #3498db;">│──────╱─────╲▼</span><br/><span style="color: #e74c3c; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #c0392b;'>Conf: 75%</small></td>
+                <td><span class="badge trend-neutral">Neutral</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-covered-call tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Own stock, sell call. Generate income. Capped upside. Neutral/slightly bullish.">Covered Call<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Own stock, sell call. Generate income. Capped upside. Neutral/slightly bullish.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(58.480715127643684, 80%, 92%);" data-score="-0.0253"><span style="color: #f39c12; font-weight: bold;">↔</span> -0.0253<span class="tooltiptext">5m: +0.178
+15m: -0.102
+1h: +0.004</span></td>
+                <td data-conf="100.0">100</td>
+                <td><span class="risk-medium tooltip" title="Alert OVERSOLD: RSI 73 (approaching overbought), BB lower band (-1.00)">MEDIUM<span class="tooltiptext" style="width: 280px;">Alert OVERSOLD: RSI 73 (approaching overbought), BB lower band (-1.00)</span></span></td>
+                <td data-price="999.55">999.55</td>
+                <td data-sl="973.41" style="font-weight: bold; color: #e74c3c;">973.41</td>
+                <td data-target="1077.98" style="font-weight: bold; color: #27ae60;">1077.98</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="20" style="font-weight: bold; color: #3498db;">20</td>
+                <td data-score="1029.95" style="font-weight: bold; color: #27ae60;">1029.95</td>
+                <td data-score="959.65" style="font-weight: bold; color: #c0392b;">959.65</td>
+                <td data-score="-0.61" style="color: #e74c3c; font-weight: bold;">-0.61%</td>
+                <td data-score="2.62" style="color: #27ae60; font-weight: bold;">+2.62%</td>
+                <td data-score="2.95" style="font-weight: bold; color: #e67e22;">2.95%</td>
+                <td data-score="4.16" style="font-weight: bold; color: #3498db;">4.16%</td>
+                <td>-1.0000</td>
+                <td>+0.4287</td>
+                <td>+0.2825</td>
+                <td>72.67</td>
+                <td>-0.0186</td>
+                <td>+0.1000</td>
+                <td>-0.4328</td>
+                <td>-1.0000</td>
+                <td>10.46</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2053</td>
+                <td>0.1582</td>
+                <td>3.9588</td>
+                <td>+0.5171</td>
+                <td>0.018197</td>
+                <td>-0.7071</td>
+                <td>+55.1718</td>
+            </tr>
+            <tr>
+                <td>8</td>
+                <td><strong>KOTAKBANK</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #27ae60; font-weight: bold; cursor: help; border-bottom: 2px dashed #27ae60; white-space: nowrap;'>📈 Double Bottom<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #27ae60; max-width: 400px;">
+                <div style="font-weight: bold; color: #27ae60; margin-bottom: 8px; font-size: 13px;">
+                    📈 Double Bottom (5m)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 90% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 5m, 15m
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price bounces from support twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #27ae60; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #3498db;">│───╱───╱───╱─│</span><br/><span style="color: #27ae60;">│ ╲ ╱     ╲ ╱ │</span><br/><span style="color: #27ae60;">│  ⌒       ⌒  │</span><br/><span style="color: #27ae60; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #27ae60;'>Conf: 90%</small></td>
+                <td><span class="badge trend-neutral">Neutral</span></td>
+                <td><span class="align-strong tooltip-trigger" title="All 3 timeframes (5m, 15m, 1h) aligned - Strongest signal. High probability. +30% R:R boost.">✓✓✓<span class="tooltiptext" style="width: 300px; bottom: 125%;">All 3 timeframes (5m, 15m, 1h) aligned - Strongest signal. High probability. +30% R:R boost.</span></span></td>
+                <td><span class="badge badge-covered-call tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Own stock, sell call. Generate income. Capped upside. Neutral/slightly bullish.">Covered Call<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Own stock, sell call. Generate income. Capped upside. Neutral/slightly bullish.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(60.51065529706582, 80%, 92%);" data-score="+0.0085"><span style="color: #c0392b; font-weight: bold;">↑</span> +0.0085<span class="tooltiptext">5m: -0.057
+15m: -0.131
+1h: -0.226</span></td>
+                <td data-conf="57.0">57</td>
+                <td><span class="risk-low tooltip" title="No extreme indicators detected">LOW<span class="tooltiptext" style="width: 280px;">No extreme indicators detected</span></span></td>
+                <td data-price="419.70">419.70</td>
+                <td data-sl="412.71" style="font-weight: bold; color: #e74c3c;">412.71</td>
+                <td data-target="440.66" style="font-weight: bold; color: #27ae60;">440.66</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="47" style="font-weight: bold; color: #3498db;">47</td>
+                <td data-score="445.60" style="font-weight: bold; color: #27ae60;">445.60</td>
+                <td data-score="415.00" style="font-weight: bold; color: #c0392b;">415.00</td>
+                <td data-score="-1.92" style="color: #e74c3c; font-weight: bold;">-1.92%</td>
+                <td data-score="-3.01" style="color: #e74c3c; font-weight: bold;">-3.01%</td>
+                <td data-score="5.81" style="font-weight: bold; color: #e67e22;">5.81%</td>
+                <td data-score="1.13" style="font-weight: bold; color: #3498db;">1.13%</td>
+                <td>-1.0000</td>
+                <td>+0.0839</td>
+                <td>+0.1196</td>
+                <td>46.51</td>
+                <td>-0.0551</td>
+                <td>-0.2000</td>
+                <td>-0.2889</td>
+                <td>+0.0824</td>
+                <td>2.79</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2187</td>
+                <td>0.1554</td>
+                <td>3.9728</td>
+                <td>+0.5124</td>
+                <td>0.044135</td>
+                <td>-0.2921</td>
+                <td>+23.1762</td>
+            </tr>
+            <tr>
+                <td>9</td>
+                <td><strong>BANKBARODA</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #27ae60; font-weight: bold; cursor: help; border-bottom: 2px dashed #27ae60; white-space: nowrap;'>📈 Double Bottom<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #27ae60; max-width: 400px;">
+                <div style="font-weight: bold; color: #27ae60; margin-bottom: 8px; font-size: 13px;">
+                    📈 Double Bottom (15m)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 84% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 15m
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price bounces from support twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #27ae60; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #3498db;">│───╱───╱───╱─│</span><br/><span style="color: #27ae60;">│ ╲ ╱     ╲ ╱ │</span><br/><span style="color: #27ae60;">│  ⌒       ⌒  │</span><br/><span style="color: #27ae60; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #27ae60;'>Conf: 84%</small></td>
+                <td><span class="badge trend-bull">Bull</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-call-diagonal tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Long longer-dated call, sell shorter call. Low risk, good for trending markets.">Call Diagonal<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Long longer-dated call, sell shorter call. Low risk, good for trending markets.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(63.31938393323546, 80%, 92%);" data-score="+0.0553"><span style="color: #f39c12; font-weight: bold;">↔</span> +0.0553<span class="tooltiptext">5m: -0.065
+15m: +0.005
+1h: -0.103</span></td>
+                <td data-conf="70.0">70</td>
+                <td><span class="risk-low tooltip" title="No extreme indicators detected">LOW<span class="tooltiptext" style="width: 280px;">No extreme indicators detected</span></span></td>
+                <td data-price="299.00">299.00</td>
+                <td data-sl="292.95" style="font-weight: bold; color: #e74c3c;">292.95</td>
+                <td data-target="317.16" style="font-weight: bold; color: #27ae60;">317.16</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="66" style="font-weight: bold; color: #3498db;">66</td>
+                <td data-score="313.35" style="font-weight: bold; color: #27ae60;">313.35</td>
+                <td data-score="285.50" style="font-weight: bold; color: #c0392b;">285.50</td>
+                <td data-score="-1.37" style="color: #e74c3c; font-weight: bold;">-1.37%</td>
+                <td data-score="2.91" style="color: #27ae60; font-weight: bold;">+2.91%</td>
+                <td data-score="4.58" style="font-weight: bold; color: #e67e22;">4.58%</td>
+                <td data-score="4.73" style="font-weight: bold; color: #3498db;">4.73%</td>
+                <td>-1.0000</td>
+                <td>+0.0057</td>
+                <td>+0.3098</td>
+                <td>55.86</td>
+                <td>-0.0658</td>
+                <td>-0.2000</td>
+                <td>-0.2158</td>
+                <td>+0.0441</td>
+                <td>2.42</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2121</td>
+                <td>0.1568</td>
+                <td>3.9660</td>
+                <td>+0.4642</td>
+                <td>0.061194</td>
+                <td>-0.2067</td>
+                <td>+16.4524</td>
+            </tr>
+            <tr>
+                <td>10</td>
+                <td><strong>AXISBANK</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #27ae60; font-weight: bold; cursor: help; border-bottom: 2px dashed #27ae60; white-space: nowrap;'>📈 Double Bottom<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #27ae60; max-width: 400px;">
+                <div style="font-weight: bold; color: #27ae60; margin-bottom: 8px; font-size: 13px;">
+                    📈 Double Bottom (5m)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 89% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 5m, 15m
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price bounces from support twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #27ae60; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #3498db;">│───╱───╱───╱─│</span><br/><span style="color: #27ae60;">│ ╲ ╱     ╲ ╱ │</span><br/><span style="color: #27ae60;">│  ⌒       ⌒  │</span><br/><span style="color: #27ae60; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #27ae60;'>Conf: 89%</small></td>
+                <td><span class="badge trend-bull">Bull</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-call-diagonal tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Long longer-dated call, sell shorter call. Low risk, good for trending markets.">Call Diagonal<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Long longer-dated call, sell shorter call. Low risk, good for trending markets.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(64.66922176815702, 80%, 92%);" data-score="+0.0778"><span style="color: #f39c12; font-weight: bold;">↔</span> +0.0778<span class="tooltiptext">5m: +0.073
+15m: -0.184
+1h: -0.114</span></td>
+                <td data-conf="100.0">100</td>
+                <td><span class="risk-medium tooltip" title="Alert OVERSOLD: MACD strong bear (-0.89)">MEDIUM<span class="tooltiptext" style="width: 280px;">Alert OVERSOLD: MACD strong bear (-0.89)</span></span></td>
+                <td data-price="1279.30">1279.30</td>
+                <td data-sl="1259.09" style="font-weight: bold; color: #e74c3c;">1259.09</td>
+                <td data-target="1339.92" style="font-weight: bold; color: #27ae60;">1339.92</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="15" style="font-weight: bold; color: #3498db;">15</td>
+                <td data-score="1327.00" style="font-weight: bold; color: #27ae60;">1327.00</td>
+                <td data-score="1219.00" style="font-weight: bold; color: #c0392b;">1219.00</td>
+                <td data-score="-2.01" style="color: #e74c3c; font-weight: bold;">-2.01%</td>
+                <td data-score="4.32" style="color: #27ae60; font-weight: bold;">+4.32%</td>
+                <td data-score="3.59" style="font-weight: bold; color: #e67e22;">3.59%</td>
+                <td data-score="4.95" style="font-weight: bold; color: #3498db;">4.95%</td>
+                <td>-1.0000</td>
+                <td>+0.1151</td>
+                <td>+0.1925</td>
+                <td>51.77</td>
+                <td>-0.0542</td>
+                <td>+0.6007</td>
+                <td>-0.8903</td>
+                <td>-0.0365</td>
+                <td>8.08</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2193</td>
+                <td>0.1553</td>
+                <td>3.9734</td>
+                <td>+0.5155</td>
+                <td>0.014487</td>
+                <td>-0.8900</td>
+                <td>+70.6249</td>
+            </tr>
+            <tr>
+                <td>11</td>
+                <td><strong>CANBK</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #27ae60; font-weight: bold; cursor: help; border-bottom: 2px dashed #27ae60; white-space: nowrap;'>📈 Double Bottom<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #27ae60; max-width: 400px;">
+                <div style="font-weight: bold; color: #27ae60; margin-bottom: 8px; font-size: 13px;">
+                    📈 Double Bottom (5m)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 84% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 5m
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price bounces from support twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #27ae60; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #3498db;">│───╱───╱───╱─│</span><br/><span style="color: #27ae60;">│ ╲ ╱     ╲ ╱ │</span><br/><span style="color: #27ae60;">│  ⌒       ⌒  │</span><br/><span style="color: #27ae60; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #27ae60;'>Conf: 84%</small></td>
+                <td><span class="badge trend-bull">Bull</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-call-calendar tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Sell near-term call, buy longer-term call. Theta positive, benefits from IV drop.">Call Calendar<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Sell near-term call, buy longer-term call. Theta positive, benefits from IV drop.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(64.71133142150826, 80%, 92%);" data-score="+0.0785"><span style="color: #f39c12; font-weight: bold;">↔</span> +0.0785<span class="tooltiptext">5m: -0.041
+15m: +0.006
+1h: -0.048</span></td>
+                <td data-conf="57.0">57</td>
+                <td><span class="risk-low tooltip" title="No extreme indicators detected">LOW<span class="tooltiptext" style="width: 280px;">No extreme indicators detected</span></span></td>
+                <td data-price="151.35">151.35</td>
+                <td data-sl="147.94" style="font-weight: bold; color: #e74c3c;">147.94</td>
+                <td data-target="161.58" style="font-weight: bold; color: #27ae60;">161.58</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="132" style="font-weight: bold; color: #3498db;">132</td>
+                <td data-score="159.10" style="font-weight: bold; color: #27ae60;">159.10</td>
+                <td data-score="146.96" style="font-weight: bold; color: #c0392b;">146.96</td>
+                <td data-score="-1.66" style="color: #e74c3c; font-weight: bold;">-1.66%</td>
+                <td data-score="1.12" style="color: #27ae60; font-weight: bold;">+1.12%</td>
+                <td data-score="4.87" style="font-weight: bold; color: #e67e22;">4.87%</td>
+                <td data-score="2.99" style="font-weight: bold; color: #3498db;">2.99%</td>
+                <td>-1.0000</td>
+                <td>+0.0772</td>
+                <td>+0.2894</td>
+                <td>52.12</td>
+                <td>-0.0954</td>
+                <td>-0.2500</td>
+                <td>-0.1599</td>
+                <td>+0.2251</td>
+                <td>1.36</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2102</td>
+                <td>0.1572</td>
+                <td>3.9639</td>
+                <td>+0.6827</td>
+                <td>0.108141</td>
+                <td>-0.1005</td>
+                <td>+7.4687</td>
+            </tr>
+            <tr>
+                <td>12</td>
+                <td><strong>UNIONBANK</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #27ae60; font-weight: bold; cursor: help; border-bottom: 2px dashed #27ae60; white-space: nowrap;'>📈 Double Bottom<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #27ae60; max-width: 400px;">
+                <div style="font-weight: bold; color: #27ae60; margin-bottom: 8px; font-size: 13px;">
+                    📈 Double Bottom (15m)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 74% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 15m
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price bounces from support twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #27ae60; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #3498db;">│───╱───╱───╱─│</span><br/><span style="color: #27ae60;">│ ╲ ╱     ╲ ╱ │</span><br/><span style="color: #27ae60;">│  ⌒       ⌒  │</span><br/><span style="color: #27ae60; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #27ae60;'>Conf: 74%</small></td>
+                <td><span class="badge trend-bull">Bull</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-call-calendar tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Sell near-term call, buy longer-term call. Theta positive, benefits from IV drop.">Call Calendar<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Sell near-term call, buy longer-term call. Theta positive, benefits from IV drop.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(65.87425091393465, 80%, 92%);" data-score="+0.0979"><span style="color: #c0392b; font-weight: bold;">↑</span> +0.0979<span class="tooltiptext">5m: +0.094
+15m: -0.034
+1h: -0.110</span></td>
+                <td data-conf="57.0">57</td>
+                <td><span class="risk-low tooltip" title="No extreme indicators detected">LOW<span class="tooltiptext" style="width: 280px;">No extreme indicators detected</span></span></td>
+                <td data-price="173.44">173.44</td>
+                <td data-sl="168.78" style="font-weight: bold; color: #e74c3c;">168.78</td>
+                <td data-target="187.42" style="font-weight: bold; color: #27ae60;">187.42</td>
+                <td data-rr="3.00" style="font-weight: bold; color: #27ae60;">1:3.0</td>
+                <td data-pos="115" style="font-weight: bold; color: #3498db;">115</td>
+                <td data-score="182.90" style="font-weight: bold; color: #27ae60;">182.90</td>
+                <td data-score="148.12" style="font-weight: bold; color: #c0392b;">148.12</td>
+                <td data-score="-1.69" style="color: #e74c3c; font-weight: bold;">-1.69%</td>
+                <td data-score="15.04" style="color: #27ae60; font-weight: bold;">+15.04%</td>
+                <td data-score="5.17" style="font-weight: bold; color: #e67e22;">5.17%</td>
+                <td data-score="17.09" style="font-weight: bold; color: #3498db;">17.09%</td>
+                <td>-1.0000</td>
+                <td>+0.1369</td>
+                <td>+0.2499</td>
+                <td>62.22</td>
+                <td>-0.0688</td>
+                <td>-0.2500</td>
+                <td>-0.1443</td>
+                <td>+0.0558</td>
+                <td>1.86</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2070</td>
+                <td>0.1579</td>
+                <td>3.9607</td>
+                <td>+0.3647</td>
+                <td>0.099099</td>
+                <td>-0.1120</td>
+                <td>+9.0253</td>
+            </tr>
+            <tr>
+                <td>13</td>
+                <td><strong>SBIN</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #27ae60; font-weight: bold; cursor: help; border-bottom: 2px dashed #27ae60; white-space: nowrap;'>📈 Double Bottom<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #27ae60; max-width: 400px;">
+                <div style="font-weight: bold; color: #27ae60; margin-bottom: 8px; font-size: 13px;">
+                    📈 Double Bottom (15m)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 77% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 15m
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price bounces from support twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #27ae60; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #3498db;">│───╱───╱───╱─│</span><br/><span style="color: #27ae60;">│ ╲ ╱     ╲ ╱ │</span><br/><span style="color: #27ae60;">│  ⌒       ⌒  │</span><br/><span style="color: #27ae60; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #27ae60;'>Conf: 77%</small></td>
+                <td><span class="badge trend-bull">Bull</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-call-diagonal tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Long longer-dated call, sell shorter call. Low risk, good for trending markets.">Call Diagonal<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Long longer-dated call, sell shorter call. Low risk, good for trending markets.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(67.18627732897195, 80%, 92%);" data-score="+0.1198"><span style="color: #c0392b; font-weight: bold;">↑</span> +0.1198<span class="tooltiptext">5m: +0.117
+15m: -0.001
+1h: -0.136</span></td>
+                <td data-conf="83.0">83</td>
+                <td><span class="risk-low tooltip" title="No extreme indicators detected">LOW<span class="tooltiptext" style="width: 280px;">No extreme indicators detected</span></span></td>
+                <td data-price="1029.55">1029.55</td>
+                <td data-sl="1015.95" style="font-weight: bold; color: #e74c3c;">1015.95</td>
+                <td data-target="1057.73" style="font-weight: bold; color: #27ae60;">1057.73</td>
+                <td data-rr="2.07" style="font-weight: bold; color: #3498db;">1:2.1</td>
+                <td data-pos="19" style="font-weight: bold; color: #3498db;">19</td>
+                <td data-score="1052.00" style="font-weight: bold; color: #27ae60;">1052.00</td>
+                <td data-score="959.50" style="font-weight: bold; color: #c0392b;">959.50</td>
+                <td data-score="-0.88" style="color: #e74c3c; font-weight: bold;">-0.88%</td>
+                <td data-score="6.25" style="color: #27ae60; font-weight: bold;">+6.25%</td>
+                <td data-score="2.13" style="font-weight: bold; color: #e67e22;">2.13%</td>
+                <td data-score="7.30" style="font-weight: bold; color: #3498db;">7.30%</td>
+                <td>-1.0000</td>
+                <td>+0.0561</td>
+                <td>+0.0730</td>
+                <td>60.19</td>
+                <td>-0.0363</td>
+                <td>+0.1000</td>
+                <td>-0.4593</td>
+                <td>+0.0524</td>
+                <td>5.44</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>+0.2369</td>
+                <td>0.1543</td>
+                <td>3.9784</td>
+                <td>+0.5176</td>
+                <td>0.018113</td>
+                <td>-0.7125</td>
+                <td>+56.8248</td>
+            </tr>
+            <tr>
+                <td>14</td>
+                <td><strong>INDUSINDBK</strong></td>
+                <td style="background-color: #f0f0f0; color: #222; font-weight: bold;">Banking</td>
+                <td><span class='tooltip' style='color: #27ae60; font-weight: bold; cursor: help; border-bottom: 2px dashed #27ae60; white-space: nowrap;'>📈 Double Bottom<span class='tooltiptext' style='width: 300px; left: -140px; max-width: 90vw; white-space: normal;'><div style="background: #f8f9fa; padding: 12px; border-radius: 4px; border-left: 4px solid #27ae60; max-width: 400px;">
+                <div style="font-weight: bold; color: #27ae60; margin-bottom: 8px; font-size: 13px;">
+                    📈 Double Bottom (15m)
+                </div>
+                <div style="font-size: 11px; color: #2c3e50; margin-bottom: 6px;">
+                    <strong>Confidence:</strong> 78% | <strong>Reliability:</strong> High
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 6px;">
+                    <strong>Aligned TFs:</strong> 15m
+                </div>
+                <div style="font-size: 11px; color: #34495e; margin-bottom: 8px;">
+                    Price bounces from support twice at similar levels
+                </div>
+                <div style="background: white; padding: 10px; border-radius: 3px; font-family: monospace; font-size: 11px; line-height: 1.5; color: #2c3e50; border: 1px solid #ecf0f1; white-space: pre-wrap; word-break: break-word;">
+                    <span style="color: #27ae60; font-weight: bold;">╭─────────────╮</span><br/><span style="color: #3498db;">│───╱───╱───╱─│</span><br/><span style="color: #27ae60;">│ ╲ ╱     ╲ ╱ │</span><br/><span style="color: #27ae60;">│  ⌒       ⌒  │</span><br/><span style="color: #27ae60; font-weight: bold;">╰─────────────╯</span>
+                </div>
+            </div></span></span><br/><small style='color: #27ae60;'>Conf: 78%</small></td>
+                <td><span class="badge trend-bull">Bull</span></td>
+                <td><span class="align-medium tooltip-trigger" title="2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.">✓✓✗<span class="tooltiptext" style="width: 300px; bottom: 125%;">2 of 3 timeframes aligned - Good signal. Moderate probability. +10% R:R boost.</span></span></td>
+                <td><span class="badge badge-call-diagonal tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="Long longer-dated call, sell shorter call. Low risk, good for trending markets.">Call Diagonal<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">Long longer-dated call, sell shorter call. Low risk, good for trending markets.</span></span></td>
+                <td class="score tooltip" style="background-color: hsl(67.19905581147239, 80%, 92%);" data-score="+0.1200"><span style="color: #f39c12; font-weight: bold;">↔</span> +0.1200<span class="tooltiptext">5m: +0.188
+15m: -0.128
+1h: -0.134</span></td>
+                <td data-conf="90.0">90</td>
+                <td><span class="risk-low tooltip" title="No extreme indicators detected">LOW<span class="tooltiptext" style="width: 280px;">No extreme indicators detected</span></span></td>
+                <td data-price="909.00">909.00</td>
+                <td data-sl="887.36" style="font-weight: bold; color: #e74c3c;">887.36</td>
+                <td data-target="945.91" style="font-weight: bold; color: #27ae60;">945.91</td>
+                <td data-rr="1.71" style="font-weight: bold; color: #f39c12;">1:1.7</td>
+                <td data-pos="22" style="font-weight: bold; color: #3498db;">22</td>
+                <td data-score="961.90" style="font-weight: bold; color: #27ae60;">961.90</td>
+                <td data-score="833.25" style="font-weight: bold; color: #c0392b;">833.25</td>
+                <td data-score="-1.00" style="color: #e74c3c; font-weight: bold;">-1.00%</td>
+                <td data-score="7.19" style="color: #27ae60; font-weight: bold;">+7.19%</td>
+                <td data-score="5.50" style="font-weight: bold; color: #e67e22;">5.50%</td>
+                <td data-score="9.09" style="font-weight: bold; color: #3498db;">9.09%</td>
+                <td>-1.0000</td>
+                <td>+0.2717</td>
+                <td>+0.2844</td>
+                <td>64.23</td>
+                <td>-0.0500</td>
+                <td>+0.1000</td>
+                <td>-0.5531</td>
+                <td>-0.1826</td>
+                <td>8.66</td>
+                <td><span class="level-support">0.00</span></td>
+                <td><span class="level-resistance">0.00</span></td>
+                <td>-0.2099</td>
+                <td>0.1573</td>
+                <td>3.9637</td>
+                <td>+0.5053</td>
+                <td>0.020149</td>
+                <td>-0.6383</td>
+                <td>+50.2156</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+    
+    <!-- SIGNAL INTELLIGENCE DASHBOARD -->
+    <div class="dashboard">
+        <h3>Signal Intelligence</h3>
+        <p class="info" style="color: #718096; font-size: 13px; margin: 8px 0;">
+            <strong>📊 Understanding Your Signals:</strong> 
+            The 3-Pillar system breaks confidence into: Signal Agreement (do indicators align?), Momentum (EMA/RSI conviction), Volume (does volume support the move?). 
+            Early signals show when institutions enter before retail. Timeframe alignment confirms trending moves.
+        </p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin: 16px 0;"><div style="background: white; border-radius: 10px; padding: 14px; border-left: 5px solid #95a5a6; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">➡️ AUBANK</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #95a5a6;">-0.025</div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="color: #4a5568;">🎯 <strong>Confidence:</strong></span>
+                        <span style="font-weight: 600; color: #667eea;">100%</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 11px; margin-top: 8px;">
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Signal Agree</div>
+                            <div style="font-weight: 700; color: #667eea; font-size: 13px;">3/6</div>
+                        </div>
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Momentum</div>
+                            <div style="font-weight: 700; color: #f39c12; font-size: 13px;">0.11</div>
+                        </div>
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Volume</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 13px;">✗</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; margin-bottom: 10px;">
+                    <div style="background: #f0f4ff; padding: 8px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 4px;">⏱️ Timeframe Align</div>
+                        <div style="font-weight: 700; color: #2d3748;">2/3 TF</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">5m:+0.18 15m:-0.10 1h:+0.00</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 8px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 4px;">⚡ Early Signals</div>
+                        <div style="font-weight: 700; color: #2d3748;">0/3</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">Vol:0.00 VWAP:0.00 OR:0.00</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 11px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+                    <span style="color: #4a5568;">RSI: <span style="font-weight: 600; color: #ff6a00;">73</span> (Overbought)</span>
+                    <span style="color: #4a5568;">Vol: <span style="font-weight: 600; color: #38ef7d;">Normal</span></span>
+                </div>
+            </div><div style="background: white; border-radius: 10px; padding: 14px; border-left: 5px solid #11998e; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">📈 AXISBANK</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #11998e;">+0.078</div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="color: #4a5568;">🎯 <strong>Confidence:</strong></span>
+                        <span style="font-weight: 600; color: #667eea;">100%</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 11px; margin-top: 8px;">
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Signal Agree</div>
+                            <div style="font-weight: 700; color: #667eea; font-size: 13px;">3/6</div>
+                        </div>
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Momentum</div>
+                            <div style="font-weight: 700; color: #f39c12; font-size: 13px;">0.15</div>
+                        </div>
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Volume</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 13px;">✓</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; margin-bottom: 10px;">
+                    <div style="background: #f0f4ff; padding: 8px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 4px;">⏱️ Timeframe Align</div>
+                        <div style="font-weight: 700; color: #2d3748;">2/3 TF</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">5m:+0.07 15m:-0.18 1h:-0.11</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 8px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 4px;">⚡ Early Signals</div>
+                        <div style="font-weight: 700; color: #2d3748;">0/3</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">Vol:0.00 VWAP:0.00 OR:0.00</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 11px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+                    <span style="color: #4a5568;">RSI: <span style="font-weight: 600; color: #95a5a6;">52</span> (Neutral)</span>
+                    <span style="color: #4a5568;">Vol: <span style="font-weight: 600; color: #38ef7d;">Strong</span></span>
+                </div>
+            </div><div style="background: white; border-radius: 10px; padding: 14px; border-left: 5px solid #ff6a00; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">📉 IDFCFIRSTB</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #ff6a00;">-0.064</div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="color: #4a5568;">🎯 <strong>Confidence:</strong></span>
+                        <span style="font-weight: 600; color: #667eea;">90%</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 11px; margin-top: 8px;">
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Signal Agree</div>
+                            <div style="font-weight: 700; color: #667eea; font-size: 13px;">2/6</div>
+                        </div>
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Momentum</div>
+                            <div style="font-weight: 700; color: #f39c12; font-size: 13px;">0.27</div>
+                        </div>
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Volume</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 13px;">✗</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; margin-bottom: 10px;">
+                    <div style="background: #f0f4ff; padding: 8px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 4px;">⏱️ Timeframe Align</div>
+                        <div style="font-weight: 700; color: #2d3748;">2/3 TF</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">5m:+0.19 15m:-0.07 1h:-0.23</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 8px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 4px;">⚡ Early Signals</div>
+                        <div style="font-weight: 700; color: #2d3748;">0/3</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">Vol:0.00 VWAP:0.00 OR:0.00</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 11px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+                    <span style="color: #4a5568;">RSI: <span style="font-weight: 600; color: #ff6a00;">81</span> (Overbought)</span>
+                    <span style="color: #4a5568;">Vol: <span style="font-weight: 600; color: #38ef7d;">Normal</span></span>
+                </div>
+            </div><div style="background: white; border-radius: 10px; padding: 14px; border-left: 5px solid #11998e; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">📈 INDUSINDBK</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #11998e;">+0.120</div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="color: #4a5568;">🎯 <strong>Confidence:</strong></span>
+                        <span style="font-weight: 600; color: #667eea;">90%</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 11px; margin-top: 8px;">
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Signal Agree</div>
+                            <div style="font-weight: 700; color: #667eea; font-size: 13px;">2/6</div>
+                        </div>
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Momentum</div>
+                            <div style="font-weight: 700; color: #f39c12; font-size: 13px;">0.02</div>
+                        </div>
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Volume</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 13px;">✗</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; margin-bottom: 10px;">
+                    <div style="background: #f0f4ff; padding: 8px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 4px;">⏱️ Timeframe Align</div>
+                        <div style="font-weight: 700; color: #2d3748;">2/3 TF</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">5m:+0.19 15m:-0.13 1h:-0.13</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 8px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 4px;">⚡ Early Signals</div>
+                        <div style="font-weight: 700; color: #2d3748;">0/3</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">Vol:0.00 VWAP:0.00 OR:0.00</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 11px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+                    <span style="color: #4a5568;">RSI: <span style="font-weight: 600; color: #f6ad55;">64</span> (Strong)</span>
+                    <span style="color: #4a5568;">Vol: <span style="font-weight: 600; color: #38ef7d;">Normal</span></span>
+                </div>
+            </div><div style="background: white; border-radius: 10px; padding: 14px; border-left: 5px solid #ff6a00; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">📉 YESBANK</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #ff6a00;">-0.069</div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="color: #4a5568;">🎯 <strong>Confidence:</strong></span>
+                        <span style="font-weight: 600; color: #667eea;">83%</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 11px; margin-top: 8px;">
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Signal Agree</div>
+                            <div style="font-weight: 700; color: #667eea; font-size: 13px;">2/6</div>
+                        </div>
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Momentum</div>
+                            <div style="font-weight: 700; color: #f39c12; font-size: 13px;">0.25</div>
+                        </div>
+                        <div style="background: white; padding: 6px; border-radius: 4px; text-align: center;">
+                            <div style="color: #718096; font-size: 10px;">Volume</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 13px;">✗</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; margin-bottom: 10px;">
+                    <div style="background: #f0f4ff; padding: 8px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 4px;">⏱️ Timeframe Align</div>
+                        <div style="font-weight: 700; color: #2d3748;">2/3 TF</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">5m:+0.15 15m:-0.09 1h:-0.14</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 8px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 4px;">⚡ Early Signals</div>
+                        <div style="font-weight: 700; color: #2d3748;">0/3</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">Vol:0.00 VWAP:0.00 OR:0.00</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 11px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+                    <span style="color: #4a5568;">RSI: <span style="font-weight: 600; color: #ff6a00;">70</span> (Overbought)</span>
+                    <span style="color: #4a5568;">Vol: <span style="font-weight: 600; color: #38ef7d;">Normal</span></span>
+                </div>
+            </div></div></div>
+    <!-- OPTION INTELLIGENCE DASHBOARD -->
+    <div class="dashboard">
+        <h3>Option Intelligence</h3>
+        <p class="info" style="color: #718096; font-size: 13px; margin: 8px 0;">
+            <strong>💡 Smart Option Strategy:</strong> 
+            This section matches option strategies to Greeks & IV levels. High IV favors selling premium (Put Spreads, Call Spreads). Low IV favors buying directional (Long Calls/Puts). 
+            Theta positive = time decay works for you (income). Delta shows directional sensitivity. Spread% < 3% = good liquidity.
+        </p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 14px; margin: 16px 0;"><div style="background: white; border-radius: 10px; padding: 16px; border-left: 5px solid #11998e; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">📈 INDUSINDBK</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #11998e;">+0.120</div>
+                </div>
+                
+                <!-- IV & Spread Info -->
+                <div style="background: linear-gradient(135deg, #4299e122 0%, transparent 100%); padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #4299e1;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+                        <div>
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">IMPLIED VOLATILITY</div>
+                            <div style="font-weight: 700; color: #4299e1; font-size: 14px; margin-bottom: 2px;">15.7%</div>
+                            <div style="color: #4299e1; font-weight: 600; font-size: 11px;">LOW (Buy Options)</div>
+                            <div style="color: #718096; font-size: 10px; margin-top: 4px; line-height: 1.4;">Buy calls/puts - cheap protection or direction play</div>
+                        </div>
+                        <div style="border-left: 1px solid #e2e8f0; padding-left: 12px;">
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">BID-ASK SPREAD</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 14px; margin-bottom: 2px;">3.96%</div>
+                            <div style="color: #38ef7d; font-weight: 600; font-size: 11px;">Good</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recommended Strategy -->
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #11998e;">
+                    <div style="font-weight: 700; color: #11998e; font-size: 13px; margin-bottom: 6px; text-transform: uppercase;">📊 ATM Call</div>
+                    <div style="color: #4a5568; font-size: 12px; line-height: 1.5;">Balanced entry - ATM call for moderate bullish exposure.</div>
+                </div>
+                
+                <!-- Greeks Breakdown -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; margin-bottom: 12px;">
+                    <div style="background: #f0f4ff; padding: 10px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 3px;">Δ DELTA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+0.51</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">ATM (directional exposure: 51%)</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 3px;">Γ GAMMA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">0.0201</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">Low sensitivity</div>
+                    </div>
+                    <div style="background: #f0fff4; padding: 10px; border-radius: 4px;">
+                        <div style="color: #38ef7d; font-weight: 600; margin-bottom: 3px;">Θ THETA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">-0.6383</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">$0.002/day ✗ Against us (Buy)</div>
+                    </div>
+                    <div style="background: #fef4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ed8936; font-weight: 600; margin-bottom: 3px;">ν VEGA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+50.2156</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">per 1% IV change</div>
+                    </div>
+                </div>
+                
+                <!-- Strike Selection Guide -->
+                <div style="background: #f0f4ff; padding: 10px; border-radius: 6px; font-size: 11px; border-left: 2px solid #667eea;">
+                    <div style="font-weight: 600; color: #667eea; margin-bottom: 6px;">📍 STRIKE SELECTION GUIDE</div>
+                    <div style="color: #2d3748; line-height: 1.6;">
+                        <div>• <strong>ATM:</strong> ₹909 (balanced, mid gamma)</div>
+                        <div>• <strong>OTM Call:</strong> ₹1009 (bullish, low delta)</div>
+                        <div>• <strong>OTM Put:</strong> ₹809 (bearish, low delta)</div>
+                    </div>
+                </div>
+            </div><div style="background: white; border-radius: 10px; padding: 16px; border-left: 5px solid #11998e; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">📈 SBIN</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #11998e;">+0.120</div>
+                </div>
+                
+                <!-- IV & Spread Info -->
+                <div style="background: linear-gradient(135deg, #4299e122 0%, transparent 100%); padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #4299e1;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+                        <div>
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">IMPLIED VOLATILITY</div>
+                            <div style="font-weight: 700; color: #4299e1; font-size: 14px; margin-bottom: 2px;">15.4%</div>
+                            <div style="color: #4299e1; font-weight: 600; font-size: 11px;">LOW (Buy Options)</div>
+                            <div style="color: #718096; font-size: 10px; margin-top: 4px; line-height: 1.4;">Buy calls/puts - cheap protection or direction play</div>
+                        </div>
+                        <div style="border-left: 1px solid #e2e8f0; padding-left: 12px;">
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">BID-ASK SPREAD</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 14px; margin-bottom: 2px;">3.98%</div>
+                            <div style="color: #38ef7d; font-weight: 600; font-size: 11px;">Good</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recommended Strategy -->
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #11998e;">
+                    <div style="font-weight: 700; color: #11998e; font-size: 13px; margin-bottom: 6px; text-transform: uppercase;">📊 ATM Call</div>
+                    <div style="color: #4a5568; font-size: 12px; line-height: 1.5;">Balanced entry - ATM call for moderate bullish exposure.</div>
+                </div>
+                
+                <!-- Greeks Breakdown -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; margin-bottom: 12px;">
+                    <div style="background: #f0f4ff; padding: 10px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 3px;">Δ DELTA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+0.52</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">ATM (directional exposure: 52%)</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 3px;">Γ GAMMA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">0.0181</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">Low sensitivity</div>
+                    </div>
+                    <div style="background: #f0fff4; padding: 10px; border-radius: 4px;">
+                        <div style="color: #38ef7d; font-weight: 600; margin-bottom: 3px;">Θ THETA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">-0.7125</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">$0.002/day ✗ Against us (Buy)</div>
+                    </div>
+                    <div style="background: #fef4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ed8936; font-weight: 600; margin-bottom: 3px;">ν VEGA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+56.8248</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">per 1% IV change</div>
+                    </div>
+                </div>
+                
+                <!-- Strike Selection Guide -->
+                <div style="background: #f0f4ff; padding: 10px; border-radius: 6px; font-size: 11px; border-left: 2px solid #667eea;">
+                    <div style="font-weight: 600; color: #667eea; margin-bottom: 6px;">📍 STRIKE SELECTION GUIDE</div>
+                    <div style="color: #2d3748; line-height: 1.6;">
+                        <div>• <strong>ATM:</strong> ₹1029 (balanced, mid gamma)</div>
+                        <div>• <strong>OTM Call:</strong> ₹1129 (bullish, low delta)</div>
+                        <div>• <strong>OTM Put:</strong> ₹929 (bearish, low delta)</div>
+                    </div>
+                </div>
+            </div><div style="background: white; border-radius: 10px; padding: 16px; border-left: 5px solid #ff6a00; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">📉 HDFCBANK</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #ff6a00;">-0.100</div>
+                </div>
+                
+                <!-- IV & Spread Info -->
+                <div style="background: linear-gradient(135deg, #4299e122 0%, transparent 100%); padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #4299e1;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+                        <div>
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">IMPLIED VOLATILITY</div>
+                            <div style="font-weight: 700; color: #4299e1; font-size: 14px; margin-bottom: 2px;">15.5%</div>
+                            <div style="color: #4299e1; font-weight: 600; font-size: 11px;">LOW (Buy Options)</div>
+                            <div style="color: #718096; font-size: 10px; margin-top: 4px; line-height: 1.4;">Buy calls/puts - cheap protection or direction play</div>
+                        </div>
+                        <div style="border-left: 1px solid #e2e8f0; padding-left: 12px;">
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">BID-ASK SPREAD</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 14px; margin-bottom: 2px;">3.98%</div>
+                            <div style="color: #38ef7d; font-weight: 600; font-size: 11px;">Good</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recommended Strategy -->
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #e74c3c;">
+                    <div style="font-weight: 700; color: #e74c3c; font-size: 13px; margin-bottom: 6px; text-transform: uppercase;">📊 ATM Put</div>
+                    <div style="color: #4a5568; font-size: 12px; line-height: 1.5;">Balanced entry - ATM put for moderate bearish exposure.</div>
+                </div>
+                
+                <!-- Greeks Breakdown -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; margin-bottom: 12px;">
+                    <div style="background: #f0f4ff; padding: 10px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 3px;">Δ DELTA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+0.52</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">ATM (directional exposure: 52%)</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 3px;">Γ GAMMA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">0.0201</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">Low sensitivity</div>
+                    </div>
+                    <div style="background: #f0fff4; padding: 10px; border-radius: 4px;">
+                        <div style="color: #38ef7d; font-weight: 600; margin-bottom: 3px;">Θ THETA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">-0.6417</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">$0.002/day ✗ Against us (Buy)</div>
+                    </div>
+                    <div style="background: #fef4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ed8936; font-weight: 600; margin-bottom: 3px;">ν VEGA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+51.0288</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">per 1% IV change</div>
+                    </div>
+                </div>
+                
+                <!-- Strike Selection Guide -->
+                <div style="background: #f0f4ff; padding: 10px; border-radius: 6px; font-size: 11px; border-left: 2px solid #667eea;">
+                    <div style="font-weight: 600; color: #667eea; margin-bottom: 6px;">📍 STRIKE SELECTION GUIDE</div>
+                    <div style="color: #2d3748; line-height: 1.6;">
+                        <div>• <strong>ATM:</strong> ₹924 (balanced, mid gamma)</div>
+                        <div>• <strong>OTM Call:</strong> ₹1024 (bullish, low delta)</div>
+                        <div>• <strong>OTM Put:</strong> ₹824 (bearish, low delta)</div>
+                    </div>
+                </div>
+            </div><div style="background: white; border-radius: 10px; padding: 16px; border-left: 5px solid #11998e; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">📈 UNIONBANK</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #11998e;">+0.098</div>
+                </div>
+                
+                <!-- IV & Spread Info -->
+                <div style="background: linear-gradient(135deg, #4299e122 0%, transparent 100%); padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #4299e1;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+                        <div>
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">IMPLIED VOLATILITY</div>
+                            <div style="font-weight: 700; color: #4299e1; font-size: 14px; margin-bottom: 2px;">15.8%</div>
+                            <div style="color: #4299e1; font-weight: 600; font-size: 11px;">LOW (Buy Options)</div>
+                            <div style="color: #718096; font-size: 10px; margin-top: 4px; line-height: 1.4;">Buy calls/puts - cheap protection or direction play</div>
+                        </div>
+                        <div style="border-left: 1px solid #e2e8f0; padding-left: 12px;">
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">BID-ASK SPREAD</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 14px; margin-bottom: 2px;">3.96%</div>
+                            <div style="color: #38ef7d; font-weight: 600; font-size: 11px;">Good</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recommended Strategy -->
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #11998e;">
+                    <div style="font-weight: 700; color: #11998e; font-size: 13px; margin-bottom: 6px; text-transform: uppercase;">📊 Long Call</div>
+                    <div style="color: #4a5568; font-size: 12px; line-height: 1.5;">Buy ATM/OTM call. Benefit from upside + IV rise. Cost: time decay.</div>
+                </div>
+                
+                <!-- Greeks Breakdown -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; margin-bottom: 12px;">
+                    <div style="background: #f0f4ff; padding: 10px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 3px;">Δ DELTA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+0.36</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">OTM (directional exposure: 36%)</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 3px;">Γ GAMMA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">0.0991</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">High sensitivity</div>
+                    </div>
+                    <div style="background: #f0fff4; padding: 10px; border-radius: 4px;">
+                        <div style="color: #38ef7d; font-weight: 600; margin-bottom: 3px;">Θ THETA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">-0.1120</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">$0.000/day ✗ Against us (Buy)</div>
+                    </div>
+                    <div style="background: #fef4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ed8936; font-weight: 600; margin-bottom: 3px;">ν VEGA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+9.0253</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">per 1% IV change</div>
+                    </div>
+                </div>
+                
+                <!-- Strike Selection Guide -->
+                <div style="background: #f0f4ff; padding: 10px; border-radius: 6px; font-size: 11px; border-left: 2px solid #667eea;">
+                    <div style="font-weight: 600; color: #667eea; margin-bottom: 6px;">📍 STRIKE SELECTION GUIDE</div>
+                    <div style="color: #2d3748; line-height: 1.6;">
+                        <div>• <strong>ATM:</strong> ₹173 (balanced, mid gamma)</div>
+                        <div>• <strong>OTM Call:</strong> ₹273 (bullish, low delta)</div>
+                        <div>• <strong>OTM Put:</strong> ₹73 (bearish, low delta)</div>
+                    </div>
+                </div>
+            </div><div style="background: white; border-radius: 10px; padding: 16px; border-left: 5px solid #11998e; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">📈 CANBK</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #11998e;">+0.079</div>
+                </div>
+                
+                <!-- IV & Spread Info -->
+                <div style="background: linear-gradient(135deg, #4299e122 0%, transparent 100%); padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #4299e1;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+                        <div>
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">IMPLIED VOLATILITY</div>
+                            <div style="font-weight: 700; color: #4299e1; font-size: 14px; margin-bottom: 2px;">15.7%</div>
+                            <div style="color: #4299e1; font-weight: 600; font-size: 11px;">LOW (Buy Options)</div>
+                            <div style="color: #718096; font-size: 10px; margin-top: 4px; line-height: 1.4;">Buy calls/puts - cheap protection or direction play</div>
+                        </div>
+                        <div style="border-left: 1px solid #e2e8f0; padding-left: 12px;">
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">BID-ASK SPREAD</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 14px; margin-bottom: 2px;">3.96%</div>
+                            <div style="color: #38ef7d; font-weight: 600; font-size: 11px;">Good</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recommended Strategy -->
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #11998e;">
+                    <div style="font-weight: 700; color: #11998e; font-size: 13px; margin-bottom: 6px; text-transform: uppercase;">📊 Long Call</div>
+                    <div style="color: #4a5568; font-size: 12px; line-height: 1.5;">Buy ATM/OTM call. Benefit from upside + IV rise. Cost: time decay.</div>
+                </div>
+                
+                <!-- Greeks Breakdown -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; margin-bottom: 12px;">
+                    <div style="background: #f0f4ff; padding: 10px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 3px;">Δ DELTA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+0.68</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">ITM (directional exposure: 68%)</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 3px;">Γ GAMMA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">0.1081</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">High sensitivity</div>
+                    </div>
+                    <div style="background: #f0fff4; padding: 10px; border-radius: 4px;">
+                        <div style="color: #38ef7d; font-weight: 600; margin-bottom: 3px;">Θ THETA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">-0.1005</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">$0.000/day ✗ Against us (Buy)</div>
+                    </div>
+                    <div style="background: #fef4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ed8936; font-weight: 600; margin-bottom: 3px;">ν VEGA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+7.4687</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">per 1% IV change</div>
+                    </div>
+                </div>
+                
+                <!-- Strike Selection Guide -->
+                <div style="background: #f0f4ff; padding: 10px; border-radius: 6px; font-size: 11px; border-left: 2px solid #667eea;">
+                    <div style="font-weight: 600; color: #667eea; margin-bottom: 6px;">📍 STRIKE SELECTION GUIDE</div>
+                    <div style="color: #2d3748; line-height: 1.6;">
+                        <div>• <strong>ATM:</strong> ₹151 (balanced, mid gamma)</div>
+                        <div>• <strong>OTM Call:</strong> ₹251 (bullish, low delta)</div>
+                        <div>• <strong>OTM Put:</strong> ₹51 (bearish, low delta)</div>
+                    </div>
+                </div>
+            </div><div style="background: white; border-radius: 10px; padding: 16px; border-left: 5px solid #11998e; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-weight: 600; font-size: 16px; color: #2d3748;">📈 AXISBANK</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #11998e;">+0.078</div>
+                </div>
+                
+                <!-- IV & Spread Info -->
+                <div style="background: linear-gradient(135deg, #4299e122 0%, transparent 100%); padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #4299e1;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+                        <div>
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">IMPLIED VOLATILITY</div>
+                            <div style="font-weight: 700; color: #4299e1; font-size: 14px; margin-bottom: 2px;">15.5%</div>
+                            <div style="color: #4299e1; font-weight: 600; font-size: 11px;">LOW (Buy Options)</div>
+                            <div style="color: #718096; font-size: 10px; margin-top: 4px; line-height: 1.4;">Buy calls/puts - cheap protection or direction play</div>
+                        </div>
+                        <div style="border-left: 1px solid #e2e8f0; padding-left: 12px;">
+                            <div style="color: #718096; font-size: 11px; font-weight: 500;">BID-ASK SPREAD</div>
+                            <div style="font-weight: 700; color: #38ef7d; font-size: 14px; margin-bottom: 2px;">3.97%</div>
+                            <div style="color: #38ef7d; font-weight: 600; font-size: 11px;">Good</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recommended Strategy -->
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #11998e;">
+                    <div style="font-weight: 700; color: #11998e; font-size: 13px; margin-bottom: 6px; text-transform: uppercase;">📊 ATM Call</div>
+                    <div style="color: #4a5568; font-size: 12px; line-height: 1.5;">Balanced entry - ATM call for moderate bullish exposure.</div>
+                </div>
+                
+                <!-- Greeks Breakdown -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; margin-bottom: 12px;">
+                    <div style="background: #f0f4ff; padding: 10px; border-radius: 4px;">
+                        <div style="color: #667eea; font-weight: 600; margin-bottom: 3px;">Δ DELTA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+0.52</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">ATM (directional exposure: 52%)</div>
+                    </div>
+                    <div style="background: #fff4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ff6a00; font-weight: 600; margin-bottom: 3px;">Γ GAMMA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">0.0145</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">Low sensitivity</div>
+                    </div>
+                    <div style="background: #f0fff4; padding: 10px; border-radius: 4px;">
+                        <div style="color: #38ef7d; font-weight: 600; margin-bottom: 3px;">Θ THETA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">-0.8900</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">$0.002/day ✗ Against us (Buy)</div>
+                    </div>
+                    <div style="background: #fef4f0; padding: 10px; border-radius: 4px;">
+                        <div style="color: #ed8936; font-weight: 600; margin-bottom: 3px;">ν VEGA</div>
+                        <div style="font-weight: 700; color: #2d3748; font-size: 13px;">+70.6249</div>
+                        <div style="color: #718096; font-size: 10px; margin-top: 2px;">per 1% IV change</div>
+                    </div>
+                </div>
+                
+                <!-- Strike Selection Guide -->
+                <div style="background: #f0f4ff; padding: 10px; border-radius: 6px; font-size: 11px; border-left: 2px solid #667eea;">
+                    <div style="font-weight: 600; color: #667eea; margin-bottom: 6px;">📍 STRIKE SELECTION GUIDE</div>
+                    <div style="color: #2d3748; line-height: 1.6;">
+                        <div>• <strong>ATM:</strong> ₹1279 (balanced, mid gamma)</div>
+                        <div>• <strong>OTM Call:</strong> ₹1379 (bullish, low delta)</div>
+                        <div>• <strong>OTM Put:</strong> ₹1179 (bearish, low delta)</div>
+                    </div>
+                </div>
+            </div></div></div>
+    <!-- DASHBOARD SECTIONS (AFTER SCREENER TABLE) -->
+    <div class="dashboard">
+        <!-- KEY METRICS & MARKET SUMMARY -->
+        <h3>Market Intelligence Summary</h3>
+    
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0;">
+            <!-- Market Sentiment -->
+            <div style="background: linear-gradient(135deg, #95a5a622 0%, transparent 100%); padding: 16px; border-radius: 8px; border-left: 4px solid #95a5a6;">
+                <div style="font-size: 11px; color: #718096; font-weight: 500; text-transform: uppercase; margin-bottom: 4px;">Overall Bias</div>
+                <div style="font-size: 24px; font-weight: 700; color: #95a5a6; margin-bottom: 2px;">⚪ NEUTRAL</div>
+                <div style="font-size: 12px; color: #4a5568;">Avg Score: +0.011</div>
+            </div>
+            
+            <!-- Confidence Level -->
+            <div style="background: linear-gradient(135deg, #27ae6022 0%, transparent 100%); padding: 16px; border-radius: 8px; border-left: 4px solid #27ae60;">
+                <div style="font-size: 11px; color: #718096; font-weight: 500; text-transform: uppercase; margin-bottom: 4px;">Signal Quality</div>
+                <div style="font-size: 24px; font-weight: 700; color: #27ae60; margin-bottom: 2px;">77%</div>
+                <div style="font-size: 12px; color: #4a5568;">HIGH CONFIDENCE</div>
+            </div>
+            
+            <!-- IV Regime -->
+            <div style="background: linear-gradient(135deg, #3498db22 0%, transparent 100%); padding: 16px; border-radius: 8px; border-left: 4px solid #3498db;">
+                <div style="font-size: 11px; color: #718096; font-weight: 500; text-transform: uppercase; margin-bottom: 4px;">Option Regime</div>
+                <div style="font-size: 14px; font-weight: 700; color: #3498db; margin-bottom: 2px;">15.6% IV</div>
+                <div style="font-size: 11px; color: #4a5568;">DIRECTIONAL BUYING FAVORABLE</div>
+            </div>
+            
+            <!-- Setup Distribution -->
+            <div style="background: linear-gradient(135deg, #667eea22 0%, transparent 100%); padding: 16px; border-radius: 8px; border-left: 4px solid #667eea;">
+                <div style="font-size: 11px; color: #718096; font-weight: 500; text-transform: uppercase; margin-bottom: 8px;">Setup Distribution</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 16px; font-weight: 700; color: #11998e;">🟢 6</div>
+                        <div style="font-size: 10px; color: #718096;">Bullish</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 16px; font-weight: 700; color: #e74c3c;">🔴 4</div>
+                        <div style="font-size: 10px; color: #718096;">Bearish</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- High Conviction Setups -->
+            <div style="background: linear-gradient(135deg, #9f7aea22 0%, transparent 100%); padding: 16px; border-radius: 8px; border-left: 4px solid #9f7aea;">
+                <div style="font-size: 11px; color: #718096; font-weight: 500; text-transform: uppercase; margin-bottom: 4px;">High Conviction</div>
+                <div style="font-size: 24px; font-weight: 700; color: #9f7aea; margin-bottom: 2px;">11</div>
+                <div style="font-size: 12px; color: #4a5568;">Confidence >= 70%</div>
+            </div>
+            
+            <!-- Liquidity Index -->
+            <div style="background: linear-gradient(135deg, #4299e122 0%, transparent 100%); padding: 16px; border-radius: 8px; border-left: 4px solid #4299e1;">
+                <div style="font-size: 11px; color: #718096; font-weight: 500; text-transform: uppercase; margin-bottom: 4px;">Total Watchlist</div>
+                <div style="font-size: 24px; font-weight: 700; color: #4299e1; margin-bottom: 2px;">14</div>
+                <div style="font-size: 12px; color: #4a5568;">Stocks analyzed</div>
+            </div>
+        </div>
+        
+        <!-- ACTION RECOMMENDATIONS -->
+        <div style="background: linear-gradient(135deg, #f6ad5522 0%, transparent 100%); padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f39c12;">
+            <div style="font-size: 12px; color: #d35400; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">⚡ Trading Recommendations</div>
+            <ul style="margin: 0; padding-left: 20px; color: #4a5568; font-size: 12px; line-height: 1.6;">
+                <li>
+                    <strong>Market Bias:</strong> 
+                    Neutral - use directional indicators for entry
+                </li>
+                <li>
+                    <strong>Signal Quality:</strong>
+                    Excellent - high conviction setups, follow recommendations closely
+                </li>
+                <li>
+                    <strong>Options Strategy:</strong>
+                    Low IV favors buying directional options
+                </li>
+            </ul>
+        </div>
+    <h3>Sector Intelligence</h3><div class="insights-row"><div class="insight-box bull"><div class="insight-title">🚀 Top Bullish Sectors</div><div class="insight-content"><div style="color: #a0aec0; font-size: 12px;">No bullish sectors found</div></div></div><div class="insight-box bear"><div class="insight-title">📉 Top Bearish Sectors</div><div class="insight-content"><div style="color: #a0aec0; font-size: 12px;">No bearish sectors found</div></div></div></div><h3>Best Risk-Reward Opportunities</h3><p class="info" style="color: #718096; font-size: 13px; margin: 8px 0;"><strong>💡 Selection Criteria:</strong> Ranked by R:R ratio, filtered by Confidence >= 50%, and quality patterns.</p><div class="risk-matrix" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 16px 0;"><div style="background: white; border-radius: 8px; padding: 12px; border-left: 4px solid #11998e; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                <div style="font-weight: 700; font-size: 14px; color: #11998e; margin-bottom: 2px;">📈 KOTAKBANK</div>
+                <div style="font-size: 11px; color: #718096; margin-bottom: 6px;">No Pattern</div>
+                <div style="background: #f8f9fa; padding: 6px; border-radius: 4px; margin-bottom: 6px;">
+                    <div style="font-size: 12px; font-weight: 700; color: #27ae60;">⭐⭐⭐</div>
+                    <div style="font-size: 10px; color: #4a5568;">1:3.0 Ratio</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
+                    <div><span style="color: #718096;">Score:</span> <span style="font-weight: 700; color: #11998e;">+0.009</span></div>
+                    <div><span style="color: #718096;">Conf:</span> <span style="font-weight: 700;">57%</span></div>
+                </div>
+            </div><div style="background: white; border-radius: 8px; padding: 12px; border-left: 4px solid #11998e; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                <div style="font-weight: 700; font-size: 14px; color: #11998e; margin-bottom: 2px;">📈 CANBK</div>
+                <div style="font-size: 11px; color: #718096; margin-bottom: 6px;">No Pattern</div>
+                <div style="background: #f8f9fa; padding: 6px; border-radius: 4px; margin-bottom: 6px;">
+                    <div style="font-size: 12px; font-weight: 700; color: #27ae60;">⭐⭐⭐</div>
+                    <div style="font-size: 10px; color: #4a5568;">1:3.0 Ratio</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
+                    <div><span style="color: #718096;">Score:</span> <span style="font-weight: 700; color: #11998e;">+0.079</span></div>
+                    <div><span style="color: #718096;">Conf:</span> <span style="font-weight: 700;">57%</span></div>
+                </div>
+            </div><div style="background: white; border-radius: 8px; padding: 12px; border-left: 4px solid #11998e; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                <div style="font-weight: 700; font-size: 14px; color: #11998e; margin-bottom: 2px;">📈 UNIONBANK</div>
+                <div style="font-size: 11px; color: #718096; margin-bottom: 6px;">No Pattern</div>
+                <div style="background: #f8f9fa; padding: 6px; border-radius: 4px; margin-bottom: 6px;">
+                    <div style="font-size: 12px; font-weight: 700; color: #27ae60;">⭐⭐⭐</div>
+                    <div style="font-size: 10px; color: #4a5568;">1:3.0 Ratio</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
+                    <div><span style="color: #718096;">Score:</span> <span style="font-weight: 700; color: #11998e;">+0.098</span></div>
+                    <div><span style="color: #718096;">Conf:</span> <span style="font-weight: 700;">57%</span></div>
+                </div>
+            </div><div style="background: white; border-radius: 8px; padding: 12px; border-left: 4px solid #e74c3c; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                <div style="font-weight: 700; font-size: 14px; color: #e74c3c; margin-bottom: 2px;">📉 FEDERALBNK</div>
+                <div style="font-size: 11px; color: #718096; margin-bottom: 6px;">No Pattern</div>
+                <div style="background: #f8f9fa; padding: 6px; border-radius: 4px; margin-bottom: 6px;">
+                    <div style="font-size: 12px; font-weight: 700; color: #27ae60;">⭐⭐⭐</div>
+                    <div style="font-size: 10px; color: #4a5568;">1:3.0 Ratio</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
+                    <div><span style="color: #718096;">Score:</span> <span style="font-weight: 700; color: #e74c3c;">-0.067</span></div>
+                    <div><span style="color: #718096;">Conf:</span> <span style="font-weight: 700;">70%</span></div>
+                </div>
+            </div><div style="background: white; border-radius: 8px; padding: 12px; border-left: 4px solid #e74c3c; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                <div style="font-weight: 700; font-size: 14px; color: #e74c3c; margin-bottom: 2px;">📉 PNB</div>
+                <div style="font-size: 11px; color: #718096; margin-bottom: 6px;">No Pattern</div>
+                <div style="background: #f8f9fa; padding: 6px; border-radius: 4px; margin-bottom: 6px;">
+                    <div style="font-size: 12px; font-weight: 700; color: #27ae60;">⭐⭐⭐</div>
+                    <div style="font-size: 10px; color: #4a5568;">1:3.0 Ratio</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
+                    <div><span style="color: #718096;">Score:</span> <span style="font-weight: 700; color: #e74c3c;">-0.047</span></div>
+                    <div><span style="color: #718096;">Conf:</span> <span style="font-weight: 700;">70%</span></div>
+                </div>
+            </div><div style="background: white; border-radius: 8px; padding: 12px; border-left: 4px solid #11998e; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                <div style="font-weight: 700; font-size: 14px; color: #11998e; margin-bottom: 2px;">📈 BANKBARODA</div>
+                <div style="font-size: 11px; color: #718096; margin-bottom: 6px;">No Pattern</div>
+                <div style="background: #f8f9fa; padding: 6px; border-radius: 4px; margin-bottom: 6px;">
+                    <div style="font-size: 12px; font-weight: 700; color: #27ae60;">⭐⭐⭐</div>
+                    <div style="font-size: 10px; color: #4a5568;">1:3.0 Ratio</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px;">
+                    <div><span style="color: #718096;">Score:</span> <span style="font-weight: 700; color: #11998e;">+0.055</span></div>
+                    <div><span style="color: #718096;">Conf:</span> <span style="font-weight: 700;">70%</span></div>
+                </div>
+            </div></div></div>
+    
+    <!-- TOP PICKS SECTION -->
+    <h3>Top Picks at a Glance</h3>
+    <div class="top-picks-container">
+    <div class="picks-card bearish"><h4>📉 Top Bearish</h4><div class="pick-item">
+                <span class="pick-symbol">HDFCBANK</span>
+                <span class="pick-score bear">-0.100</span>
+                <span class="pick-details">70% | ₹925</span>
+            </div><div class="pick-item">
+                <span class="pick-symbol">YESBANK</span>
+                <span class="pick-score bear">-0.069</span>
+                <span class="pick-details">83% | ₹22</span>
+            </div><div class="pick-item">
+                <span class="pick-symbol">FEDERALBNK</span>
+                <span class="pick-score bear">-0.067</span>
+                <span class="pick-details">70% | ₹273</span>
+            </div></div><div class="picks-card bullish"><h4>📈 Top Bullish</h4><div class="pick-item">
+                <span class="pick-symbol">BANKBARODA</span>
+                <span class="pick-score bull">+0.055</span>
+                <span class="pick-details">70% | ₹299</span>
+            </div><div class="pick-item">
+                <span class="pick-symbol">AXISBANK</span>
+                <span class="pick-score bull">+0.078</span>
+                <span class="pick-details">100% | ₹1,279</span>
+            </div><div class="pick-item">
+                <span class="pick-symbol">CANBK</span>
+                <span class="pick-score bull">+0.079</span>
+                <span class="pick-details">57% | ₹151</span>
+            </div></div></div><h3>Sectoral Heat Map</h3><div class="sector-heatmap"><div class="sector-card" style="background: linear-gradient(135deg, #f56565 0%, #38ef7d 100%); color: #ffffff;">
+            <div class="sector-name">Banking</div>
+            <div class="sector-score">+0.011</div>
+            <div class="sector-count">14 stocks | Neutral</div>
+        </div></div></div>    <script>
+let lastSort = {col: null, asc: true};
+
+function sortTable(th, type) {
+    const table = document.getElementById("screener");
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    const idx = Array.from(th.parentNode.children).indexOf(th);
+    const asc = !(lastSort.col === idx && lastSort.asc);
+    
+    rows.sort((a, b) => {
+        let cellA = a.cells[idx];
+        let cellB = b.cells[idx];
+        
+        let va = cellA.getAttribute("data-score") || cellA.getAttribute("data-conf") || cellA.getAttribute("data-price") || cellA.innerText.trim();
+        let vb = cellB.getAttribute("data-score") || cellB.getAttribute("data-conf") || cellB.getAttribute("data-price") || cellB.innerText.trim();
+        
+        if (type === "num") {
+            va = parseFloat(va) || 0;
+            vb = parseFloat(vb) || 0;
+        } else {
+            va = va.toLowerCase();
+            vb = vb.toLowerCase();
+        }
+        
+        if (va < vb) return asc ? -1 : 1;
+        if (va > vb) return asc ? 1 : -1;
+        return 0;
+    });
+    
+    rows.forEach(r => tbody.appendChild(r));
+    
+    document.querySelectorAll('th').forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+    if (asc) th.classList.add('sort-asc');
+    else th.classList.add('sort-desc');
+    
+    lastSort = {col: idx, asc: asc};
+}
+
+function filterTable() {
+    const v = document.getElementById("search").value.toLowerCase();
+    const rows = document.getElementById("screener").tBodies[0].rows;
+    const enableConf = document.getElementById("enableMinConf").checked;
+    const minConf = parseFloat(document.getElementById("minConf").value) || 0;
+    const sectorSel = document.getElementById("sectorFilter").value.toLowerCase();
+    
+    for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const textMatch = r.innerText.toLowerCase().includes(v);
+        
+        let confVal = 0;
+        // Column positions: 0 Rank, 1 Symbol, 2 Sector, 3 Pattern, 4 Trend, 5 TF Align, 6 Strategy, 7 Score, 8 Conf%, 9 Price, 10 SL, 11 Target, 12 R:R, 13 Pos Size
+        if (r.cells[8]) {
+            const confText = r.cells[8].getAttribute("data-conf") || r.cells[8].innerText.trim();
+            confVal = parseFloat(confText) || 0;
+        }
+        
+        const sectorCell = r.cells[2] ? (r.cells[2].innerText || "").toLowerCase() : "";
+        const sectorMatch = (sectorSel === "all") || (sectorCell === sectorSel);
+        const confMatch = (!enableConf) || (confVal >= minConf);
+        r.style.display = (textMatch && sectorMatch && confMatch) ? "" : "none";
+    }
+}
+
+// Populate sector dropdown from table rows
+function populateSectors() {
+    const rows = document.getElementById("screener").tBodies[0].rows;
+    const sectors = new Set();
+    for (let i = 0; i < rows.length; i++) {
+        const cell = rows[i].cells[2];
+        if (cell) {
+            const sec = (cell.innerText || "").trim();
+            if (sec) sectors.add(sec);
+        }
+    }
+    const select = document.getElementById("sectorFilter");
+    const existing = new Set();
+    // Keep "All" default
+    for (let i = select.options.length - 1; i >= 0; i--) {
+        existing.add(select.options[i].value);
+    }
+    Array.from(sectors).sort().forEach(sec => {
+        const val = sec;
+        if (!existing.has(val)) {
+            const opt = document.createElement("option");
+            opt.value = val;
+            opt.text = sec;
+            select.appendChild(opt);
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    populateSectors();
+    filterTable();
+});
+    </script>
+</body>
+</html>

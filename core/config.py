@@ -17,9 +17,9 @@ OUT_CSV = os.path.join(BASE_DIR, "nifty_bearnness.csv")
 
 # Default weights for different modes
 MODE_WEIGHTS = {
-    'intraday': {'intraday': 1.0, 'swing': 0.0, 'longterm': 0.0},
-    'swing': {'intraday': 0.50, 'swing': 0.30, 'longterm': 0.20},
-    'longterm': {'intraday': 0.20, 'swing': 0.30, 'longterm': 0.50}
+    'intraday': {'intraday': 0.25, 'swing': 0.50, 'longterm': 0.25},
+    'swing': {'intraday': 0.35, 'swing': 0.35, 'longterm': 0.30},
+    'longterm': {'intraday': 0.15, 'swing': 0.25, 'longterm': 0.60}
 }
 
 # Market regime weight adjustments
