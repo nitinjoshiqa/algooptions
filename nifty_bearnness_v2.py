@@ -1,10 +1,4 @@
-# Shared institutional context score logic
-import math
-
-def tanh(x):
-    return math.tanh(x)
-
-
+# Shared utilities
 def generate_mini_chart_svg(candles_data, price, symbol, width=280, height=60):
     """
     Generate a minimal SVG sparkline chart for quick price trend visualization.
@@ -89,108 +83,13 @@ def compute_context_score(row):
     """
     Context score on a 0–5 scale (fuzzy, early-signal aware, with divergence factors)
 
-    0.0–1.0 : hostile
-    1.0–2.0 : weak
-    2.0–3.0 : neutral
-    3.0–4.0 : early supportive
-    4.0–5.0 : strong institutional
-    
-    Returns: (score, momentum)
+    Returns: (score, momentum) calculated by core.context_engine
     - score: 0-5 context score
     - momentum: -1 to +1 (accelerating negative to accelerating positive)
+    
+    UPDATED: Now delegates to core.context_engine (single source of truth)
     """
-
-    # --------------------------------------------------
-    # Base (neutral = 2.5)
-    # --------------------------------------------------
-    score = 2.5
-    momentum = 0.0
-
-    # --- Inputs ---
-    vwap_score   = row.get('vwap_score', 0.0) or 0.0
-    volume_score = row.get('volume_score', 0.0) or 0.0
-    regime       = row.get('market_regime', 'neutral')
-    risk_level   = row.get('risk_level', 'LOW')
-    
-    # --- NEW: Divergence signals ---
-    pv_div_score = row.get('pv_divergence_score', 0.0) or 0.0
-    pr_div_score = row.get('pr_divergence_score', 0.0) or 0.0
-    pv_confidence = row.get('pv_confidence', 0.0) or 0.0
-
-    # --------------------------------------------------
-    # 1️⃣ VWAP pressure (most important early signal)
-    # Range contribution: approx ±1.0
-    # --------------------------------------------------
-    vwap_contrib = 1.0 * tanh(vwap_score * 1.8)
-    score += vwap_contrib
-    
-    # VWAP momentum: derivative of tanh (how fast it's changing)
-    vwap_momentum = 1.0 * (1 - tanh(vwap_score * 1.8)**2) * 1.8 * vwap_score
-    momentum += 0.6 * vwap_momentum  # Weight VWAP momentum heavily
-
-    # --------------------------------------------------
-    # 2️⃣ Volume participation (accumulation / distribution)
-    # Range contribution: approx ±0.7
-    # --------------------------------------------------
-    volume_contrib = 0.7 * tanh(volume_score * 1.5)
-    score += volume_contrib
-    
-    # Volume momentum
-    volume_momentum = 0.7 * (1 - tanh(volume_score * 1.5)**2) * 1.5 * volume_score
-    momentum += 0.4 * volume_momentum
-
-    # --------------------------------------------------
-    # 3️⃣ Divergence detection (NEW: climax & reversal warnings)
-    # CAPPED: Divergence can ONLY reduce or cap context, NEVER increase it
-    # Range contribution: ±0.6 (but only negative or neutral, not positive)
-    # --------------------------------------------------
-    # Price/Volume divergence: climax conditions are BEARISH signals (lower context)
-    if pv_div_score < -0.5:  # Climax: price up but volume down (exhaustion)
-        divergence_contrib = -0.6 * pv_confidence  # Strong signal reduces context
-        score += divergence_contrib
-        momentum -= 0.3 * pv_confidence  # Accelerate downward momentum
-    # REMOVED: elif branch that allowed positive divergence contribution
-    # Divergence alignment is NOT allowed to boost context_score
-    # If healthy alignment exists, it drives volume_score/vwap_score instead
-    
-    # Price/RSI divergence: bearish divergence means weakness (lower context)
-    if pr_div_score < -0.5:  # Bearish divergence = reversal risk
-        score -= 0.3  # Reduce institutional confidence
-        momentum -= 0.15
-    # REMOVED: elif branch for bullish divergence bonus
-    # Bullish reversal bounce potential does not inflate context (stays with indicators)
-
-    # --------------------------------------------------
-    # 4️⃣ Market regime modulation
-    # --------------------------------------------------
-    regime_str = regime or 'neutral'
-    if 'trending' in regime_str:
-        score += 0.4
-        momentum += 0.1  # Trending = positive momentum
-    elif 'volatile' in regime_str:
-        score -= 0.6
-        momentum -= 0.2  # Volatile = negative momentum
-    elif 'ranging' in regime_str:
-        score += 0.0  # true neutral
-        momentum += 0.0
-
-    # --------------------------------------------------
-    # 5️⃣ Risk compression (reduce conviction, keep bias)
-    # --------------------------------------------------
-    if risk_level == 'HIGH':
-        score = 2.5 + (score - 2.5) * 0.55
-        momentum *= 0.7  # Dampen momentum in high risk
-    elif risk_level == 'MEDIUM':
-        score = 2.5 + (score - 2.5) * 0.75
-        momentum *= 0.85
-
-    # --------------------------------------------------
-    # 6️⃣ Safety clamp
-    # --------------------------------------------------
-    score = max(0.0, min(5.0, score))
-    momentum = max(-1.0, min(1.0, momentum))
-
-    return round(score, 2), round(momentum, 2)
+    return compute_context_from_engine(row)
 """
 Refactored NIFTY Bearnness Screener - Clean Modular Architecture
 
@@ -237,6 +136,18 @@ from core.option_strategies import suggest_option_strategy, STRATEGY_TOOLTIPS
 from core.sector_mapper import get_sector
 from core.performance import get_tracker
 from core.support_resistance import integrate_with_screener
+
+# NEW: Unified scoring engines
+from core.context_engine import compute_context_score as compute_context_from_engine
+from core.robustness_engine import (
+    validate_robustness,
+    get_robustness_score,
+    get_robustness_fail_reasons,
+    get_robustness_tier
+)
+from core.special_days_detector import get_special_day_type, adjust_for_special_day
+from core.trade_learner import log_trade_opportunity
+
 import pandas as pd
 
 # Optional database imports (gracefully handle if not installed)

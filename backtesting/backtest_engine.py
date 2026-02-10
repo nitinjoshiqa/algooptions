@@ -1,5 +1,7 @@
 """
 Backtesting Engine - Replays historical data and generates signals
+
+UPDATED: Now integrates new robustness & context engines for improved accuracy
 """
 
 import pandas as pd
@@ -11,6 +13,17 @@ import os
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# NEW: Import unified context, robustness, and special day detection engines
+from core.context_engine import compute_context_score as compute_context_from_engine
+from core.robustness_engine import (
+    validate_robustness, 
+    get_robustness_score, 
+    calculate_robustness_momentum as calc_robustness_momentum_from_filters,
+    get_robustness_fail_reasons
+)
+from core.special_days_detector import get_special_day_type, adjust_for_special_day
+from core.trade_learner import log_trade_opportunity
 
 
 # ==================== SIGNAL PERSISTENCE VALIDATION FUNCTIONS ====================
@@ -98,54 +111,38 @@ def get_volatility_regime(atr, close):
         return 'LOW'
 
 
-def calculate_robustness_momentum(df, current_idx, filters_passed_current):
-    """
-    Calculate robustness momentum (rate of change of filter quality)
-    Similar to context_momentum but for robustness filters
-    
-    Returns:
-        float: -1 to +1 (degrading to improving)
-    """
-    if current_idx < 5:
-        return 0.0  # Not enough history
-    
-    # Count filters passed in previous bars
-    prev_idx = current_idx - 1
-    if prev_idx < 0:
-        return 0.0
-    
-    # Estimate: assume previous bar had similar filter status
-    # For now, use price momentum as proxy for robustness momentum
-    curr_close = df['Close'].iloc[current_idx]
-    prev_close = df['Close'].iloc[prev_idx]
-    prev2_close = df['Close'].iloc[prev_idx - 1] if prev_idx > 0 else prev_close
-    
-    # Calculate trend: is price accelerating in winning direction?
-    if prev_close >= prev2_close:  # Price going up
-        price_momentum = min((curr_close - prev_close) / (prev_close + 0.001), 0.5)
-    else:  # Price going down
-        price_momentum = max((curr_close - prev_close) / (prev_close + 0.001), -0.5)
-    
-    return max(-1.0, min(1.0, price_momentum))
+
+
+# Note: Robustness momentum is now calculated by robustness_engine
+# based on filter state changes, not price momentum
+
 
 
 def calculate_master_score(confidence, final_score=0.68, context_score=3.0, 
                           context_momentum=0.0, robustness_score=50, news_sentiment=0.0):
     """
-    Calculate master score combining all 5 dimensions with weightage
+    Calculate master score combining all 6 dimensions with weightage
+    
+    GUARDRAILS:
+    - Master score is DIRECTION-AGNOSTIC (0-100 quality metric, not bias)
+    - Use ONLY for ranking, position sizing, and UI display
+    - DO NOT use for signal generation, validation, or direction bias
+    - Signals are already validated by robustness filters (ALL 7 must PASS)
+    - Master score CANNOT override signal = NO/YES decision
     
     Args:
         confidence: Pattern confidence (0-100)
         final_score: Technical score (0-1)
         context_score: Institutional context (0-5)
         context_momentum: Context momentum (-1 to +1)
-        robustness_score: Filter quality (0-100)
+        robustness_score: Filter quality (0-100) = (filters_passed / 7) * 100
         news_sentiment: News sentiment (-1 to +1)
     
     Returns:
         dict: {
             'master_score': 0-100,
             'components': {...},
+            'weights': {...},
             'tooltip': str
         }
     """
@@ -159,7 +156,7 @@ def calculate_master_score(confidence, final_score=0.68, context_score=3.0,
         'news': ((news_sentiment + 1) / 2 * 100),  # -1 to +1 → 0-100
     }
     
-    # Weightage (can be adjusted based on preference)
+    # Weightage (updated: 6 dimensions)
     weights = {
         'confidence': 0.25,    # Pattern quality - 25%
         'technical': 0.25,     # Indicator quality - 25%
@@ -184,7 +181,7 @@ def calculate_master_score(confidence, final_score=0.68, context_score=3.0,
         f"Technical (Indicators): {normalized['technical']:.0f}/100 (25% weight)\n"
         f"  RSI, VWAP, EMA, MACD, Bollinger Bands\n\n"
         f"Robustness (Filters): {normalized['robustness']:.0f}/100 (20% weight)\n"
-        f"  Market regime, volume, time, liquidity, earnings\n\n"
+        f"  ALL 7 filters (regime, volume, time, liquidity, earnings, MTF, exp)\n\n"
         f"Context (Institutional): {normalized['context']:.0f}/100 (15% weight)\n"
         f"  Vol/Div/RSI divergence, institutional flows\n\n"
         f"Momentum (Market Flow): {normalized['momentum']:.0f}/100 (10% weight)\n"
@@ -192,7 +189,9 @@ def calculate_master_score(confidence, final_score=0.68, context_score=3.0,
         f"News Sentiment: {normalized['news']:.0f}/100 (5% weight)\n"
         f"  Latest news impact: {news_sentiment:+.2f}\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"Decision: {'STRONG BUY ✓✓' if master_score >= 80 else 'BUY ✓' if master_score >= 70 else 'HOLD ⚠' if master_score >= 60 else 'SKIP ✗'}"
+        f"Tier: {'STRONG ✓✓' if master_score >= 80 else 'GOOD ✓' if master_score >= 70 else 'FAIR ⚠' if master_score >= 60 else 'WEAK ✗'}\n"
+        f"Use for: Ranking & position sizing only\n"
+        f"NOT for: Signal generation or direction bias"
     )
     
     return {
