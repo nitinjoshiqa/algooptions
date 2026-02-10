@@ -417,3 +417,146 @@ def opening_range_breakout_score(intraday_candles, current_price):
     
     except Exception:
         return 0
+
+
+def fundamentals_score(fundamentals_data):
+    """
+    Score stock based on fundamental metrics.
+    
+    Positive factors (bullish):
+    - Reasonable PE ratio (not overvalued)
+    - Strong ROE (>15%)
+    - Low debt-to-equity (<1.0)
+    - Positive dividend yield
+    - Revenue growth
+    
+    Negative factors (bearish):
+    - High PE ratio (>30)
+    - Low/negative ROE
+    - High debt-to-equity (>2.0)
+    - No dividends
+    - Negative revenue growth
+    
+    Returns score from -1.0 (bearish fundamentals) to +1.0 (bullish fundamentals)
+    """
+    if not fundamentals_data or not isinstance(fundamentals_data, dict):
+        return 0  # Neutral if no data
+    
+    score = 0.0
+    factors = 0
+    
+    # PE Ratio scoring (Price/Earnings)
+    pe = fundamentals_data.get('peRatio')
+    if pe and pe > 0:
+        if pe < 15:
+            score += 0.8  # Undervalued
+        elif pe < 25:
+            score += 0.4  # Reasonable
+        elif pe < 35:
+            score += 0.0  # Fair
+        else:
+            score -= 0.6  # Overvalued
+        factors += 1
+    
+    # ROE scoring (Return on Equity)
+    roe = fundamentals_data.get('roe')
+    if roe is not None:
+        if roe > 0.20:
+            score += 0.7  # Excellent
+        elif roe > 0.15:
+            score += 0.4  # Good
+        elif roe > 0.10:
+            score += 0.1  # Acceptable
+        elif roe > 0.05:
+            score += 0.0  # Marginal
+        else:
+            score -= 0.5  # Poor
+        factors += 1
+    
+    # Debt-to-Equity scoring
+    dte = fundamentals_data.get('debtToEquity')
+    if dte is not None and dte >= 0:
+        if dte < 0.5:
+            score += 0.5  # Low debt
+        elif dte < 1.0:
+            score += 0.2  # Moderate debt
+        elif dte < 2.0:
+            score += 0.0  # High debt
+        else:
+            score -= 0.6  # Very high debt
+        factors += 1
+    
+    # Dividend Yield scoring
+    dy = fundamentals_data.get('dividendYield')
+    if dy is not None and dy >= 0:
+        if dy > 0.04:
+            score += 0.4  # Good dividend
+        elif dy > 0.02:
+            score += 0.2  # Moderate dividend
+        elif dy > 0.01:
+            score += 0.1  # Low dividend
+        else:
+            score -= 0.1  # No dividend
+        factors += 1
+    
+    # Revenue Growth scoring
+    rg = fundamentals_data.get('revenueGrowth')
+    if rg is not None:
+        if rg > 0.20:
+            score += 0.5  # Strong growth
+        elif rg > 0.10:
+            score += 0.3  # Good growth
+        elif rg > 0.05:
+            score += 0.1  # Moderate growth
+        elif rg > 0.00:
+            score += 0.0  # Stable
+        else:
+            score -= 0.4  # Declining
+        factors += 1
+    
+    # Profit Margins scoring
+    pm = fundamentals_data.get('profitMargins')
+    if pm is not None:
+        if pm > 0.20:
+            score += 0.4  # High margins
+        elif pm > 0.10:
+            score += 0.2  # Good margins
+        elif pm > 0.05:
+            score += 0.1  # Moderate margins
+        else:
+            score -= 0.3  # Low margins
+        factors += 1
+    
+    # Normalize by number of factors available
+    if factors > 0:
+        score = score / factors
+    
+    return max(-1.0, min(1.0, score))
+
+
+def news_sentiment_score(news_data):
+    """
+    Score based on recent news sentiment.
+    
+    Uses the sentiment_score from news analysis.
+    Positive sentiment = bullish, negative = bearish.
+    
+    Returns score from -1.0 (very negative news) to +1.0 (very positive news)
+    """
+    if not news_data or not isinstance(news_data, dict):
+        return 0  # Neutral if no data
+    
+    sentiment = news_data.get('sentiment_score', 0)
+    news_count = news_data.get('news_count', 0)
+    
+    # Weight by news volume - more news = more confidence
+    if news_count == 0:
+        return 0
+    elif news_count < 3:
+        confidence_multiplier = 0.5  # Low confidence with few articles
+    elif news_count < 5:
+        confidence_multiplier = 0.7  # Moderate confidence
+    else:
+        confidence_multiplier = 1.0  # High confidence
+    
+    return sentiment * confidence_multiplier

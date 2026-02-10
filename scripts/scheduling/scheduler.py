@@ -6,6 +6,7 @@ Automatically runs the screener at configured intervals
 import logging
 import sys
 import argparse
+import os
 from pathlib import Path
 from datetime import datetime, time
 from typing import Optional
@@ -17,7 +18,11 @@ from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 
-from config_manager import SchedulerConfig
+# Add scripts directory to path for imports
+scripts_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(scripts_dir))
+
+from config.config_manager import SchedulerConfig
 
 # Setup logging
 logging.basicConfig(
@@ -42,6 +47,7 @@ class ScreenerScheduler:
         self.last_run_time = None
         self.last_run_status = None
         self.state_file = "logs/scheduler_state.json"
+        self.pid_file = Path("logs/scheduler.pid")
         
         # Setup logging
         Path("logs").mkdir(exist_ok=True)
@@ -69,19 +75,41 @@ class ScreenerScheduler:
         self._save_state()
         logger.error(f"Run #{self.run_count} failed: {event.exception}")
     
-    def _save_state(self):
-        """Save scheduler state to file"""
-        state = {
-            "run_count": self.run_count,
-            "last_run_time": self.last_run_time.isoformat() if self.last_run_time else None,
-            "last_run_status": self.last_run_status,
-            "timestamp": datetime.now().isoformat()
-        }
+    def _save_pid(self):
+        """Save current process PID to file"""
         try:
-            with open(self.state_file, 'w') as f:
-                json.dump(state, f, indent=2)
+            self.pid_file.parent.mkdir(exist_ok=True)
+            with open(self.pid_file, 'w') as f:
+                f.write(str(os.getpid()))
+            logger.info(f"PID saved to {self.pid_file}")
         except Exception as e:
-            logger.error(f"Error saving state: {e}")
+            logger.error(f"Error saving PID: {e}")
+    
+    def _remove_pid(self):
+        """Remove PID file"""
+        try:
+            if self.pid_file.exists():
+                self.pid_file.unlink()
+                logger.info("PID file removed")
+        except Exception as e:
+            logger.error(f"Error removing PID file: {e}")
+    
+    def _is_already_running(self):
+        """Check if scheduler is already running"""
+        if not self.pid_file.exists():
+            return False
+        
+        try:
+            with open(self.pid_file, 'r') as f:
+                pid = int(f.read().strip())
+            
+            # Check if process is still running
+            os.kill(pid, 0)  # Signal 0 just checks if process exists
+            return True
+        except (OSError, ValueError):
+            # Process not running or invalid PID
+            self._remove_pid()
+            return False
     
     def _load_state(self):
         """Load scheduler state from file"""
@@ -113,12 +141,12 @@ class ScreenerScheduler:
         
         return start_time <= current_time <= end_time
     
-    def _run_screener(self):
+    def _run_screener(self, force_run=False):
         """Execute the screener"""
         logger.info("=" * 60)
         logger.info(f"Run #{self.run_count + 1} started")
         
-        if not self._is_market_hours():
+        if not force_run and not self._is_market_hours():
             logger.info("Outside market hours, skipping run")
             self.run_count += 1
             return
@@ -128,7 +156,10 @@ class ScreenerScheduler:
             args = self.config.get_cli_args()
             
             # Build full command
-            cmd = f".venv\\Scripts\\python.exe {' '.join(args)}"
+            python_exe = str(Path(__file__).parent.parent.parent / ".venv" / "Scripts" / "python.exe")
+            script_path = str(Path(__file__).parent.parent.parent / "nifty_bearnness_v2.py")
+            args_str = " ".join(args[1:])  # Skip the script name since we're using full path
+            cmd = f'"{python_exe}" "{script_path}" {args_str}'
             logger.info(f"Executing: {cmd}")
             
             # Run screener
@@ -138,7 +169,7 @@ class ScreenerScheduler:
                 shell=True,
                 capture_output=True,
                 text=True,
-                cwd=str(Path(__file__).parent)
+                cwd=str(Path(__file__).parent.parent.parent)  # Run from project root
             )
             duration = (datetime.now() - start_time).total_seconds()
             
@@ -164,7 +195,13 @@ class ScreenerScheduler:
             logger.warning("Scheduler is disabled in configuration")
             return
         
+        # Check if already running
+        if self._is_already_running():
+            logger.error("Scheduler is already running. Use --stop first or check logs/scheduler.pid")
+            return
+        
         self._load_state()
+        self._save_pid()
         
         try:
             interval = config["interval_minutes"]
@@ -183,7 +220,7 @@ class ScreenerScheduler:
             logger.info(f"Skip weekends: {config['skip_weekends']}")
             
             self.scheduler.start()
-            logger.info(f"[OK] Scheduler is now running")
+            logger.info(f"[OK] Scheduler is now running (PID: {os.getpid()})")
             
             # Keep alive
             try:
@@ -195,6 +232,7 @@ class ScreenerScheduler:
         
         except Exception as e:
             logger.error(f"Failed to start scheduler: {e}")
+            self._remove_pid()
             raise
     
     def stop(self):
@@ -203,6 +241,8 @@ class ScreenerScheduler:
             logger.info("Stopping scheduler...")
             self.scheduler.shutdown(wait=True)
             logger.info("[OK] Scheduler stopped")
+        
+        self._remove_pid()
     
     def get_status(self) -> dict:
         """Get current scheduler status"""
@@ -230,10 +270,10 @@ class ScreenerScheduler:
             logger.error(f"[ERROR] Configuration error: {e}")
             return False
     
-    def run_once(self):
+    def run_once(self, force_run=True):
         """Run screener once immediately"""
         logger.info("Running screener once (not scheduled)")
-        self._run_screener()
+        self._run_screener(force_run=force_run)
         logger.info("Single run completed")
 
 

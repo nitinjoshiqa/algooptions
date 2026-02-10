@@ -4,11 +4,14 @@ from indicators.patterns import detect_patterns
 from scoring import (rsi_score, ema_score, opening_range_score, vwap_score, 
                      structure_score, volume_score, macd_score, bollinger_bands_score,
                      calculate_sl_target, volume_acceleration_score, vwap_crossover_score,
-                     opening_range_breakout_score)
+                     opening_range_breakout_score, fundamentals_score, news_sentiment_score)
 from options.option_scorer import OptionScorer
-from data_providers import get_spot_price, get_intraday_candles_for
+from data_providers import get_spot_price, get_intraday_candles_for, get_fundamentals, get_news_sentiment
 from core.market_regime import MarketRegimeDetector
 from core.config import MODE_WEIGHTS, OPENING_RANGE_MINUTES, VWAP_LOOKBACK_MIN
+from core.relative_strength import calculate_relative_strength
+from core.divergence_detection import calculate_price_volume_divergence, calculate_price_rsi_divergence
+from core.earnings_tracker import get_earnings_dates, get_earnings_confidence_modifier, get_earnings_summary
 # TIER 2: Pattern validation, SL scaling, position sizing
 from core.tier2_features import (MarketFilter, ConfidenceSLScaler, PositionSizer, 
                                  PatternValidator, should_trade_symbol, get_sl_and_target,
@@ -24,12 +27,13 @@ _INDEX_SCORE_CACHE = {}
 class BearnessScoringEngine:
     """Main scoring engine using Strategy pattern."""
     
-    def __init__(self, mode='intraday', use_yf=False, force_yf=False, quick_mode=False,
+    def __init__(self, mode='intraday', use_yf=False, force_yf=False, force_breeze=False, quick_mode=False,
                  intraday_weight=None, swing_weight=None, longterm_weight=None,
                  index_bias=None):
         self.mode = mode
         self.use_yf = use_yf
         self.force_yf = force_yf
+        self.force_breeze = force_breeze
         self.quick_mode = quick_mode
         
         if intraday_weight is not None or swing_weight is not None or longterm_weight is not None:
@@ -93,9 +97,19 @@ class BearnessScoringEngine:
     
     def _try_symbol(self, sym, original_symbol):
         """Try to fetch and score a symbol variant."""
-        price = get_spot_price(sym, self.use_yf, self.force_yf)
+        price = get_spot_price(sym, self.use_yf, self.force_yf, self.force_breeze)
         if price is None:
             return None
+
+        # Fetch fundamentals and news data (cached, so doesn't slow down much)
+        fundamentals_data = get_fundamentals(sym, self.use_yf, self.force_yf, self.force_breeze)
+        news_data = get_news_sentiment(sym)
+        
+        # Fetch relative strength data (sector and index comparison)
+        rs_data = calculate_relative_strength(sym, use_yf=self.use_yf, force_yf=self.force_yf, force_breeze=self.force_breeze)
+        
+        # Fetch divergence data (price/volume, price/RSI)
+        pv_divergence = calculate_price_volume_divergence(sym, use_yf=self.use_yf, force_yf=self.force_yf, force_breeze=self.force_breeze)
 
         # PHASE 1: Liquidity & Volatility Filters (single pass)
         filter_result = self._apply_filters(sym, price)
@@ -113,7 +127,7 @@ class BearnessScoringEngine:
             return self._minimal_score_result(sym, original_symbol, price)
 
         # PHASE 3: Compute scores (single regime detection, no compound multipliers)
-        scores_by_tf = self._compute_timeframe_scores(candles_data, price, sym)
+        scores_by_tf = self._compute_timeframe_scores(candles_data, price, sym, fundamentals_data, news_data)
         if 'intraday' not in scores_by_tf:
             return self._minimal_score_result(sym, original_symbol, price)
 
@@ -127,9 +141,12 @@ class BearnessScoringEngine:
         price_val = price if price > 0 else 0.01
         atr_pct = (atr_val / price_val) * 100 if price_val > 0 else 0
         
+        # Calculate price/RSI divergence (reversal warnings)
+        rsi_val = intraday_data.get('rsi', 50.0)
+        pr_divergence = calculate_price_rsi_divergence(sym, rsi_val, use_yf=self.use_yf, force_yf=self.force_yf, force_breeze=self.force_breeze)
+        
         blended = self._blend_scores(scores_by_tf, self.w_intraday, self.w_swing, self.w_longterm, 
                                      regime=detected_regime, atr_pct=atr_pct)
-        
         # Calculate price changes now that we have candles data
         daily_pct, weekly_pct, week52_high, week52_low = self._calculate_price_changes(candles_data, price)
         
@@ -182,8 +199,89 @@ class BearnessScoringEngine:
             pattern_quality=pattern_quality
         )
         
-        # PHASE 9: TIER 2 - Market filtering, SL/Target, Position sizing
-        should_trade, filter_reason = should_trade_symbol(detected_regime, atr_pct, final_confidence)
+        # Apply earnings impact: reduce confidence near earnings (noise filter)
+        earnings_data = get_earnings_dates(sym)
+        earnings_modifier_data = get_earnings_confidence_modifier(sym, 
+            earnings_data.get('days_until_earnings') if earnings_data else None)
+        earnings_modifier = earnings_modifier_data.get('modifier', 1.0)
+        final_confidence = final_confidence * earnings_modifier  # Apply 0.4-1.0 multiplier
+        
+        # CONFIDENCE FLOOR TRACKING - Detect and record reason for flooring
+        confidence_floor_reason = None
+        pre_floor_confidence = final_confidence
+        final_confidence = max(20, min(100, final_confidence))  # Keep in 20-100 range
+        
+        # Determine floor reason if confidence was capped at 20%
+        if pre_floor_confidence < 20 and final_confidence == 20:
+            # Identify which factor caused the floor
+            if all_scores and sum(1 for s in all_scores if abs(s) > 0.5) < 2:
+                confidence_floor_reason = "low_signal_strength"
+            elif detected_regime and 'volatile' in detected_regime:
+                confidence_floor_reason = "regime_volatile"
+            elif earnings_modifier < 0.8:
+                confidence_floor_reason = "high_event_risk"
+            else:
+                confidence_floor_reason = "multiple_weak_factors"
+        
+        # ============================================================================
+        # CONTEXT CALCULATION (ENGINE-SIDE) - Institutional context + momentum
+        # This feeds into system_state for authoritative execution decisions
+        # ============================================================================
+        # Compute risk_level locally based on RSI (same logic as HTML generation)
+        rsi_val = intraday_data.get('rsi', 50) or 50
+        if rsi_val >= 70:
+            local_risk_level = 'HIGH'  # Overbought
+        elif rsi_val <= 30:
+            local_risk_level = 'MEDIUM'  # Oversold
+        else:
+            local_risk_level = 'LOW'  # Neutral
+        
+        # Extract context inputs from available data
+        vwap_score = intraday_data.get('vwap_score', 0.0) or 0.0
+        volume_score = intraday_data.get('volume_score', 0.0) or 0.0
+        pv_div_score = pv_divergence.get('divergence_score', 0) if pv_divergence else 0
+        pr_div_score = pr_divergence.get('divergence_score', 0) if pr_divergence else 0
+        pv_confidence = pv_divergence.get('confidence', 0) if pv_divergence else 0
+        
+        # Calculate context metrics (simplified version of main script's compute_context_score)
+        context_score = self._compute_context_metrics(
+            vwap_score=vwap_score,
+            volume_score=volume_score,
+            regime=detected_regime,
+            risk_level=local_risk_level,
+            pv_div_score=pv_div_score,
+            pr_div_score=pr_div_score,
+            pv_confidence=pv_confidence
+        )
+        context_momentum = self._compute_context_momentum(
+            vwap_score=vwap_score,
+            volume_score=volume_score,
+            regime=detected_regime,
+            pv_div_score=pv_div_score,
+            pr_div_score=pr_div_score
+        )
+        
+        # ============================================================================
+        # SYSTEM STATE CALCULATION (AUTHORITATIVE) - Hard execution blocker
+        # ============================================================================
+        news_score = (news_data.get('news_sentiment_score', 0) or 0) if news_data else 0
+        
+        # Compute system state based on engine data
+        system_state = self._compute_system_state_authoritative(
+            context_score=context_score,
+            context_momentum=context_momentum,
+            risk_level=local_risk_level,
+            news_score=news_score,
+            confidence=final_confidence
+        )
+        
+        # HARD-BLOCK execution if system_state is STAND_DOWN
+        if system_state == 'STAND_DOWN':
+            should_trade = False
+            filter_reason = f"STAND_DOWN: {self._get_standdown_reason(context_score, context_momentum, local_risk_level, news_score)}"
+        else:
+            # PHASE 9: TIER 2 - Market filtering, SL/Target, Position sizing
+            should_trade, filter_reason = should_trade_symbol(detected_regime, atr_pct, final_confidence)
         sl_target_info = get_sl_and_target(atr_val, final_confidence, final_score, detected_regime, risk_reward_ratio=1.25)
         position_info = calculate_position(final_confidence, atr_val, detected_regime, capital=100000, risk_per_trade=0.02)
         
@@ -207,6 +305,13 @@ class BearnessScoringEngine:
         # final_score is linked to intraday_score (primary decision maker)
         final_score = intraday_score
         
+        # ============================================================================
+        # ---- SCORING FREEZE POINT ----
+        # After this point, final_score is IMMUTABLE
+        # Only confidence, state, and execution filters may be calculated below
+        # Do NOT modify final_score after this marker
+        # ============================================================================
+        
         # PHASE 10: Build result
         w_intra, w_swing, w_long = self.w_intraday, self.w_swing, self.w_longterm
         
@@ -225,6 +330,11 @@ class BearnessScoringEngine:
             "swing_score": swing_score,
             "longterm_score": longterm_score,
             "confidence": final_confidence,
+            "confidence_floor_reason": confidence_floor_reason,  # Why was conf floored?
+            "system_state": system_state,  # AUTHORITATIVE execution state (engine-computed)
+            "context_score": context_score,  # Institutional context (0-5)
+            "context_momentum": context_momentum,  # Context rate of change (-1 to +1)
+            "risk_level": local_risk_level,  # Risk zone (LOW/MEDIUM/HIGH based on RSI)
             "price": price,
             "or_score": intraday_data['or_score'],
             "vwap_score": intraday_data['vwap_score'],
@@ -243,6 +353,32 @@ class BearnessScoringEngine:
             "volume_acceleration": intraday_data.get('volume_acceleration', 0),
             "vwap_crossover": intraday_data.get('vwap_crossover', 0),
             "opening_range_breakout": intraday_data.get('opening_range_breakout', 0),
+            # FUNDAMENTALS & NEWS (for intraday analysis)
+            "fundamentals_score": intraday_data.get('fundamentals_score', 0),
+            "news_sentiment_score": intraday_data.get('news_sentiment_score', 0),
+            "news_headlines": news_data.get('recent_news', []) if news_data else [],
+            "news_count": news_data.get('news_count', 0) if news_data else 0,
+            # RELATIVE STRENGTH (weighted: 60% sector, 40% index) - informational only
+            "rs_weighted": rs_data.get('rs_weighted', 0) if rs_data else 0,
+            "sector": rs_data.get('sector', 'Unknown') if rs_data else 'Unknown',
+            "peer_data": rs_data.get('peer_data', []) if rs_data else [],
+            # EARNINGS IMPACT (confidence modifier + summary)
+            "earnings_next_date": earnings_data.get('next_earnings').strftime('%Y-%m-%d') if earnings_data and earnings_data.get('next_earnings') else None,
+            "earnings_days_until": earnings_data.get('days_until_earnings') if earnings_data else None,
+            "earnings_confidence_modifier": earnings_modifier,
+            "earnings_modifier_reason": earnings_modifier_data.get('reason', ''),
+            "earnings_position_size_factor": earnings_modifier_data.get('position_size_factor', 1.0),
+            # DIVERGENCE DETECTION (climax conditions & reversal warnings)
+            "pv_divergence_type": pv_divergence.get('divergence_type') if pv_divergence else None,
+            "pv_divergence_score": pv_divergence.get('divergence_score', 0) if pv_divergence else 0,
+            "pv_price_trend": pv_divergence.get('price_trend', 0) if pv_divergence else 0,
+            "pv_volume_trend": pv_divergence.get('volume_trend', 0) if pv_divergence else 0,
+            "pv_confidence": pv_divergence.get('confidence', 0) if pv_divergence else 0,
+            "pr_divergence_type": pr_divergence.get('divergence_type') if pr_divergence else None,
+            "pr_divergence_score": pr_divergence.get('divergence_score', 0) if pr_divergence else 0,
+            "pr_price_momentum": pr_divergence.get('price_momentum', 0) if pr_divergence else 0,
+            "pr_rsi_level": pr_divergence.get('rsi_level', 50) if pr_divergence else 50,
+            "pr_confidence": pr_divergence.get('confidence', 0) if pr_divergence else 0,
             # TIER 2: Market filtering and position sizing
             "should_trade": should_trade,
             "filter_reason": filter_reason,
@@ -295,7 +431,7 @@ class BearnessScoringEngine:
         - Allows mid-cap movers with 3x their volume to trade
         """
         try:
-            test_candles, _ = get_intraday_candles_for(sym, '1day', 5, self.use_yf, self.force_yf)
+            test_candles, _ = get_intraday_candles_for(sym, '1day', 5, self.use_yf, self.force_yf, self.force_breeze)
             if test_candles:
                 volumes = [float(c.get('volume', 0)) for c in test_candles]
                 avg_volume = sum(volumes) / len(volumes) if volumes else 0
@@ -313,7 +449,7 @@ class BearnessScoringEngine:
             pass
 
         try:
-            swing_candles, _ = get_intraday_candles_for(sym, '1day', 20, self.use_yf, self.force_yf)
+            swing_candles, _ = get_intraday_candles_for(sym, '1day', 20, self.use_yf, self.force_yf, self.force_breeze)
             if swing_candles and len(swing_candles) >= 14:
                 highs = [float(c.get('high', 0)) for c in swing_candles]
                 lows = [float(c.get('low', 0)) for c in swing_candles]
@@ -421,12 +557,12 @@ class BearnessScoringEngine:
         try:
             for sym_variant in ['^NSEI', 'NIFTYBEES.NS']:
                 try:
-                    price = get_spot_price(sym_variant, use_yf=True, force_yf=True)
+                    price = get_spot_price(sym_variant, use_yf=True, force_yf=True, force_breeze=False)
                     if price is None:
                         continue
                     
                     try:
-                        candles, src = get_intraday_candles_for(sym_variant, '1day', 20, use_yf=True, force_yf=True)
+                        candles, src = get_intraday_candles_for(sym_variant, '1day', 20, use_yf=True, force_yf=True, force_breeze=False)
                         if candles and len(candles) >= 3:
                             closes = [float(c.get('close', 0)) for c in candles[-10:]]
                             avg_price = sum(closes) / len(closes)
@@ -510,14 +646,14 @@ class BearnessScoringEngine:
         
         if self.w_intraday > 0:
             bars = 40 if self.quick_mode else 78
-            candles, src = get_intraday_candles_for(symbol, '5minute', bars, self.use_yf, self.force_yf)
+            candles, src = get_intraday_candles_for(symbol, '5minute', bars, self.use_yf, self.force_yf, self.force_breeze)
             if candles:
                 result['intraday'] = candles
                 result['source'].append(src or 'breeze')
         
         if self.w_swing > 0:
             bars = 15 if self.quick_mode else 26
-            candles, src = get_intraday_candles_for(symbol, '15minute', bars, self.use_yf, self.force_yf)
+            candles, src = get_intraday_candles_for(symbol, '15minute', bars, self.use_yf, self.force_yf, self.force_breeze)
             if candles:
                 result['swing'] = candles
                 if src and src not in result['source']:
@@ -525,7 +661,7 @@ class BearnessScoringEngine:
         
         if self.w_longterm > 0:
             bars = 10 if self.quick_mode else 20
-            candles, src = get_intraday_candles_for(symbol, '1day', bars, self.use_yf, self.force_yf)
+            candles, src = get_intraday_candles_for(symbol, '1day', bars, self.use_yf, self.force_yf, self.force_breeze)
             if candles:
                 result['longterm'] = candles
                 if src and src not in result['source']:
@@ -540,7 +676,7 @@ class BearnessScoringEngine:
         result['source'] = ', '.join(result['source']) if result['source'] else 'breeze'
         return result
     
-    def _compute_timeframe_scores(self, candles_data, price, symbol):
+    def _compute_timeframe_scores(self, candles_data, price, symbol, fundamentals_data=None, news_data=None):
         """Compute scores for all available timeframes (SINGLE REGIME DETECTION)."""
         scores = {}
         
@@ -554,11 +690,11 @@ class BearnessScoringEngine:
                         candles = trimmed if len(trimmed) >= 3 else candles
                     except Exception:
                         pass
-                scores[tf_name] = self._compute_single_timeframe(candles, price, symbol)
+                scores[tf_name] = self._compute_single_timeframe(candles, price, symbol, fundamentals_data, news_data, tf_name == 'intraday')
         
         return scores
     
-    def _compute_single_timeframe(self, candles, price, symbol):
+    def _compute_single_timeframe(self, candles, price, symbol, fundamentals_data=None, news_data=None, is_intraday=False):
         """Compute score for a single timeframe with regime-adaptive weighting."""
         # Get all indicator values (normalize only once at the end)
         or_bars = max(1, OPENING_RANGE_MINUTES // 5)
@@ -625,11 +761,22 @@ class BearnessScoringEngine:
         vwap_cross_norm = normalize_score(vwap_cross_s)
         or_breakout_norm = normalize_score(or_breakout_s)
         
+        # NEWS SENTIMENT: Only for intraday timeframe (fundamentals too slow-moving for intraday)
+        fundamentals_norm = 0
+        news_norm = 0
+        if is_intraday:
+            # Skip fundamentals for intraday - they change too slowly
+            # fundamentals_norm = normalize_score(fundamentals_score(fundamentals_data))
+            news_norm = normalize_score(news_sentiment_score(news_data))
+        else:
+            # For swing/longterm timeframes, include fundamentals but keep separate from technical score
+            fundamentals_norm = normalize_score(fundamentals_score(fundamentals_data))
+        
         # DETECT REGIME ONCE (at the start, not scattered throughout)
         regime = self._detect_regime(candles)
         weights = self._get_weights_for_regime(regime)
         
-        # Apply weights - reduced redundancy
+        # Apply weights - reduced redundancy (TECHNICAL ONLY - fundamentals separate)
         weighted_scores = [
             or_s_norm * weights['or'],
             vwap_s_norm * weights['vwap'],
@@ -707,7 +854,10 @@ class BearnessScoringEngine:
             # NEW: Early signal detectors
             "volume_acceleration": vol_accel_s,
             "vwap_crossover": vwap_cross_s,
-            "opening_range_breakout": or_breakout_s
+            "opening_range_breakout": or_breakout_s,
+            # FUNDAMENTALS & NEWS
+            "fundamentals_score": fundamentals_norm,
+            "news_sentiment_score": news_norm if is_intraday else 0
         }
 
     def _get_adaptive_weights(self, regime, atr_pct, signal_strength):
@@ -820,50 +970,72 @@ class BearnessScoringEngine:
     def _compute_confidence(self, all_scores, vol_score, regime, rsi_val,
                             alignment_count=1, signal_strength=0.0, pattern_quality=0.0):
         """
-        SIMPLIFIED 3-PILLAR CONFIDENCE FORMULA (v2)
+        CALIBRATED 3-PILLAR CONFIDENCE FORMULA (v3) - STRICT MODE
         
-        Replaces 7-component system with clearer, more debuggable approach:
+        More selective confidence that reflects actual signal quality:
         
-        1. SIGNAL AGREEMENT (45 points max) - Do indicators align?
-           - Count how many indicators point in same direction (>0.3 threshold)
-           - More agreement = higher conviction
+        1. SIGNAL AGREEMENT (50 points max) - Strong indicator alignment?
+           - Require >0.5 threshold for "strong" signals (was >0.3)
+           - Penalize conflicting signals heavily
         
-        2. MOMENTUM CONFIRMATION (35 points max) - EMA/RSI/MACD conviction?
-           - Measure average magnitude of key momentum signals
-           - Bigger moves = higher confidence
+        2. MOMENTUM CONFIRMATION (30 points max) - Real momentum?
+           - Require avg momentum > 0.65 for full credit (was 0.70)
+           - Penalize weak momentum signals
         
-        3. VOLUME VALIDATION (20 points max) - Does volume support the move?
-           - Check if volume matches price direction
-           - Supporting volume boosts confidence, diverging volume penalizes
+        3. VOLUME VALIDATION (20 points max) - Does volume confirm?
+           - Stricter penalties for volume divergence
+           - Bonus only for strong volume support
         
-        Returns: 20-100 confidence score (base 20, never go below due to regime)
+        Returns: 20-100 confidence score (lower baseline, harder to earn points)
         """
-        confidence = 40  # Base confidence (things need to be bad to go below this)
+        confidence = 25  # REDUCED from 40: must earn confidence, not assume it
         
         # ============================================================================
-        # PILLAR 1: SIGNAL AGREEMENT (45 points max)
+        # PILLAR 1: SIGNAL AGREEMENT (50 points max) - STRICTER
         # ============================================================================
-        # Count strong signals (>0.3 absolute value) in same direction
-        strong_signals = [s for s in all_scores if abs(s) > 0.3]
+        # Count STRONG signals (>0.5 abuse value) - was 0.3, now 0.5 (stricter)
+        strong_signals = [s for s in all_scores if abs(s) > 0.50]
+        weak_signals = [s for s in all_scores if 0.25 < abs(s) <= 0.50]
+        conflicting_signals = []
         
+        # Check for conflicting signals (opposite direction of majority)
+        if len(all_scores) >= 3:
+            positive = sum(1 for s in all_scores if s > 0.1)
+            negative = sum(1 for s in all_scores if s < -0.1)
+            if positive > 0 and negative > 0 and abs(positive - negative) >= 3:
+                conflicting_signals = [s for s in weak_signals if (sum(1 for x in all_scores if x > 0) > sum(1 for x in all_scores if x < 0)) != (s > 0)]
+        
+        # Score strong signals (stricter thresholds)
         if len(strong_signals) >= 5:
-            confidence += 45  # Heavy consensus: 5+ indicators aligned
+            confidence += 50  # Excellent: 5+ strong indicators aligned
         elif len(strong_signals) == 4:
-            confidence += 35  # Very strong: 4 indicators agree
+            confidence += 38  # Very strong: 4 strong indicators
         elif len(strong_signals) == 3:
-            confidence += 25  # Good: 3 indicators agree
+            confidence += 25  # Good: 3 strong indicators
         elif len(strong_signals) == 2:
-            confidence += 12  # Moderate: 2 indicators agree
-        # else: 0 (base only)
+            confidence += 12  # Moderate: 2 strong indicators
+        elif len(strong_signals) == 1:
+            confidence += 5   # Weak: only 1 strong indicator
+        # else: 0 (no strong signals at all)
         
-        # BONUS: Do all strong signals point the SAME direction?
+        # PENALTY: Conflicting signals reduce confidence heavily
+        if len(conflicting_signals) >= 2:
+            confidence -= 20  # Major conflict: multiple opposing signals
+        elif len(conflicting_signals) == 1:
+            confidence -= 10  # Minor conflict: one opposing signal
+        
+        # BONUS: 100% alignment among strong signals (all point same direction)
         if len(strong_signals) >= 3:
-            directions = [1 if s > 0.3 else -1 for s in strong_signals]
+            directions = [1 if s > 0.5 else -1 for s in strong_signals]
             if len(set(directions)) == 1:  # All same direction
-                confidence += 10  # Clean consensus bonus
+                confidence += 8  # Clean consensus bonus (reduced from 10)
+        
+        # WEAK SIGNALS CONTRIBUTION (moderate boost if some weak alignment)
+        if len(weak_signals) >= 3 and len(strong_signals) == 0:
+            confidence += 8  # Some alignment even without strong signals
         
         # ============================================================================
-        # PILLAR 2: MOMENTUM CONFIRMATION (35 points max)
+        # PILLAR 2: MOMENTUM CONFIRMATION (30 points max) - STRICTER
         # ============================================================================
         # Extract momentum indicators: RSI, MACD, EMA (capture direction + conviction)
         try:
@@ -878,52 +1050,60 @@ class BearnessScoringEngine:
         momentum_signals = [rsi_normalized, ema_score, macd_score]
         avg_momentum = sum(abs(m) for m in momentum_signals) / len(momentum_signals) if momentum_signals else 0
         
-        if avg_momentum > 0.70:
-            confidence += 35  # Very strong momentum
-        elif avg_momentum > 0.50:
-            confidence += 25  # Strong momentum
-        elif avg_momentum > 0.30:
-            confidence += 15  # Moderate momentum
-        elif avg_momentum > 0.10:
-            confidence += 8   # Weak momentum
-        # else: 0
+        # STRICTER thresholds - require higher momentum for credit
+        if avg_momentum > 0.75:
+            confidence += 30  # Excellent momentum
+        elif avg_momentum > 0.60:
+            confidence += 20  # Strong momentum (raised from 0.50 threshold)
+        elif avg_momentum > 0.40:
+            confidence += 10  # Moderate momentum
+        elif avg_momentum > 0.20:
+            confidence += 4   # Weak momentum (reduced credit)
+        else:
+            confidence -= 5   # Penalize zero/negative momentum (NEW)
         
         # ============================================================================
-        # PILLAR 3: VOLUME VALIDATION (20 points max)
+        # PILLAR 3: VOLUME VALIDATION (20 points max) - STRICTER
         # ============================================================================
         # Does volume align with price direction?
-        if vol_score > 0.50:
-            confidence += 20  # Strong supporting volume
-        elif vol_score > 0.20:
-            confidence += 12  # Moderate supporting volume
-        elif vol_score > 0.0:
+        if vol_score > 0.60:
+            confidence += 20  # Excellent supporting volume
+        elif vol_score > 0.30:
+            confidence += 12  # Good supporting volume (raised threshold from 0.20)
+        elif vol_score > 0.05:
             confidence += 5   # Mild supporting volume
-        elif vol_score < -0.40:
-            confidence -= 15  # Strong conflicting volume (penalty)
-        elif vol_score < -0.15:
-            confidence -= 8   # Moderate conflicting volume
-        # else: 0 (neutral volume)
+        elif vol_score < -0.50:
+            confidence -= 20  # STRONG conflicting volume (penalty increased from -15)
+        elif vol_score < -0.25:
+            confidence -= 12  # MODERATE conflicting volume (penalty increased from -8)
+        else:
+            confidence -= 3   # Slight penalty for neutral/mixed volume (NEW)
         
         # ============================================================================
-        # REGIME CONTEXT (modulates final confidence, doesn't add points)
+        # REGIME CONTEXT (stricter modulation)
         # ============================================================================
         if regime == 'trending':
-            confidence = min(100, confidence + 5)  # Boost in trending markets
+            confidence = min(100, confidence + 8)  # Boost in trending (increased from +5)
         elif regime == 'choppy':
-            confidence = max(25, confidence - 20)  # Cap at 80 in choppy (hard to be confident)
+            confidence = max(20, confidence - 30)  # HARDER cap in choppy (increased from -20)
         elif regime == 'volatile':
-            confidence = max(30, confidence - 15)  # Reduce in volatile markets
+            confidence = max(25, confidence - 25)  # HARDER penalty for volatile (increased from -15)
+        elif regime == 'sideways':
+            confidence = max(20, confidence - 25)  # Penalize sideways markets
         
         # ============================================================================
-        # MULTI-TIMEFRAME ALIGNMENT BONUS (only if 2+ timeframes aligned)
+        # MULTI-TIMEFRAME ALIGNMENT BONUS (stricter)
         # ============================================================================
-        if alignment_count >= 2:
-            confidence += 10  # Extra confidence for multi-TF agreement
+        if alignment_count >= 3:
+            confidence += 15  # 3+ timeframes aligned (strong bonus)
+        elif alignment_count == 2:
+            confidence += 8   # 2 timeframes aligned (reduced from flat 10)
+        # else: 0 (single timeframe = no bonus)
         
         # ============================================================================
         # FINAL CLAMP & RETURN
         # ============================================================================
-        # Range: 20-100 (never go below 20, max out at 100)
+        # Range: 20-100 (much harder to achieve high confidence)
         confidence = min(100, max(20, confidence))
         
         return confidence
@@ -1116,6 +1296,130 @@ class BearnessScoringEngine:
             blended, pattern_name, pattern_conf, pattern_impact, event_risk, symbol
         )
         return adjusted
+    
+    def _compute_context_metrics(self, vwap_score, volume_score, regime, risk_level, 
+                                 pv_div_score, pr_div_score, pv_confidence):
+        """Calculate context score (0-5 scale) based on institutional signals."""
+        from math import tanh  # Import here to match main script
+        
+        score = 2.5  # Neutral baseline
+        
+        # VWAP pressure (most important early signal)
+        vwap_contrib = 1.0 * tanh(vwap_score * 1.8)
+        score += vwap_contrib
+        
+        # Volume participation
+        volume_contrib = 0.7 * tanh(volume_score * 1.5)
+        score += volume_contrib
+        
+        # Divergence detection (CAPPED - cannot boost context)
+        if pv_div_score < -0.5:  # Climax conditions
+            divergence_contrib = -0.6 * pv_confidence
+            score += divergence_contrib
+        
+        if pr_div_score < -0.5:  # Bearish divergence
+            score -= 0.3
+        
+        # Market regime modulation
+        regime_str = regime or 'neutral'
+        if 'trending' in regime_str:
+            score += 0.4
+        elif 'volatile' in regime_str:
+            score -= 0.6
+        
+        # Risk compression
+        if risk_level == 'HIGH':
+            score = 2.5 + (score - 2.5) * 0.55
+        elif risk_level == 'MEDIUM':
+            score = 2.5 + (score - 2.5) * 0.75
+        
+        # Safety clamp
+        score = max(0.0, min(5.0, score))
+        return round(score, 2)
+    
+    def _compute_context_momentum(self, vwap_score, volume_score, regime, pv_div_score, pr_div_score):
+        """Calculate context momentum (-1 to +1) reflecting rate of change."""
+        from math import tanh
+        
+        momentum = 0.0
+        
+        # VWAP momentum (derivative of tanh)
+        vwap_momentum = 1.0 * (1 - tanh(vwap_score * 1.8)**2) * 1.8 * vwap_score
+        momentum += 0.6 * vwap_momentum
+        
+        # Volume momentum
+        volume_momentum = 0.7 * (1 - tanh(volume_score * 1.5)**2) * 1.5 * volume_score
+        momentum += 0.4 * volume_momentum
+        
+        # Divergence impact on momentum
+        if pv_div_score < -0.5:
+            momentum -= 0.3
+        
+        if pr_div_score < -0.5:
+            momentum -= 0.15
+        
+        # Clamp
+        momentum = max(-1.0, min(1.0, momentum))
+        return round(momentum, 2)
+    
+    def _compute_system_state_authoritative(self, context_score, context_momentum, risk_level, news_score, confidence):
+        """
+        Compute authoritative system state for hard execution decisions.
+        
+        States:
+        - STAND_DOWN: Avoid - high risk or negative context
+        - OBSERVE: Watch - mixed signals
+        - ENGAGE: Trade - positive context  
+        - EXPAND: Aggressive - strong context + momentum + low risk
+        
+        NOTE: High-confidence signals (>70) override context weakness to allow technical trades.
+        """
+        # STAND_DOWN conditions (most restrictive)
+        if risk_level == 'HIGH' and confidence < 75:
+            return 'STAND_DOWN'
+        
+        # Context weakness is tolerated for high-confidence technical setups
+        # Allow trading if confidence is very high despite poor context
+        if confidence < 70:
+            # For lower confidence, apply strict context checks
+            if context_score < 1.5 or context_momentum < -0.5:
+                return 'STAND_DOWN'
+        
+        if news_score < -0.5:  # Only block on VERY negative news (was -0.4)
+            return 'STAND_DOWN'
+        
+        if confidence < 25:  # Very low confidence
+            return 'STAND_DOWN'
+        
+        # EXPAND conditions (most aggressive)
+        if context_score > 3.8 and context_momentum > 0.6 and risk_level in ['LOW', 'MEDIUM']:
+            return 'EXPAND'
+        
+        # ENGAGE conditions (normal trading)
+        if context_score > 2.8 and context_momentum > 0.0 and risk_level in ['LOW', 'MEDIUM']:
+            return 'ENGAGE'
+        
+        # For high-confidence signals (>70), allow ENGAGE even if context is weak
+        if confidence > 70 and context_score >= 1.2 and risk_level != 'HIGH':
+            return 'ENGAGE'
+        
+        # OBSERVE (default - mixed signals)
+        return 'OBSERVE'
+    
+    def _get_standdown_reason(self, context_score, context_momentum, risk_level, news_score):
+        """Get human-readable reason for STAND_DOWN state."""
+        reasons = []
+        
+        if risk_level == 'HIGH':
+            reasons.append("High risk zone")
+        if context_score < 1.5:
+            reasons.append("Hostile context")
+        if context_momentum < -0.5:
+            reasons.append("Deteriorating momentum")
+        if news_score < -0.4:
+            reasons.append("Negative news shock")
+        
+        return " | ".join(reasons) if reasons else "Risk factors detected"
     
     def _no_data_result(self, symbol):
         """Return result for symbols with no data."""

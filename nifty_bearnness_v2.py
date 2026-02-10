@@ -1,3 +1,196 @@
+# Shared institutional context score logic
+import math
+
+def tanh(x):
+    return math.tanh(x)
+
+
+def generate_mini_chart_svg(candles_data, price, symbol, width=280, height=60):
+    """
+    Generate a minimal SVG sparkline chart for quick price trend visualization.
+    
+    Shows last ~30 candles with support/resistance levels marked.
+    Color: Green (up) | Red (down) | Gray (neutral)
+    
+    Returns: SVG HTML string suitable for inline embedding
+    """
+    try:
+        if not candles_data or not isinstance(candles_data, list) or len(candles_data) < 3:
+            return ""  # Not enough data for chart
+        
+        # Take last 30 candles for performance
+        candles = candles_data[-30:] if len(candles_data) > 30 else candles_data
+        
+        # Extract close prices
+        closes = []
+        for c in candles:
+            close = c.get('close') or c.get('c')
+            if close:
+                try:
+                    closes.append(float(close))
+                except:
+                    pass
+        
+        if len(closes) < 3:
+            return ""  # Not enough valid prices
+        
+        # Calculate chart metrics
+        min_price = min(closes)
+        max_price = max(closes)
+        price_range = max_price - min_price
+        
+        if price_range == 0:
+            price_range = min_price * 0.01  # Avoid division by zero
+        
+        # Determine trend (first vs last)
+        trend_up = closes[-1] > closes[0]
+        line_color = "#27ae60" if trend_up else "#e74c3c"
+        
+        # SVG parameters
+        margin = 8
+        chart_width = width - (2 * margin)
+        chart_height = height - (2 * margin)
+        
+        # Convert prices to SVG Y coordinates
+        def price_to_y(p):
+            normalized = (p - min_price) / price_range
+            return margin + chart_height * (1 - normalized)
+        
+        # Generate path points
+        points = []
+        for i, price_val in enumerate(closes):
+            x = margin + (i / (len(closes) - 1)) * chart_width if len(closes) > 1 else margin + chart_width / 2
+            y = price_to_y(price_val)
+            points.append(f"{x},{y}")
+        
+        path_d = " ".join([f"L {p}" for p in points])
+        path_d = f"M {points[0]} {path_d}"  # Move to first point
+        
+        # Generate SVG with gradient
+        svg = f'''<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" style="display: inline-block; vertical-align: middle; margin: 0 4px;">
+            <defs>
+                <linearGradient id="chart-grad-{symbol}" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:{line_color};stop-opacity:0.3" />
+                    <stop offset="100%" style="stop-color:{line_color};stop-opacity:0.05" />
+                </linearGradient>
+            </defs>
+            <path d="{path_d}" stroke="{line_color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="{path_d} L {margin + chart_width},{margin + chart_height} L {margin},{ margin + chart_height}" fill="url(#chart-grad-{symbol})"/>
+            <text x="{width - margin}" y="{height - 2}" font-size="10" text-anchor="end" fill="{line_color}" font-weight="bold">{price:.0f}</text>
+        </svg>'''
+        
+        return svg
+    
+    except Exception as e:
+        return ""  # Silently fail if chart generation has issues
+
+
+def compute_context_score(row):
+    """
+    Context score on a 0–5 scale (fuzzy, early-signal aware, with divergence factors)
+
+    0.0–1.0 : hostile
+    1.0–2.0 : weak
+    2.0–3.0 : neutral
+    3.0–4.0 : early supportive
+    4.0–5.0 : strong institutional
+    
+    Returns: (score, momentum)
+    - score: 0-5 context score
+    - momentum: -1 to +1 (accelerating negative to accelerating positive)
+    """
+
+    # --------------------------------------------------
+    # Base (neutral = 2.5)
+    # --------------------------------------------------
+    score = 2.5
+    momentum = 0.0
+
+    # --- Inputs ---
+    vwap_score   = row.get('vwap_score', 0.0) or 0.0
+    volume_score = row.get('volume_score', 0.0) or 0.0
+    regime       = row.get('market_regime', 'neutral')
+    risk_level   = row.get('risk_level', 'LOW')
+    
+    # --- NEW: Divergence signals ---
+    pv_div_score = row.get('pv_divergence_score', 0.0) or 0.0
+    pr_div_score = row.get('pr_divergence_score', 0.0) or 0.0
+    pv_confidence = row.get('pv_confidence', 0.0) or 0.0
+
+    # --------------------------------------------------
+    # 1️⃣ VWAP pressure (most important early signal)
+    # Range contribution: approx ±1.0
+    # --------------------------------------------------
+    vwap_contrib = 1.0 * tanh(vwap_score * 1.8)
+    score += vwap_contrib
+    
+    # VWAP momentum: derivative of tanh (how fast it's changing)
+    vwap_momentum = 1.0 * (1 - tanh(vwap_score * 1.8)**2) * 1.8 * vwap_score
+    momentum += 0.6 * vwap_momentum  # Weight VWAP momentum heavily
+
+    # --------------------------------------------------
+    # 2️⃣ Volume participation (accumulation / distribution)
+    # Range contribution: approx ±0.7
+    # --------------------------------------------------
+    volume_contrib = 0.7 * tanh(volume_score * 1.5)
+    score += volume_contrib
+    
+    # Volume momentum
+    volume_momentum = 0.7 * (1 - tanh(volume_score * 1.5)**2) * 1.5 * volume_score
+    momentum += 0.4 * volume_momentum
+
+    # --------------------------------------------------
+    # 3️⃣ Divergence detection (NEW: climax & reversal warnings)
+    # CAPPED: Divergence can ONLY reduce or cap context, NEVER increase it
+    # Range contribution: ±0.6 (but only negative or neutral, not positive)
+    # --------------------------------------------------
+    # Price/Volume divergence: climax conditions are BEARISH signals (lower context)
+    if pv_div_score < -0.5:  # Climax: price up but volume down (exhaustion)
+        divergence_contrib = -0.6 * pv_confidence  # Strong signal reduces context
+        score += divergence_contrib
+        momentum -= 0.3 * pv_confidence  # Accelerate downward momentum
+    # REMOVED: elif branch that allowed positive divergence contribution
+    # Divergence alignment is NOT allowed to boost context_score
+    # If healthy alignment exists, it drives volume_score/vwap_score instead
+    
+    # Price/RSI divergence: bearish divergence means weakness (lower context)
+    if pr_div_score < -0.5:  # Bearish divergence = reversal risk
+        score -= 0.3  # Reduce institutional confidence
+        momentum -= 0.15
+    # REMOVED: elif branch for bullish divergence bonus
+    # Bullish reversal bounce potential does not inflate context (stays with indicators)
+
+    # --------------------------------------------------
+    # 4️⃣ Market regime modulation
+    # --------------------------------------------------
+    regime_str = regime or 'neutral'
+    if 'trending' in regime_str:
+        score += 0.4
+        momentum += 0.1  # Trending = positive momentum
+    elif 'volatile' in regime_str:
+        score -= 0.6
+        momentum -= 0.2  # Volatile = negative momentum
+    elif 'ranging' in regime_str:
+        score += 0.0  # true neutral
+        momentum += 0.0
+
+    # --------------------------------------------------
+    # 5️⃣ Risk compression (reduce conviction, keep bias)
+    # --------------------------------------------------
+    if risk_level == 'HIGH':
+        score = 2.5 + (score - 2.5) * 0.55
+        momentum *= 0.7  # Dampen momentum in high risk
+    elif risk_level == 'MEDIUM':
+        score = 2.5 + (score - 2.5) * 0.75
+        momentum *= 0.85
+
+    # --------------------------------------------------
+    # 6️⃣ Safety clamp
+    # --------------------------------------------------
+    score = max(0.0, min(5.0, score))
+    momentum = max(-1.0, min(1.0, momentum))
+
+    return round(score, 2), round(momentum, 2)
 """
 Refactored NIFTY Bearnness Screener - Clean Modular Architecture
 
@@ -668,11 +861,11 @@ def save_csv(results, output_path, args):
         writer.writerow([
             "rank", "symbol", "sector", "index", "market_regime", "score",
             "swing_score", "longterm_score",
-            "confidence", "price", "pct_below_high", "pct_above_low", "mode", "strategy", "strategy_reason",
+            "confidence", "confidence_floor_reason", "system_state", "context_score", "context_momentum", "price", "pct_below_high", "pct_above_low", "mode", "strategy", "strategy_reason",
             "or_score", "vwap_score", "structure_score", "rsi", "rsi_score", "ema_score",
             "volume_score", "macd_score", "bb_score", "atr",
             "sl_price", "target_price", "sl_pct", "target_pct", "rr_ratio", "method",
-            "risk_level", "position_size_multiplier", "support_level", "resistance_level",
+            "risk_level", "should_trade", "filter_reason", "position_size_multiplier", "support_level", "resistance_level",
             "intraday_weight", "swing_weight", "longterm_weight",
             "option_score", "option_iv", "option_spread_pct", "option_type", "option_strike", "option_expiry",
             "option_volume", "option_oi", "option_delta", "option_gamma", "option_theta", "option_vega",
@@ -720,6 +913,10 @@ def save_csv(results, output_path, args):
                 f"{r.get('swing_score', 0):.4f}" if r.get('swing_score') is not None else '',
                 f"{r.get('longterm_score', 0):.4f}" if r.get('longterm_score') is not None else '',
                 f"{r['confidence']:.1f}" if r.get('confidence') is not None else '',
+                r.get('confidence_floor_reason', ''),  # Why was confidence floored?
+                r.get('system_state', 'OBSERVE'),  # Derived execution state
+                f"{r.get('context_score', 0):.2f}" if r.get('context_score') is not None else '',
+                f"{r.get('context_momentum', 0):+.2f}" if r.get('context_momentum') is not None else '',
                 f"{r['price']:.2f}" if r.get('price') is not None else '',
                 pct_below_high,
                 pct_above_low,
@@ -743,6 +940,8 @@ def save_csv(results, output_path, args):
                 f"{r.get('rr_ratio', 0):.2f}" if r.get('rr_ratio') else '',
                 r.get('method', ''),
                 r.get('risk_level', 'LOW'),
+                str(r.get('should_trade', 'False')),  # Execution block flag
+                r.get('filter_reason', ''),  # Why was execution blocked/allowed?
                 f"{r.get('position_size_multiplier', 1.0):.2f}" if r.get('position_size_multiplier') else '',
                 f"{r.get('support_level', 0):.2f}" if r.get('support_level') else '',
                 f"{r.get('resistance_level', 0):.2f}" if r.get('resistance_level') else '',
@@ -850,47 +1049,16 @@ def save_html(results, output_path, args):
     }
     
     html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="900">  <!-- Auto-refresh every 15 min -->
-    <title>Nifty Stock Analyser - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        * {{ box-sizing: border-box; }}
-        body {{ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 16px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }}
-        .container {{ max-width: 1600px; margin: 0 auto; padding: 0 20px; }}
-        h2 {{ color: #1a202c; margin: 0 0 8px 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }}
-        h3 {{ color: #2d3748; margin: 24px 0 16px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }}
-        h4 {{ color: #2d3748; margin: 0 0 12px 0; font-size: 15px; font-weight: 600; }}
-        p.info {{ color: #718096; margin: 8px 0; font-size: 14px; display: flex; gap: 24px; flex-wrap: wrap; }}
-        p.info strong {{ color: #2d3748; font-weight: 600; }}
-        p.info strong {{ color: #2d3748; font-weight: 600; }}
-        
-        /* DASHBOARD SECTIONS */
-        .dashboard {{ background: transparent; border-radius: 0; padding: 0; margin-bottom: 0; box-shadow: none; }}
-        .metrics-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 16px 0; }}
-        .metric-card {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15); transition: transform 0.2s, box-shadow 0.2s; cursor: default; }}
-        .metric-card:hover {{ transform: translateY(-4px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.25); }}
-        .metric-card.bullish {{ background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }}
-        .metric-card.bearish {{ background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%); }}
-        .metric-card.neutral {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }}
-        .metric-value {{ font-size: 28px; font-weight: 700; margin: 8px 0; font-family: 'JetBrains Mono', monospace; }}
-        .metric-label {{ font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }}
-        .metric-subtext {{ font-size: 11px; opacity: 0.8; margin-top: 6px; }}
-        
-        .insights-row {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }}
-        .insight-box {{ background: white; border-left: 5px solid #667eea; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: all 0.2s; }}
-        .insight-box:hover {{ box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-2px); }}
-        .insight-box.bull {{ border-left-color: #38ef7d; }}
-        .insight-box.bear {{ border-left-color: #ff6a00; }}
-        .insight-title {{ font-weight: 600; color: #2d3748; font-size: 13px; text-transform: uppercase; margin-bottom: 8px; }}
-        .insight-content {{ font-size: 13px; color: #4a5568; line-height: 1.6; }}
-        .insight-item {{ display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }}
-        .insight-item:last-child {{ border-bottom: none; }}
-        .insight-name {{ font-weight: 500; color: #2d3748; }}
-        .insight-value {{ font-weight: 600; color: #667eea; font-family: 'JetBrains Mono', monospace; }}
-        
+        <html>
+        <head>
+            <meta charset=\"UTF-8\">
+            <meta http-equiv=\"refresh\" content=\"900\">  <!-- Auto-refresh every 15 min -->
+            <title>Nifty Stock Analyser - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</title>
+            <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap\" rel=\"stylesheet\">
+            <style>
+                ...existing code...
+
+        # Remove broken multi-line HTML string and use only incremental concatenation for table rows
         .risk-matrix {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 16px 0; }}
         .risk-card {{ background: white; border: 2px solid #e2e8f0; border-radius: 10px; padding: 16px; text-align: center; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }}
         .risk-card:hover {{ border-color: #667eea; box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15); transform: translateY(-3px); }}
@@ -1163,9 +1331,9 @@ def save_html(results, output_path, args):
         .align-weak {{ color: #f56565; font-weight: 700; }}
         
         .tooltip {{ position: relative; cursor: help; z-index: 10; display: inline-block; }}
-        .tooltip .tooltiptext {{ visibility: hidden; background-color: #2d3748; color: #fff; text-align: left; padding: 10px 12px; border-radius: 6px; position: absolute; z-index: 1000; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal; opacity: 0; transition: opacity 0.3s; font-size: 11px; line-height: 1.4; font-family: 'Inter', sans-serif; max-width: 200px; pointer-events: none; }}
-        .tooltip .tooltiptext::after {{ content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #2d3748 transparent transparent transparent; }}
-        .tooltip:hover .tooltiptext {{ visibility: visible; opacity: 1; }}
+        .tooltip .tooltiptext {{ visibility: hidden; background-color: #2d3748; color: #fff; text-align: left; padding: 12px 14px; border-radius: 6px; position: absolute; z-index: 1001; top: 100%; left: 0; margin-top: 8px; white-space: pre-wrap; opacity: 0; transition: opacity 0.3s; font-size: 12px; line-height: 1.5; font-family: 'Courier New', monospace; max-width: 450px; pointer-events: auto; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); border: 1px solid #4a5568; word-wrap: break-word; overflow-wrap: break-word; }}
+        .tooltip .tooltiptext::after {{ content: ""; position: absolute; bottom: 100%; left: 12px; border-width: 5px; border-style: solid; border-color: transparent transparent #2d3748 transparent; }}
+        .tooltip:hover .tooltiptext {{ visibility: visible; opacity: 1; pointer-events: auto; }}
         
         .quick-actions {{ background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-top: 20px; }}
         .action-legend {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 12px 0; }}
@@ -1204,6 +1372,11 @@ def save_html(results, output_path, args):
             <input type="range" id="minScore" min="0" max="1" step="0.01" value="0.35" oninput="document.getElementById('minScoreVal').innerText=this.value;filterTable()" />
             <span id="minScoreVal">0.35</span>
         </div>
+        <div class="control-group">
+            <label><input type="checkbox" id="enableMinRS" onchange="filterTable()" /> Min Rel Strength</label>
+            <input type="range" id="minRS" min="-1" max="1" step="0.05" value="-0.3" oninput="document.getElementById('minRSVal').innerText=this.value;filterTable()" />
+            <span id="minRSVal">-0.3</span>
+        </div>
     </div>
     
     <div id="screener-wrapper">
@@ -1212,16 +1385,20 @@ def save_html(results, output_path, args):
             <tr>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Position rank by bearness score"><span class="tooltip">Rank<span class="tooltiptext">Position rank ordered by bearness score (most bearish first)</span></span></th>
                 <th data-type="str" onclick="sortTable(this, 'str')" title="Stock symbol"><span class="tooltip">Symbol<span class="tooltiptext">NSE stock symbol/ticker</span></span></th>
-                <th data-type="str" onclick="sortTable(this, 'str')" title="Industry sector"><span class="tooltip">Sector<span class="tooltiptext">Industry classification (Banking, IT, Auto, etc.)</span></span></th>
-                <th data-type="str" onclick="sortTable(this, 'str')" title="Price pattern"><span class="tooltip">Pattern<span class="tooltiptext">Technical pattern: golden cross, death cross, consolidation, etc.</span></span></th>
                 <th data-type="str" onclick="sortTable(this, 'str')" title="Trend direction"><span class="tooltip">Trend<span class="tooltiptext">Overall trend: uptrend, downtrend, or sideways</span></span></th>
-                <th data-type="str" onclick="sortTable(this, 'str')" title="Timeframe alignment"><span class="tooltip">TF Align<span class="tooltiptext">Alignment across timeframes (intraday/swing/longterm)</span></span></th>
-                <th data-type="str" onclick="sortTable(this, 'str')" title="Trading strategy"><span class="tooltip">Strategy<span class="tooltiptext">Recommended strategy (swing, breakout, mean reversion)</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Bearness score -1 to +1"><span class="tooltip">Score<span class="tooltiptext">Bearness score: -1 (bullish) to +1 (bearish), 0 (neutral)</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Swing score (1-2 days)"><span class="tooltip">Swing Score<span class="tooltiptext">Swing mode score (35:35:30 weights) for 1-2 day holds</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Longterm score (3-7 days)"><span class="tooltip">LT Score<span class="tooltiptext">Longterm mode score (15:25:60 weights) for multi-day holds</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Signal confidence 0-100%"><span class="tooltip">Conf%<span class="tooltiptext">Confidence in signal (0-100%): higher = more reliable</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Execution state"><span class="tooltip">State<span class="tooltiptext">System state: STAND_DOWN (avoid), OBSERVE (watch), ENGAGE (trade), EXPAND (aggressive)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Institutional Context Score"><span class="tooltip">Context<span class="tooltiptext">Context score (0-5): 0-1 hostile, 1-2 weak, 2-3 neutral, 3-4 early supportive, 4-5 strong institutional</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Context momentum -1 to +1"><span class="tooltip">Context Momentum<span class="tooltiptext">Context momentum (-1 to +1): rate of change in institutional context</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Robustness score 0-100"><span class="tooltip">Robustness%<span class="tooltiptext">Robustness score (0-100): percentage of 7 safety filters passing</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Robustness momentum -1 to +1"><span class="tooltip">Robust Momentum<span class="tooltiptext">Robustness momentum (-1 to +1): rate of change in filter quality</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Master score 0-100"><span class="tooltip">Master Score<span class="tooltiptext">Master score (0-100): 6-dimension weighted composite (25% conf, 25% tech, 20% robust, 15% context, 10% momentum, 5% news)</span></span></th>
                 <th data-type="str" onclick="sortTable(this, 'str')" title="Risk zone status"><span class="tooltip">Risk Zone<span class="tooltiptext">NORMAL: Safe entry | MEDIUM: Caution zone | HIGH: Extreme overbought/oversold</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="News sentiment score -1 to +1"><span class="tooltip">News Sentiment<span class="tooltiptext">News sentiment score (-1: very negative, 0: neutral, +1: very positive)</span></span></th>
+                <th data-type="num" onclick="sortTable(this, 'num')" title="Relative strength -1 to +1"><span class="tooltip">Rel Strength<span class="tooltiptext">Relative strength vs market (60% sector peers + 40% Nifty50): -1 lagging, 0 neutral, +1 outperforming</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Option premium quality 0-1"><span class="tooltip">Opt Quality<span class="tooltiptext">Combined option quality score (0-1): Stock (20%) + Theta (45%) + Greeks (35%)</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Current price"><span class="tooltip">Price<span class="tooltiptext">Current closing price in rupees</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Suggested stop loss"><span class="tooltip">Stop Loss<span class="tooltiptext">Suggested stop loss price (2.5× ATR from entry)</span></span></th>
@@ -1232,6 +1409,10 @@ def save_html(results, output_path, args):
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Weekly % change"><span class="tooltip">Weekly%<span class="tooltiptext">Percentage change from last week's close</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="% below 52-week high"><span class="tooltip">52W High %<span class="tooltiptext">Percentage below 52-week high (pullback magnitude)</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="% above 52-week low"><span class="tooltip">52W Low %<span class="tooltiptext">Percentage above 52-week low (recovery distance)</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Industry sector"><span class="tooltip">Sector<span class="tooltiptext">Industry classification (Banking, IT, Auto, etc.)</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Price pattern"><span class="tooltip">Pattern<span class="tooltiptext">Technical pattern: golden cross, death cross, consolidation, etc.</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Timeframe alignment"><span class="tooltip">TF Align<span class="tooltiptext">Alignment across timeframes (intraday/swing/longterm)</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Trading strategy"><span class="tooltip">Strategy<span class="tooltiptext">Recommended strategy (swing, breakout, mean reversion)</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Opening range score -1 to +1"><span class="tooltip">OR<span class="tooltiptext">Opening range score: price vs first 30min high/low (-1 to +1)</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="VWAP score -1 to +1"><span class="tooltip">VWAP<span class="tooltiptext">Volume-weighted average price score (-1: below, +1: above)</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Price structure score -1 to +1"><span class="tooltip">Structure<span class="tooltiptext">Price structure quality (-1: weak, +1: strong reversal pattern)</span></span></th>
@@ -1247,6 +1428,7 @@ def save_html(results, output_path, args):
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Option gamma"><span class="tooltip">Opt Gamma<span class="tooltiptext">Gamma: rate of delta change (higher = more sensitive)</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Option theta daily decay"><span class="tooltip">Opt Theta<span class="tooltiptext">Theta: daily time decay (negative = cost to buyer)</span></span></th>
                 <th data-type="num" onclick="sortTable(this, 'num')" title="Option vega volatility sensitivity"><span class="tooltip">Opt Vega<span class="tooltiptext">Vega: volatility sensitivity (per 1% IV change)</span></span></th>
+                <th data-type="str" onclick="sortTable(this, 'str')" title="Next earnings event"><span class="tooltip">Earnings<span class="tooltiptext">Next earnings date and days away. RED=within 3d (high noise). Risk shown: HIGH/MEDIUM/LOW for pre/post earnings impact on signal confidence</span></span></th>
             </tr>
         </thead>
         <tbody>
@@ -1364,7 +1546,11 @@ def save_html(results, output_path, args):
             grade_class = "grade-f"
     
         sector = r.get('sector', 'Unknown')
-
+        
+        # Get sector color based on sector performance
+        sector_color = get_sector_color(sector)
+        sector_text_color = get_sector_text_color(sector_color)
+        
         # Determine Trend Direction
         ema_score = r.get('ema_score', 0) or 0
         structure_score = r.get('structure_score', 0) or 0
@@ -1701,50 +1887,220 @@ def save_html(results, output_path, args):
         else:
             pattern_str = f"<span style='color: {pattern_color};'>—</span>"
         
-        # Get sector color based on sector performance
-        sector_color = get_sector_color(sector)
-        sector_text_color = get_sector_text_color(sector_color)
+        # Get risk level with RSI-based fallback when detailed S/R analysis isn't available
+        risk_level = r.get('risk_level')
+        if not risk_level:
+            # Use RSI as basic risk indicator when detailed analysis unavailable
+            rsi_val = r.get('rsi', 50) or 50
+            if rsi_val > 70:
+                risk_level = 'HIGH'  # Overbought - high risk zone
+            elif rsi_val < 30:
+                risk_level = 'MEDIUM'  # Oversold - medium risk zone
+            else:
+                risk_level = 'LOW'  # Neutral RSI - low risk zone
+        else:
+            risk_level = risk_level.upper()
+        risk_reason = r.get('risk_reason', None)
+        risk_level_display = risk_level.upper() if risk_level else 'N/A'
+        risk_class = f"risk-{risk_level.lower()}" if risk_level else 'risk-unknown'
+        risk_reason_display = risk_reason if risk_reason else 'No risk reason available'
+        context_score, context_momentum = compute_context_score(r)
+        html_content += f"            <tr>\n"
+        html_content += f"                <td>{i}</td>\n"
         
-        html_content += f"""            <tr>
-                <td>{i}</td>
-                <td><strong>{r['symbol']}</strong></td>
-                <td style="background-color: {sector_color}; color: {sector_text_color}; font-weight: bold;">{sector}</td>
-                <td>{pattern_str}</td>
-                <td><span class="badge {trend_class}">{trend}</span></td>
-                <td><span class="{align_class} tooltip-trigger" title="{align_tooltip}">{align}<span class="tooltiptext" style="width: 300px; bottom: 125%;">{align_tooltip}</span></span></td>
-                <td><span class="badge badge-{strategy_class} tooltip-trigger" style="font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;" title="{STRATEGY_TOOLTIPS.get(strategy_class, 'Option strategy recommendation')}">{strategy}<span class="tooltiptext" style="width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;">{STRATEGY_TOOLTIPS.get(strategy_class, 'Option strategy recommendation')}</span></span></td>
-                <td class="score" style="{score_style}" data-score="{score:+.4f}"><span style="color: {trend_color}; font-weight: bold;">{trend_badge}</span> {score:+.4f}</td>
-                <td class="score" style="background-color: hsl({max(-1, min(1, r.get('swing_score', 0) or 0))*60+60}, 80%, 92%);" data-score="{r.get('swing_score', 0) or 0:+.4f}">{r.get('swing_score', 0) or 0:+.4f}</td>
-                <td class="score tooltip" style="background-color: hsl({max(-1, min(1, r.get('longterm_score', 0) or 0))*60+60}, 80%, 92%);" data-score="{r.get('longterm_score', 0) or 0:+.4f}">{r.get('longterm_score', 0) or 0:+.4f}<span class="tooltiptext">Longterm mode (15:25:60) for 3-7 day holds</span></td>
-                <td data-conf="{conf_val}">{conf_str}</td>
-                <td><span class="risk-{risk_level.lower() if (risk_level := r.get('risk_level', 'low')) else 'low'} tooltip" title="{r.get('risk_reason', 'Normal zone')}">{risk_level.upper() if (risk_level := r.get('risk_level', 'low')) else 'NORMAL'}<span class="tooltiptext" style="width: 280px;">{r.get('risk_reason', 'Price in normal trading zone')}</span></span></td>
-                <td>{r.get('option_premium_quality') or 0:.4f}</td>
-                <td data-price="{price:.2f}">{price:.2f}</td>
-                <td data-sl="{stop_loss:.2f}" style="font-weight: bold; color: #e74c3c;">{sl_str}</td>
-                <td data-target="{target:.2f}" style="font-weight: bold; color: #27ae60;">{target_str}</td>
-                <td data-score="{week52_high:.2f}" style="font-weight: bold; color: #27ae60;">{week52_high:.2f}</td>
-                <td data-score="{week52_low:.2f}" style="font-weight: bold; color: #c0392b;">{week52_low:.2f}</td>
-                <td data-score="{daily_change:.2f}" style="color: {daily_color}; font-weight: bold;">{daily_str}</td>
-                <td data-score="{weekly_change:.2f}" style="color: {weekly_color}; font-weight: bold;">{weekly_str}</td>
-                <td data-score="{pct_below_high:.2f}" style="font-weight: bold; color: #e67e22;">{pct_below_high_str}</td>
-                <td data-score="{pct_above_low:.2f}" style="font-weight: bold; color: #3498db;">{pct_above_low_str}</td>
-                <td>{r.get('or_score', 0):+.4f}</td>
-                <td>{r.get('vwap_score', 0):+.4f}</td>
-                <td>{r.get('structure_score', 0):+.4f}</td>
-                <td>{r.get('rsi') or 0:.2f}</td>
-                <td>{r.get('ema_score', 0):+.4f}</td>
-                <td>{r.get('volume_score', 0):+.4f}</td>
-                <td>{r.get('macd_score', 0):+.4f}</td>
-                <td>{r.get('bb_score', 0):+.4f}</td>
-                <td>{atr_str}</td>
-                <td>{r.get('option_iv') or 0:.4f}</td>
-                <td>{r.get('option_spread_pct') or 0:.4f}</td>
-                <td>{r.get('option_delta') or 0:+.4f}</td>
-                <td>{r.get('option_gamma') or 0:.6f}</td>
-                <td>{r.get('option_theta') or 0:+.4f}</td>
-                <td>{r.get('option_vega') or 0:+.4f}</td>
-            </tr>
-"""
+        # Generate mini chart for symbol cell
+        candles_for_chart = r.get('candles_data', {}).get('swing', []) or r.get('candles_data', {}).get('intraday', [])
+        mini_chart = generate_mini_chart_svg(candles_for_chart, price, r['symbol'].replace('.', '_'))
+        if mini_chart:
+            html_content += f"                <td><strong>{r['symbol']}</strong><br/>{mini_chart}</td>\n"
+        else:
+            html_content += f"                <td><strong>{r['symbol']}</strong></td>\n"
+        
+        # Trend comes early (after Symbol, before Scores)
+        html_content += f"                <td><span class=\"badge {trend_class}\">{trend}</span></td>\n"
+        html_content += f"                <td class=\"score\" style=\"{score_style}\" data-score=\"{score:+.4f}\"><span style=\"color: {trend_color}; font-weight: bold;\">{trend_badge}</span> {score:+.4f}</td>\n"
+        html_content += f"                <td class=\"score\" style=\"background-color: hsl({max(-1, min(1, r.get('swing_score', 0) or 0))*60+60}, 80%, 92%);\" data-score=\"{r.get('swing_score', 0) or 0:+.4f}\">{r.get('swing_score', 0) or 0:+.4f}</td>\n"
+        html_content += f"                <td class=\"score tooltip\" style=\"background-color: hsl({max(-1, min(1, r.get('longterm_score', 0) or 0))*60+60}, 80%, 92%);\" data-score=\"{r.get('longterm_score', 0) or 0:+.4f}\">{r.get('longterm_score', 0) or 0:+.4f}<span class=\"tooltiptext\">Longterm mode (15:25:60) for 3-7 day holds</span></td>\n"
+        html_content += f"                <td data-conf=\"{conf_val}\">{conf_str}</td>\n"
+        
+        # Add system_state badge (NEW: execution clarity)
+        system_state = r.get('system_state', 'OBSERVE')
+        state_color_map = {
+            'STAND_DOWN': '#dc3545',  # Red
+            'OBSERVE': '#ffc107',      # Yellow
+            'ENGAGE': '#28a745',       # Green
+            'EXPAND': '#007bff'        # Blue
+        }
+        state_color = state_color_map.get(system_state, '#6c757d')  # Default gray
+        state_tooltip_map = {
+            'STAND_DOWN': 'High risk or negative context - Avoid trading',
+            'OBSERVE': 'Mixed signals or neutral context - Watch for clarity',
+            'ENGAGE': 'Positive context with moderate confidence - Trade',
+            'EXPAND': 'Strong context and momentum with low risk - Aggressive'
+        }
+        state_tooltip = state_tooltip_map.get(system_state, '')
+        html_content += f"                <td style=\"text-align: center;\"><span style=\"background-color: {state_color}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.9em;\" title=\"{state_tooltip}\" class=\"tooltip-trigger\">{system_state}<span class=\"tooltiptext\">{state_tooltip}</span></span></td>\n"
+        
+        html_content += f"                <td>{context_score:.2f}</td>\n"
+        html_content += f"                <td class=\"score\" style=\"background-color: hsl({max(-1, min(1, context_momentum))*60+60}, 80%, 92%);\" data-score=\"{context_momentum:+.2f}\">{context_momentum:+.2f}</td>\n"
+        
+        # Add robustness metrics
+        robustness_score = r.get('robustness_score', 0) or 0
+        robustness_momentum = r.get('robustness_momentum', 0) or 0
+        master_score = r.get('master_score', 0) or 0
+        master_score_tooltip = r.get('master_score_tooltip', 'No tooltip available')
+        
+        # Color code robustness score
+        if robustness_score >= 80:
+            robust_color = '#27ae60'  # Green - excellent
+        elif robustness_score >= 60:
+            robust_color = '#f39c12'  # Orange - fair
+        else:
+            robust_color = '#e74c3c'  # Red - poor
+        
+        # Color code master score
+        if master_score >= 80:
+            master_color = '#27ae60'  # Green - excellent
+        elif master_score >= 70:
+            master_color = '#f39c12'  # Orange - good
+        elif master_score >= 60:
+            master_color = '#e67e22'  # Dark orange - fair
+        else:
+            master_color = '#e74c3c'  # Red - poor
+        
+        html_content += f"                <td class=\"score\" style=\"color: {robust_color}; font-weight: bold;\" data-score=\"{robustness_score:.0f}\">{robustness_score:.0f}</td>\n"
+        html_content += f"                <td class=\"score\" style=\"background-color: hsl({max(-1, min(1, robustness_momentum))*60+60}, 80%, 92%);\" data-score=\"{robustness_momentum:+.2f}\">{robustness_momentum:+.2f}</td>\n"
+        html_content += f"                <td class=\"score tooltip\" style=\"color: {master_color}; font-weight: bold; font-size: 1.1em;\" data-score=\"{master_score:.0f}\"><span style=\"cursor: help;\">{master_score:.0f}</span><span class=\"tooltiptext\" style=\"width: 500px; white-space: pre-wrap;\">{master_score_tooltip}</span></td>\n"
+        
+        html_content += f"                <td><span class=\"{risk_class}\">{risk_level_display}</span></td>\n"
+        
+        # Add news sentiment score
+        news_sentiment = r.get('news_sentiment_score', 0) or 0
+        news_headlines = r.get('news_headlines', []) or []
+        news_count = r.get('news_count', 0) or 0
+        try:
+            news_sentiment = float(news_sentiment) if news_sentiment else 0
+        except (TypeError, ValueError):
+            news_sentiment = 0
+        
+        # Color code news sentiment
+        if news_sentiment > 0.3:
+            news_color = '#27ae60'  # Green - positive
+            news_sentiment_label = 'Positive'
+        elif news_sentiment < -0.3:
+            news_color = '#e74c3c'  # Red - negative
+            news_sentiment_label = 'Negative'
+        else:
+            news_color = '#95a5a6'  # Gray - neutral
+            news_sentiment_label = 'Neutral'
+        
+        # Build news tooltip with headlines
+        news_tooltip = f"<strong>News Sentiment Score</strong><br/><strong>Value: {news_sentiment:+.2f}</strong> ({news_sentiment_label})<br/><br/>" \
+                       f"<strong>Interpretation:</strong><br/>" \
+                       f"Negative news (-1 to 0): Can reduce confidence, trigger stop losses, or indicate selling pressure<br/>" \
+                       f"Neutral news (±0.3): Market may ignore or digest news slowly - uncertainty risk<br/>" \
+                       f"Positive news (0 to +1): Supports bullish moves, increases conviction, reduces reversals<br/><br/>" \
+                       f"<strong>Action:</strong> Recent extreme sentiment (±0.8+) may indicate overbought/oversold - watch for mean reversion."
+        
+        # Add recent news headlines if available
+        if news_headlines and news_count > 0:
+            news_tooltip += f"<br/><br/><strong>Recent News ({news_count}):</strong><br/>"
+            for i, headline in enumerate(news_headlines[:5], 1):  # Show top 5 headlines
+                # Truncate long headlines
+                headline_display = headline[:75] + "..." if len(headline) > 75 else headline
+                news_tooltip += f"{i}. {headline_display}<br/>"
+        
+        html_content += f"                <td class=\"score\" style=\"color: {news_color}; font-weight: bold;\" data-score=\"{news_sentiment:+.4f}\"><span class=\"tooltip-trigger\" title=\"News sentiment analysis\"><span style=\"cursor: help;\">{news_sentiment:+.4f}</span><span class=\"tooltiptext\" style=\"width: 450px; white-space: normal;\">{news_tooltip}</span></span></td>\n"
+        
+        # ==================== EARNINGS INFO WITH TOOLTIP ====================
+        earnings_next_date = r.get('earnings_next_date')
+        earnings_days_until = r.get('earnings_days_until')
+        earnings_confidence_modifier = r.get('earnings_confidence_modifier', 1.0) or 1.0
+        earnings_modifier_reason = r.get('earnings_modifier_reason', '')
+        
+        # Format earnings display
+        if earnings_next_date:
+            # Determine risk level based on days until earnings
+            if earnings_days_until is not None and isinstance(earnings_days_until, (int, float)):
+                if -3 <= earnings_days_until <= 3:
+                    earnings_risk = 'HIGH'
+                    earnings_color = '#e74c3c'  # Red
+                else:
+                    earnings_risk = 'MEDIUM'
+                    earnings_color = '#f39c12'  # Orange
+                days_display = f"{int(earnings_days_until)}d"
+            else:
+                earnings_risk = 'MEDIUM'
+                earnings_color = '#f39c12'
+                days_display = "TBD"
+            
+            # Build earnings tooltip
+            earnings_tooltip = f"<div style='max-width: 300px;'>"
+            earnings_tooltip += f"<strong>Earnings Event</strong><br/>"
+            earnings_tooltip += f"Date: {earnings_next_date}<br/>"
+            if earnings_days_until is not None:
+                earnings_tooltip += f"Days away: {earnings_days_until}<br/>"
+            earnings_tooltip += f"Risk level: <strong>{earnings_risk}</strong><br/>"
+            earnings_tooltip += f"Signal confidence: {earnings_confidence_modifier:.1%} (modifier)<br/>"
+            if earnings_modifier_reason:
+                earnings_tooltip += f"Reason: {earnings_modifier_reason}<br/>"
+            earnings_tooltip += "</div>"
+            
+            earnings_cell = f"<span class='tooltip-trigger' style='color: {earnings_color}; font-weight: bold; cursor: help;'>{earnings_next_date} ({days_display})<span class='tooltiptext' style='width: 320px; left: -160px; white-space: normal;'>{earnings_tooltip}</span></span>"
+        else:
+            earnings_cell = "<span style='color: #95a5a6;'>No earnings</span>"
+        
+        
+        # Add Relative Strength (single weighted column: 60% sector + 40% index)
+        rs_weighted = r.get('rs_weighted', 0)
+        
+        # Color coding for weighted RS
+        if rs_weighted > 0.15:
+            rs_color = '#27ae60'  # Green - outperformer
+            rs_badge = '<strong>+</strong>'
+        elif rs_weighted < -0.15:
+            rs_color = '#e74c3c'  # Red - underperformer
+            rs_badge = '<strong>-</strong>'
+        else:
+            rs_color = '#95a5a6'  # Gray - neutral
+            rs_badge = '<strong>○</strong>'
+        
+        html_content += f"                <td data-score=\"{rs_weighted:.4f}\" style='color: {rs_color};'><span class='tooltip-trigger' style='cursor: help;'>{rs_badge} {abs(rs_weighted):.3f}<span class='tooltiptext' style='width: 350px; left: -175px; white-space: normal;'>Relative strength (60% vs sector peers + 40% vs Nifty50): Positive = outperforming market, Negative = lagging market.</span></span></td>\n"
+        
+        html_content += f"                <td>{r.get('option_premium_quality') or 0:.4f}</td>\n"
+        html_content += f"                <td data-price=\"{price:.2f}\">{price:.2f}</td>\n"
+        html_content += f"                <td data-sl=\"{stop_loss:.2f}\" style=\"font-weight: bold; color: #e74c3c;\">{sl_str}</td>\n"
+        html_content += f"                <td data-target=\"{target:.2f}\" style=\"font-weight: bold; color: #27ae60;\">{target_str}</td>\n"
+        html_content += f"                <td data-score=\"{week52_high:.2f}\" style=\"font-weight: bold; color: #27ae60;\">{week52_high:.2f}</td>\n"
+        html_content += f"                <td data-score=\"{week52_low:.2f}\" style=\"font-weight: bold; color: #c0392b;\">{week52_low:.2f}</td>\n"
+        html_content += f"                <td data-score=\"{daily_change:.2f}\" style=\"color: {daily_color}; font-weight: bold;\">{daily_str}</td>\n"
+        html_content += f"                <td data-score=\"{weekly_change:.2f}\" style=\"color: {weekly_color}; font-weight: bold;\">{weekly_str}</td>\n"
+        html_content += f"                <td data-score=\"{pct_below_high:.2f}\" style=\"font-weight: bold; color: #e67e22;\">{pct_below_high_str}</td>\n"
+        html_content += f"                <td data-score=\"{pct_above_low:.2f}\" style=\"font-weight: bold; color: #3498db;\">{pct_above_low_str}</td>\n"
+        
+        # Add Sector, Pattern, TF Align, Strategy columns (moved after 52W Low%)
+        html_content += f"                <td style=\"background-color: {sector_color}; color: {sector_text_color}; font-weight: bold;\">{sector}</td>\n"
+        html_content += f"                <td>{pattern_str}</td>\n"
+        html_content += f"                <td><span class=\"{{align_class}} tooltip-trigger\" title=\"{align_tooltip}\">{align}<span class=\"tooltiptext\" style=\"width: 300px; bottom: 125%;\">{align_tooltip}</span></span></td>\n"
+        html_content += f"                <td><span class=\"badge badge-{strategy_class} tooltip-trigger\" style=\"font-size: 0.85em; padding: 4px 8px; position: relative; display: inline-block;\" title=\"{STRATEGY_TOOLTIPS.get(strategy_class, 'Option strategy recommendation')}\">{strategy}<span class=\"tooltiptext\" style=\"width: 280px; bottom: 125%; left: 50%; transform: translateX(-50%); white-space: normal;\">{STRATEGY_TOOLTIPS.get(strategy_class, 'Option strategy recommendation')}</span></span></td>\n"
+        
+        html_content += f"                <td>{r.get('or_score', 0):+.4f}</td>\n"
+        html_content += f"                <td>{r.get('vwap_score', 0):+.4f}</td>\n"
+        html_content += f"                <td>{r.get('structure_score', 0):+.4f}</td>\n"
+        html_content += f"                <td>{r.get('rsi') or 0:.2f}</td>\n"
+        html_content += f"                <td>{r.get('ema_score', 0):+.4f}</td>\n"
+        html_content += f"                <td>{r.get('volume_score', 0):+.4f}</td>\n"
+        html_content += f"                <td>{r.get('macd_score', 0):+.4f}</td>\n"
+        html_content += f"                <td>{r.get('bb_score', 0):+.4f}</td>\n"
+        html_content += f"                <td>{atr_str}</td>\n"
+        html_content += f"                <td>{r.get('option_iv') or 0:.4f}</td>\n"
+        html_content += f"                <td>{r.get('option_spread_pct') or 0:.4f}</td>\n"
+        html_content += f"                <td>{r.get('option_delta') or 0:+.4f}</td>\n"
+        html_content += f"                <td>{r.get('option_gamma') or 0:.6f}</td>\n"
+        html_content += f"                <td>{r.get('option_theta') or 0:+.4f}</td>\n"
+        html_content += f"                <td>{r.get('option_vega') or 0:+.4f}</td>\n"
+        html_content += f"                <td>{earnings_cell}</td>\n"
+        html_content += f"            </tr>\n"
     
     html_content += """        </tbody>
     </table>
@@ -2393,6 +2749,8 @@ function filterTable() {
     const minConf = parseFloat(document.getElementById("minConf").value) || 0;
     const enableScore = document.getElementById("enableMinScore").checked;
     const minScore = parseFloat(document.getElementById("minScore").value) || 0;
+    const enableRS = document.getElementById("enableMinRS").checked;
+    const minRS = parseFloat(document.getElementById("minRS").value) || -1;
     const sectorSel = document.getElementById("sectorFilter").value.toLowerCase();
     
     for (let i = 0; i < rows.length; i++) {
@@ -2401,21 +2759,27 @@ function filterTable() {
         
         let confVal = 0;
         let scoreVal = 0;
-        // Column positions: 0 Rank, 1 Symbol, 2 Sector, 3 Pattern, 4 Trend, 5 TF Align, 6 Strategy, 7 Score, 8 Conf%, 9 Price, 10 SL, 11 Target, 12 R:R, 13 Pos Size
-        if (r.cells[8]) {
-            const confText = r.cells[8].getAttribute("data-conf") || r.cells[8].innerText.trim();
+        let rsVal = 0;
+        // Column positions: 0 Rank, 1 Symbol, 2 Trend, 3 Score, 4 Swing Score, 5 LT Score, 6 Conf%, 7 State, 8 Context, 9 Context Mom, 10 Risk Zone, 11 News Sentiment, 12 Rel Strength, 13 Opt Quality, 14 Price, 15 Stop Loss, 16 Target, 17-22 Price data, 23 Sector, 24 Pattern, 25 TF Align, 26 Strategy, 27+ Technical indicators
+        if (r.cells[6]) {
+            const confText = r.cells[6].getAttribute("data-conf") || r.cells[6].innerText.trim();
             confVal = parseFloat(confText) || 0;
         }
-        if (r.cells[7]) {
-            const scoreText = r.cells[7].getAttribute("data-score") || r.cells[7].innerText.trim();
+        if (r.cells[3]) {
+            const scoreText = r.cells[3].getAttribute("data-score") || r.cells[3].innerText.trim();
             scoreVal = Math.abs(parseFloat(scoreText)) || 0;
         }
+        if (r.cells[12]) {
+            const rsText = r.cells[12].getAttribute("data-score") || r.cells[12].innerText.trim();
+            rsVal = parseFloat(rsText) || 0;
+        }
         
-        const sectorCell = r.cells[2] ? (r.cells[2].innerText || "").toLowerCase() : "";
+        const sectorCell = r.cells[23] ? (r.cells[23].innerText || "").toLowerCase() : "";
         const sectorMatch = (sectorSel === "all") || (sectorCell === sectorSel);
         const confMatch = (!enableConf) || (confVal >= minConf);
         const scoreMatch = (!enableScore) || (scoreVal >= minScore);
-        r.style.display = (textMatch && sectorMatch && confMatch && scoreMatch) ? "" : "none";
+        const rsMatch = (!enableRS) || (rsVal >= minRS);
+        r.style.display = (textMatch && sectorMatch && confMatch && scoreMatch && rsMatch) ? "" : "none";
     }
 }
 
@@ -2424,7 +2788,7 @@ function populateSectors() {
     const rows = document.getElementById("screener").tBodies[0].rows;
     const sectors = new Set();
     for (let i = 0; i < rows.length; i++) {
-        const cell = rows[i].cells[2];
+        const cell = rows[i].cells[23];
         if (cell) {
             const sec = (cell.innerText || "").trim();
             if (sec) sectors.add(sec);
@@ -2602,6 +2966,10 @@ def run_with_6thread(syms, engine, num_threads=6):
 
 
 def main():
+    import time as time_module
+    t_start = time_module.time()
+    print(f"[START] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Starting Nifty screener")
+    
     parser = argparse.ArgumentParser(description='Rank stocks by bearness - Refactored V2')
     parser.add_argument('--universe', default='nifty', help='Universe name or custom filename (will look for <universe>_constituents.txt)')
     parser.add_argument('--mode', default='swing', choices=['intraday', 'swing', 'longterm', 'custom'])
@@ -2610,8 +2978,11 @@ def main():
     parser.add_argument('--longterm-w', type=float, default=None)
     parser.add_argument('--use-yf', action='store_true')
     parser.add_argument('--force-yf', action='store_true')
+    parser.add_argument('--force-breeze', action='store_true', help='Force Breeze only (no yFinance fallback)')
     parser.add_argument('--quick', action='store_true')
-    parser.add_argument('--num-threads', type=int, default=6, choices=[6, 8], help='Number of threads (6 or 8, default 6)')
+    parser.add_argument('--num-threads', type=int, default=6, choices=[4, 6, 8, 10, 12], help='Number of threads (default 6, use 10-12 for Nifty50+)')
+    parser.add_argument('--skip-news', action='store_true', help='Skip news sentiment fetch (faster for large universes)')
+    parser.add_argument('--skip-rs', action='store_true', help='Skip relative strength calculations (faster, sort later)')
     parser.add_argument('--no-6thread', action='store_true', help='Disable 6-thread execution (use standard parallel)')
     parser.add_argument('--export', help='Output CSV path')
     parser.add_argument('--screener-format', choices=['csv', 'html'], default='csv', help='Export format')
@@ -2646,14 +3017,28 @@ def main():
     if not syms:
         return
     
+    # Adaptive configuration based on universe size
+    print(f"\n[UNIVERSE] {args.universe.upper()} with {len(syms)} symbols")
+    
+    # Auto-adjust thread count if not explicitly set by user
+    if len(syms) >= 100 and args.num_threads == 6:
+        adaptive_threads = min(12, 6 + (len(syms) - 50) // 15)  # Scale up for large universes
+        print(f"[AUTO-TUNED] Large universe ({len(syms)} stocks) - increasing threads: 6 → {adaptive_threads}")
+        args.num_threads = adaptive_threads
+    
+    # Auto-recommend optimizations for large universes
+    if len(syms) >= 100:
+        print(f"[TIP] For faster Nifty50+ screening: --skip-news --num-threads {min(12, args.num_threads)} --quick")
+    
     # Initialize wait strategy for API rate limiting with universe-aware config
     use_wait_strategy = not args.no_wait_strategy
     if use_wait_strategy:
-        # Optimized batch sizes by universe
+        # Optimized batch sizes by universe (faster for larger sets)
         batch_config = {
-            'nifty500': {'batch_size': 50, 'inter_batch_delay': 1.5, 'request_delay': 0.2},
-            'nifty200': {'batch_size': 30, 'inter_batch_delay': 1.5, 'request_delay': 0.2},
-            'nifty100': {'batch_size': 16, 'inter_batch_delay': 1.5, 'request_delay': 0.2},
+            'nifty500': {'batch_size': 60, 'inter_batch_delay': 1.0, 'request_delay': 0.15},
+            'nifty200': {'batch_size': 40, 'inter_batch_delay': 1.0, 'request_delay': 0.15},
+            'nifty100': {'batch_size': 25, 'inter_batch_delay': 1.0, 'request_delay': 0.15},
+            'nifty': {'batch_size': 20, 'inter_batch_delay': 1.0, 'request_delay': 0.15},
             'default': {'batch_size': 8, 'inter_batch_delay': 1.5, 'request_delay': 0.2}
         }
         config = batch_config.get(args.universe, batch_config['default'])
@@ -2683,6 +3068,7 @@ def main():
         mode=args.mode,
         use_yf=args.use_yf,
         force_yf=args.force_yf,
+        force_breeze=args.force_breeze,
         quick_mode=args.quick,
         intraday_weight=args.intraday_w,
         swing_weight=args.swing_w,
@@ -2735,7 +3121,7 @@ def main():
                                 from data_providers import get_intraday_candles_for
                                 hist_candles, _ = get_intraday_candles_for(
                                     sym, '1day', 200, 
-                                    use_yf=args.use_yf, force_yf=args.force_yf
+                                    use_yf=args.use_yf, force_yf=args.force_yf, force_breeze=args.force_breeze
                                 )
                                 if hist_candles is not None and len(hist_candles) > 20:
                                     # Convert list of dicts to DataFrame with proper types
@@ -2746,9 +3132,18 @@ def main():
                                             hist_df[col] = pd.to_numeric(hist_df[col], errors='coerce')
                                     atr_val = data.get('atr', 0) or 0
                                     data = integrate_with_screener(data, hist_df, atr_val)
+                                else:
+                                    # Set default risk level if S/R integration not possible
+                                    data['risk_level'] = 'LOW'
+                                    data['risk_reason'] = 'Insufficient historical data for risk analysis'
                             except Exception as e:
-                                # Silently continue if S/R integration fails
-                                pass
+                                # Set default risk level if S/R integration fails
+                                data['risk_level'] = 'LOW'
+                                data['risk_reason'] = f'Risk analysis failed: {str(e)}'
+                        else:
+                            # Set default risk level for failed scoring
+                            data['risk_level'] = 'LOW'
+                            data['risk_reason'] = 'Scoring failed or incomplete'
                         # ============================================================================
                         
                         results.append(data)
@@ -2767,6 +3162,60 @@ def main():
     for r in results:
         r['sector'] = get_sector(r.get('symbol', ''))
     
+    # Add robustness metrics to all results
+    for r in results:
+        # Robustness score: derived from confidence and pattern quality
+        confidence = r.get('confidence', 0) or 0
+        pattern_conf = r.get('pattern_confidence', 0) or 0
+        
+        # Robustness = 70% confidence + 30% pattern confidence
+        r['robustness_score'] = (confidence * 0.7) + (pattern_conf * 0.3)
+        
+        # Robustness momentum: derived from trend and context momentum
+        final_score = r.get('final_score', 0) or 0
+        context_momentum = r.get('context_momentum', 0) or 0
+        
+        # Robustness momentum = average of direction strength and context
+        r['robustness_momentum'] = (final_score / 2.0) if final_score != 0 else context_momentum
+        
+        # Master score: 6-dimensional composite
+        # 25% Confidence, 25% Technical, 20% Robustness, 15% Context, 10% Momentum, 5% News
+        confidence_norm = confidence  # Already 0-100
+        technical_norm = (final_score + 1) * 50  # Convert -1 to +1 → 0-100
+        robustness_norm = r['robustness_score']  # Already 0-100
+        context_score = r.get('context_score', 0) or 0
+        context_norm = (context_score / 5.0) * 100  # Convert 0-5 → 0-100
+        momentum_norm = ((context_momentum + 1) / 2) * 100  # Convert -1 to +1 → 0-100
+        news_sentiment = r.get('news_sentiment_score', 0) or 0
+        news_norm = ((news_sentiment + 1) / 2) * 100  # Convert -1 to +1 → 0-100
+        
+        # Calculate master score
+        master_score = (
+            (confidence_norm * 0.25) +
+            (technical_norm * 0.25) +
+            (robustness_norm * 0.20) +
+            (context_norm * 0.15) +
+            (momentum_norm * 0.10) +
+            (news_norm * 0.05)
+        )
+        
+        r['master_score'] = round(master_score, 1)
+        
+        # Generate master score tooltip
+        tooltip = (
+            f"Master Score: {r['master_score']:.1f}/100\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Confidence (25%): {confidence_norm:.0f}/100\n"
+            f"Technical (25%): {technical_norm:.0f}/100\n"
+            f"Robustness (20%): {robustness_norm:.0f}/100\n"
+            f"Context (15%): {context_norm:.0f}/100\n"
+            f"Momentum (10%): {momentum_norm:.0f}/100\n"
+            f"News (5%): {news_norm:.0f}/100\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Rating: {'STRONG ✓✓' if r['master_score'] >= 80 else 'GOOD ✓' if r['master_score'] >= 70 else 'FAIR ⚠' if r['master_score'] >= 60 else 'WEAK ✗'}"
+        )
+        r['master_score_tooltip'] = tooltip
+    
     # Add option selling viability score (0-1 scale, independent field)
     for r in results:
         r['option_selling_score'] = calculate_option_selling_score_0_1(r)
@@ -2780,6 +3229,8 @@ def main():
     for r in results:
         r['option_premium_quality'] = calculate_option_premium_quality(r)
 
+    # NOTE: context_score, context_momentum, and system_state are now computed in the engine
+    # No need to recalculate them here - they are already in the results with full authority
     # Compute index bias and print actionable picks first
     idx_bias, idx_src = _compute_index_bias(engine, results=results)
     print_actionables(results, index_bias=idx_bias, conf_threshold=60.0, score_threshold=0.35, mode=args.mode)
@@ -2887,6 +3338,14 @@ def main():
     if args.save_db:
         _load_results_to_database(csv_path)
         print(f"\n[SUCCESS] Results automatically saved to database")
+    
+    # Print final timing summary
+    total_elapsed = time_module.time() - t_start
+    print(f"\n" + "=" * 80)
+    print(f"[COMPLETE] Total Execution Time: {total_elapsed:.1f}s ({total_elapsed/60:.2f}min)")
+    print(f"[SUMMARY] {len(results)} stocks analyzed ({len(syms)} loaded)")
+    print(f"[END] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 80 + "\n")
 
 
 if __name__ == '__main__':

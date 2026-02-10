@@ -85,6 +85,42 @@ python nifty_bearnness_v2.py \
 python nifty_bearnness_v2.py --no-wait-strategy
 ```
 
+### 🔄 Automated Scheduling (15-minute intervals)
+
+**Start Background Scheduler:**
+```bash
+# Windows (double-click)
+start_scheduler.bat
+
+# Or manually
+python start_scheduler.py
+```
+
+**Stop Scheduler:**
+```bash
+# Windows (double-click)
+stop_scheduler.bat
+
+# Or manually
+python stop_scheduler.py
+```
+
+**Check Status:**
+```bash
+# Windows (double-click)
+scheduler_status.bat
+
+# Or manually
+python scripts\scheduling\scheduler.py --status
+```
+
+**Scheduler Features:**
+- ✅ Runs every 15 minutes during market hours (9:15 AM - 3:30 PM IST)
+- ✅ Automatically skips weekends
+- ✅ Generates fresh reports without manual intervention
+- ✅ Logs all activity to `logs/scheduler.log`
+- ✅ Can be stopped anytime with stop script
+
 **Complete command reference:** See [WIKI.md > Command Reference](WIKI.md#command-reference)
 
 ---
@@ -246,6 +282,32 @@ Built for Indian stock market analysis using NSE/NIFTY indices.
 **Data Source:** Yahoo Finance  
 **Markets:** NSE (Bombay Stock Exchange)  
 **Time Zone:** IST (UTC+5:30)
+
+---
+
+## 🤖 MCP Integration (AI Assistant Support)
+
+This project includes **Model Context Protocol (MCP)** support, allowing AI assistants like Claude to interact directly with your trading analysis tools.
+
+### Quick Setup for Claude Desktop
+
+1. **Install MCP package** (already done):
+   ```bash
+   pip install mcp>=1.26.0
+   ```
+
+2. **Configure Claude Desktop:**
+   - Open `%APPDATA%\Claude\claude_desktop_config.json`
+   - Add the server configuration (see `claude_desktop_config.json`)
+   - Restart Claude Desktop
+
+3. **Available AI Commands:**
+   - *"Analyze RELIANCE.NS for the last 60 days"*
+   - *"Show me NIFTY 50 stocks"*
+   - *"Run a backtest on NIFTY 100"*
+   - *"Generate a report for NIFTY Large Cap"*
+
+**📖 Complete Guide:** See **[MCP_README.md](MCP_README.md)** for detailed setup and usage instructions.
 
 ---
 

@@ -1,73 +1,73 @@
 {
   "AUBANK": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:22.538792"
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "BANKBARODA": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:24.358430"
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "CANBK": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:26.605613"
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "FEDERALBNK": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:28.579298"
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "AXISBANK": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:30.797502"
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "ICICIBANK": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:32.622674"
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "IDFCFIRSTB": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:34.748152"
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "PNB": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:36.596125"
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "INDUSINDBK": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:38.547896"
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "KOTAKBANK": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:40.518496"
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "SBIN": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:42.787783"
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "HDFCBANK": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:44.862132"
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "UNIONBANK": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:47.134159"
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:53.471206"
   },
   "YESBANK": {
-    "next_earnings": null,
-    "days_until": null,
-    "fetch_time": "2026-01-24T21:37:49.554540"
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:53.471206"
   },
   "CAPLIPOINT": {
     "next_earnings": "2026-05-01T00:00:00",
@@ -111,8 +111,8 @@
   },
   "CHAMBLFERT": {
     "next_earnings": "2026-05-01T00:00:00",
-    "days_until": 96,
-    "fetch_time": "2026-01-24T23:08:06.525738"
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "CHOICEIN": {
     "next_earnings": "2026-07-01T00:00:00",
@@ -121,8 +121,8 @@
   },
   "CENTURYPLY": {
     "next_earnings": "2026-06-01T00:00:00",
-    "days_until": 127,
-    "fetch_time": "2026-01-24T23:08:06.525738"
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "CUB": {
     "next_earnings": "2026-06-01T00:00:00",
@@ -166,8 +166,8 @@
   },
   "DEEPAKFERT": {
     "next_earnings": "2026-02-01T00:00:00",
-    "days_until": 7,
-    "fetch_time": "2026-01-24T23:08:06.525738"
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "AGARWALEYE": {
     "next_earnings": "2026-07-01T00:00:00",
@@ -191,8 +191,8 @@
   },
   "EMAMILTD": {
     "next_earnings": "2026-02-01T00:00:00",
-    "days_until": 7,
-    "fetch_time": "2026-01-24T23:08:06.525738"
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "EMCURE": {
     "next_earnings": "2026-03-01T00:00:00",
@@ -216,13 +216,13 @@
   },
   "ESCORTS": {
     "next_earnings": "2026-07-01T00:00:00",
-    "days_until": 157,
-    "fetch_time": "2026-01-24T23:08:06.525738"
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "EXIDEIND": {
     "next_earnings": "2026-02-01T00:00:00",
-    "days_until": 7,
-    "fetch_time": "2026-01-24T23:08:06.525738"
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "FACT": {
     "next_earnings": "2026-03-01T00:00:00",
@@ -251,8 +251,8 @@
   },
   "FORCEMOT": {
     "next_earnings": "2026-03-01T00:00:00",
-    "days_until": 35,
-    "fetch_time": "2026-01-24T23:08:06.525738"
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
   },
   "GICRE": {
     "next_earnings": "2026-06-01T00:00:00",
@@ -263,5 +263,1485 @@
     "next_earnings": null,
     "days_until": null,
     "fetch_time": "2026-01-24T23:08:10.757459"
+  },
+  "ADANIPORTS": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "AMBUJACEM": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 27,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "ADANIPOWER": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "ADANIENSOL": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "ADANIENT": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "ADANIGREEN": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "APOLLOHOSP": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "APOLLOTYRE": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 89,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "AUROPHARMA": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 27,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "BIOCON": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "ASHOKLEY": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "BLUESTARCO": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 28,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "BOSCHLTD": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 59,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "BRITANNIA": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 120,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "BAJAJ-AUTO": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.360871"
+  },
+  "BPCL": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 27,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "COLPAL": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "BAJAJFINSV": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "COFORGE": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "CUMMINSIND": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 150,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "DABUR": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 28,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "BAJFINANCE": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "DELHIVERY": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 59,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "DIVISLAB": {
+    "next_earnings": "2026-02-07T00:00:00",
+    "days_until": 6,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "DLF": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "BEL": {
+    "next_earnings": "2026-03-14T00:00:00",
+    "days_until": 41,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "BHARTIARTL": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "FORTIS": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "GAIL": {
+    "next_earnings": "2026-03-14T00:00:00",
+    "days_until": 41,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "CIPLA": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:26.361873"
+  },
+  "GUJALKALI": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-31T00:30:28.908399"
+  },
+  "GODREJCP": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:28.910418"
+  },
+  "HATSUN": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-31T00:30:30.692872"
+  },
+  "COALINDIA": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 27,
+    "fetch_time": "2026-01-31T00:30:30.694874"
+  },
+  "HEROMOTOCO": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:30.694874"
+  },
+  "ICICIGI": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:30.694874"
+  },
+  "INDHOTEL": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:30.694874"
+  },
+  "INOXWIND": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 89,
+    "fetch_time": "2026-01-31T00:30:30.694874"
+  },
+  "DRREDDY": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 20,
+    "fetch_time": "2026-01-31T00:30:30.694874"
+  },
+  "IOC": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 27,
+    "fetch_time": "2026-01-31T00:30:30.694874"
+  },
+  "KIOCL": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-01-31T00:30:32.930098"
+  },
+  "360ONE": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ABBOTINDIA": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ABFRL": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ABCAPITAL": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ABLBL": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ASIANPAINT": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ANANTRAJ": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "AKZOINDIA": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ALKEM": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "APLAPOLLO": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ANGELONE": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ASTERDM": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ASTRAL": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ATHERENERG": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BAJAJHFL": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BALKRISIND": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BANDHANBNK": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BANKINDIA": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BDL": {
+    "next_earnings": "2026-03-21T00:00:00",
+    "days_until": 42,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BHARATFORG": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BAYERCROP": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BERGEPAINT": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BHEL": {
+    "next_earnings": "2026-03-21T00:00:00",
+    "days_until": 42,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BRIGADE": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BSE": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CDSL": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "EICHERMOT": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "BSOFT": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CAMS": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ETERNAL": {
+    "next_earnings": "2026-03-07T00:00:00",
+    "days_until": 28,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CEATLTD": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GRASIM": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CGPOWER": {
+    "next_earnings": "2026-03-21T00:00:00",
+    "days_until": 42,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CHENNPETRO": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CHOLAHLDNG": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CHOLAFIN": {
+    "next_earnings": "2026-03-07T00:00:00",
+    "days_until": 28,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HCLTECH": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "COCHINSHIP": {
+    "next_earnings": "2026-03-07T00:00:00",
+    "days_until": 28,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CONCOR": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "COROMANDEL": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HINDALCO": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CREDITACC": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HDFCLIFE": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CROMPTON": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "CYIENT": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HINDUNILVR": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "DALBHARAT": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "DATAPATTNS": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "DEEPAKNTR": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "DIXON": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "INDIGO": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ELECON": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "INFY": {
+    "next_earnings": "2026-01-31T00:00:00",
+    "days_until": -7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "DMART": {
+    "next_earnings": "2026-02-07T00:00:00",
+    "days_until": 0,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ITC": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ENRIN": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "JIOFIN": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "JSWSTEEL": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "FLUOROCHEM": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "LT": {
+    "next_earnings": "2026-02-07T00:00:00",
+    "days_until": 0,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GESHIP": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GLENMARK": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GLAXO": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "M&M": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "MARUTI": {
+    "next_earnings": "2026-02-07T00:00:00",
+    "days_until": 0,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GMDCLTD": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GMRAIRPORT": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GODFRYPHLP": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "MAXHEALTH": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GODREJPROP": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "NESTLEIND": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GRANULES": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "NTPC": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GRSE": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GRAPHITE": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ONGC": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "GVT&D": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HAL": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "POWERGRID": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HAVELLS": {
+    "next_earnings": "2026-02-07T00:00:00",
+    "days_until": 0,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "RELIANCE": {
+    "next_earnings": "2026-02-07T00:00:00",
+    "days_until": 0,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HBLENGINE": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HDFCAMC": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "SBILIFE": {
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HEG": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HINDCOPPER": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HFCL": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "SHRIRAMFIN": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HINDPETRO": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HINDZINC": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HUDCO": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "TATACONSUM": {
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "SUNPHARMA": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HOMEFIRST": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "HYUNDAI": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "TCS": {
+    "next_earnings": "2026-02-07T00:00:00",
+    "days_until": 0,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "IDBI": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "TATASTEEL": {
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "IDEA": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "ICICIPRULI": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "IEX": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "IFCI": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "TECHM": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "TITAN": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "IIFL": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "INDIANB": {
+    "next_earnings": "2026-03-21T00:00:00",
+    "days_until": 42,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "TMPV": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "INDUSTOWER": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "TRENT": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:50.578070"
+  },
+  "INVENTURE": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:57:53.467046"
+  },
+  "WIPRO": {
+    "next_earnings": "2026-02-07T00:00:00",
+    "days_until": 0,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "IPCALAB": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "IRCTC": {
+    "next_earnings": "2026-03-14T00:00:00",
+    "days_until": 35,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "IRB": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "IREDA": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "IRFC": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "J&KBANK": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JINDALSAW": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "ITCHOTELS": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JINDALSTEL": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JKTYRE": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JPPOWER": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JSL": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JKCEMENT": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JSWENERGY": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JUBLFOOD": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JSWINFRA": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JWL": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "JYOTHYLAB": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "KALYANKJIL": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "KAJARIACER": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:53.471206"
+  },
+  "KANSAINER": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:57:55.681381"
+  },
+  "KARURVYSYA": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:55.686934"
+  },
+  "KAYNES": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:55.686934"
+  },
+  "KFINTECH": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:57:55.686934"
+  },
+  "KEI": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:55.686934"
+  },
+  "KITEX": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:57:57.847012"
+  },
+  "KPITTECH": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "LALPATHLAB": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "LAURUSLABS": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "LEMONTREE": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "LICI": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "LICHSGFIN": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "LTF": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "LODHA": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "LTFOODS": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "LTIM": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "LUPIN": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "M&MFIN": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "MANKIND": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "MAHABANK": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "MANAPPURAM": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "MARICO": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "MCX": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "MAZDOCK": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "MFSL": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:57:57.856137"
+  },
+  "MEDPLUS": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:00.447117"
+  },
+  "MIDHANI": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:03.427164"
+  },
+  "MOTHERSON": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:03.433308"
+  },
+  "MOTILALOFS": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:58:03.433308"
+  },
+  "MOIL": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:05.556861"
+  },
+  "MRPL": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:58:05.563699"
+  },
+  "MPHASIS": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:05.563699"
+  },
+  "MRF": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:05.563699"
+  },
+  "MSPL": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "MUTHOOTFIN": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "NATIONALUM": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "NBCC": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "NAVINFLUOR": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "NETWEB": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "NHPC": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "NEWGEN": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "NMDC": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "NLCINDIA": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "NUVAMA": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:58:07.716803"
+  },
+  "NOCIL": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:09.937211"
+  },
+  "NYKAA": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "OBEROIRLTY": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "OLAELEC": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "OIL": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PAGEIND": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PATANJALI": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PAYTM": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PERSISTENT": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PETRONET": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PFC": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PFIZER": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PIDILITIND": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PGEL": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PHOENIXLTD": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PNBHOUSING": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PIIND": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "POLICYBZR": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "POLYCAB": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PREMIERENE": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "POONAWALLA": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "PRESTIGE": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "RADICO": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:09.941193"
+  },
+  "RATNAMANI": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:12.308300"
+  },
+  "RBLBANK": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:58:12.311580"
+  },
+  "RAMCOCEM": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:58:12.311580"
+  },
+  "RECLTD": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:58:12.311580"
+  },
+  "REDINGTON": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:12.311580"
+  },
+  "RPOWER": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:58:12.311580"
+  },
+  "RVNL": {
+    "next_earnings": "2026-03-14T00:00:00",
+    "days_until": 35,
+    "fetch_time": "2026-02-06T11:58:12.311580"
+  },
+  "SAIL": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:58:12.311580"
+  },
+  "SAGILITY": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:58:12.311580"
+  },
+  "SAMMAANCAP": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:58:12.311580"
+  },
+  "SANOFI": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:14.911102"
+  },
+  "SBICARD": {
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SCHNEIDER": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SHREECEM": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SIEMENS": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SOLARINDS": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SONACOMS": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SRF": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SUZLON": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SUPREMEIND": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SUMICHEM": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SUNTV": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SWANCORP": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SYRMA": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SWIGGY": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "SYNGENE": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "TARIL": {
+    "next_earnings": "2026-02-01T00:00:00",
+    "days_until": -6,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "TATAPOWER": {
+    "next_earnings": "2026-02-14T00:00:00",
+    "days_until": 7,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "TATACOMM": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "TATACHEM": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "TATATECH": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "TIINDIA": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "TEJASNET": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "THERMAX": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "TORNTPHARM": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "TVSMOTOR": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "TORNTPOWER": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:58:14.915113"
+  },
+  "ULTRACEMCO": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:17.418044"
+  },
+  "UNITDSPR": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:17.422679"
+  },
+  "UPL": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:17.422679"
+  },
+  "UNOMINDA": {
+    "next_earnings": "2026-06-01T00:00:00",
+    "days_until": 114,
+    "fetch_time": "2026-02-06T11:58:17.422679"
+  },
+  "VBL": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:17.422679"
+  },
+  "VEDL": {
+    "next_earnings": "2026-02-28T00:00:00",
+    "days_until": 21,
+    "fetch_time": "2026-02-06T11:58:17.422679"
+  },
+  "VGUARD": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:58:17.422679"
+  },
+  "VINATIORGA": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:19.747100"
+  },
+  "VMM": {
+    "next_earnings": "2026-03-07T00:00:00",
+    "days_until": 28,
+    "fetch_time": "2026-02-06T11:58:19.758038"
+  },
+  "VOLTAS": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:19.758038"
+  },
+  "WAAREEENER": {
+    "next_earnings": "2026-02-21T00:00:00",
+    "days_until": 14,
+    "fetch_time": "2026-02-06T11:58:19.758038"
+  },
+  "WELCORP": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:58:19.758038"
+  },
+  "VRLLOG": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:22.028800"
+  },
+  "WESTLIFE": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:24.318493"
+  },
+  "WOCKPHARMA": {
+    "next_earnings": "2026-04-01T00:00:00",
+    "days_until": 53,
+    "fetch_time": "2026-02-06T11:58:24.328010"
+  },
+  "WHIRLPOOL": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:24.328010"
+  },
+  "ZEEL": {
+    "next_earnings": "2026-05-01T00:00:00",
+    "days_until": 83,
+    "fetch_time": "2026-02-06T11:58:24.328010"
+  },
+  "ZENTEC": {
+    "next_earnings": "2026-07-01T00:00:00",
+    "days_until": 144,
+    "fetch_time": "2026-02-06T11:58:24.328010"
+  },
+  "ZYDUSLIFE": {
+    "next_earnings": "2026-03-01T00:00:00",
+    "days_until": 22,
+    "fetch_time": "2026-02-06T11:58:24.328010"
+  },
+  "ZYDUSWELL": {
+    "next_earnings": null,
+    "days_until": null,
+    "fetch_time": "2026-02-06T11:58:26.556724"
   }
 }

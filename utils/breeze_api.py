@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from dotenv import load_dotenv
 
@@ -7,7 +8,7 @@ try:
     from breeze_connect import BreezeConnect
 except Exception as e:
     BreezeConnect = None
-    print(f"BreezeConnect import failed [WARN]: {e}")
+    print(f"BreezeConnect import failed [WARN]: {e}", file=sys.stderr)
 
 # Load environment variables
 load_dotenv()
@@ -37,10 +38,10 @@ _breeze_initialized = False
 def _attempt_breeze_connection(attempt=1):
     """Attempt to connect to Breeze with error details."""
     try:
-        print(f"[Attempt {attempt}/{BREEZE_RETRY_ATTEMPTS}] Initializing BreezeConnect...")
+        print(f"[Attempt {attempt}/{BREEZE_RETRY_ATTEMPTS}] Initializing BreezeConnect...", file=sys.stderr)
         breeze_obj = BreezeConnect(api_key=API_KEY)
         
-        print(f"[Attempt {attempt}/{BREEZE_RETRY_ATTEMPTS}] Generating session...")
+        print(f"[Attempt {attempt}/{BREEZE_RETRY_ATTEMPTS}] Generating session...", file=sys.stderr)
         result = breeze_obj.generate_session(
             api_secret=API_SECRET,
             session_token=SESSION_TOKEN
@@ -50,35 +51,35 @@ def _attempt_breeze_connection(attempt=1):
         if result and isinstance(result, dict):
             status = result.get('Status')
             if status == 200 or status == 201:
-                print("[OK] Breeze session established successfully")
+                print("[OK] Breeze session established successfully", file=sys.stderr)
                 return breeze_obj, True
             else:
                 error = result.get('Error', 'Unknown error')
-                print(f"[FAIL] Breeze session failed with status {status}: {error}")
+                print(f"[FAIL] Breeze session failed with status {status}: {error}", file=sys.stderr)
                 return None, False
         else:
             # generate_session() returned None - test with actual API call
-            print(f"[?] Session result was None - verifying with API test...")
+            print(f"[?] Session result was None - verifying with API test...", file=sys.stderr)
             try:
                 test_result = breeze_obj.get_portfolio_positions()
                 if test_result is not None:
-                    print("[OK] Breeze API verified working")
+                    print("[OK] Breeze API verified working", file=sys.stderr)
                     return breeze_obj, True
                 else:
-                    print("[FAIL] Breeze API test returned None - session invalid")
+                    print("[FAIL] Breeze API test returned None - session invalid", file=sys.stderr)
                     return None, False
             except Exception as test_error:
-                print(f"[FAIL] Breeze API test failed: {type(test_error).__name__}: {str(test_error)[:80]}")
+                print(f"[FAIL] Breeze API test failed: {type(test_error).__name__}: {str(test_error)[:80]}", file=sys.stderr)
                 return None, False
             
     except ConnectionError as e:
-        print(f"[FAIL] Connection error (attempt {attempt}): {str(e)[:100]}")
+        print(f"[FAIL] Connection error (attempt {attempt}): {str(e)[:100]}", file=sys.stderr)
         return None, False
     except TimeoutError as e:
-        print(f"[FAIL] Timeout error (attempt {attempt}): {str(e)[:100]}")
+        print(f"[FAIL] Timeout error (attempt {attempt}): {str(e)[:100]}", file=sys.stderr)
         return None, False
     except Exception as e:
-        print(f"[FAIL] Error (attempt {attempt}): {type(e).__name__}: {str(e)[:80]}")
+        print(f"[FAIL] Error (attempt {attempt}): {type(e).__name__}: {str(e)[:80]}", file=sys.stderr)
         return None, False
 
 
@@ -93,11 +94,11 @@ def get_breeze_instance():
     
     if not BreezeConnect:
         _breeze_instance = _DummyBreeze()
-        print("BreezeConnect module not available [INFO]")
+        print("BreezeConnect module not available [INFO]", file=sys.stderr)
         return _breeze_instance
     
     if not API_KEY or not API_SECRET:
-        print("Breeze credentials missing [WARN]: API_KEY or API_SECRET not in .env")
+        print("Breeze credentials missing [WARN]: API_KEY or API_SECRET not in .env", file=sys.stderr)
         _breeze_instance = _DummyBreeze()
         return _breeze_instance
     
@@ -110,11 +111,11 @@ def get_breeze_instance():
         
         # Wait before retry (except after last attempt)
         if attempt < BREEZE_RETRY_ATTEMPTS:
-            print(f"[RETRY] Waiting {BREEZE_RETRY_DELAY}s before retry...")
+            print(f"[RETRY] Waiting {BREEZE_RETRY_DELAY}s before retry...", file=sys.stderr)
             time.sleep(BREEZE_RETRY_DELAY)
     
     # All retries exhausted
-    print(f"[WARN] Failed to connect to Breeze after {BREEZE_RETRY_ATTEMPTS} attempts - falling back to alternative providers")
+    print(f"[WARN] Failed to connect to Breeze after {BREEZE_RETRY_ATTEMPTS} attempts - falling back to alternative providers", file=sys.stderr)
     _breeze_instance = _DummyBreeze()
     return _breeze_instance
 

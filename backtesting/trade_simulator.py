@@ -31,12 +31,16 @@ class Trade:
 class TradeSimulator:
     """Simulate trade execution with position sizing and exits"""
     
-    def __init__(self, initial_capital=100000, risk_per_trade=0.02, commission=0.0005):
+    def __init__(self, initial_capital=100000, risk_per_trade=0.02, commission=0.0005, 
+                 daily_loss_limit=-0.02, max_daily_trades=5, correlation_threshold=0.7):
         """
         Args:
             initial_capital: Starting capital (default 1L)
             risk_per_trade: Risk % per trade (default 2%)
             commission: Commission % (default 0.05%)
+            daily_loss_limit: Daily loss limit as % of capital (default -2%)
+            max_daily_trades: Max trades per day (default 5)
+            correlation_threshold: Max correlation for multi-stock positions (0-1)
         """
         self.initial_capital = initial_capital
         self.capital = initial_capital
@@ -45,9 +49,49 @@ class TradeSimulator:
         self.trades = []
         self.open_positions = {}
         
-    def calculate_position_size(self, price, stop_loss):
-        """Calculate shares to buy based on risk"""
-        risk_amount = self.capital * self.risk_per_trade
+        # NEW: Daily loss management
+        self.daily_loss_limit = daily_loss_limit
+        self.current_day = None
+        self.daily_loss = 0.0
+        self.daily_high_mark = initial_capital  # Highest capital seen in day
+        self.daily_trades_count = 0
+        self.max_daily_trades = max_daily_trades
+        self.day_trading_paused = False
+        
+        # NEW: Correlation tracking
+        self.correlation_threshold = correlation_threshold
+        self.position_symbols = []  # Track open positions by symbol
+        
+    def calculate_position_size(self, price, stop_loss, atr=None, close_price=None):
+        """
+        Calculate shares with VOLATILITY ADJUSTMENT
+        
+        High volatility (>3%) = 1% risk
+        Medium volatility (1-3%) = 2% risk (default)
+        Low volatility (<1%) = 3% risk
+        
+        Args:
+            price: Entry price
+            stop_loss: Stop loss price
+            atr: Average True Range (optional)
+            close_price: Current close price (optional)
+        
+        Returns:
+            shares to buy
+        """
+        # Determine risk percentage based on volatility
+        if atr and close_price and close_price > 0:
+            vol_ratio = atr / close_price
+            if vol_ratio > 0.03:      # High volatility
+                risk_pct = 0.01        # Risk only 1%
+            elif vol_ratio > 0.015:   # Medium volatility
+                risk_pct = 0.02        # Risk 2%
+            else:                      # Low volatility
+                risk_pct = 0.03        # Risk 3%
+        else:
+            risk_pct = 0.02  # Default to 2% if no vol data
+        
+        risk_amount = self.capital * risk_pct
         risk_per_share = abs(price - stop_loss)
         
         if risk_per_share == 0:
@@ -60,6 +104,49 @@ class TradeSimulator:
         shares = min(shares, max_shares)
         
         return shares
+    
+    def update_daily_loss(self, date, net_pnl):
+        """
+        Track daily P&L and check if daily loss limit hit
+        
+        Returns:
+            bool: True if can continue trading, False if paused (hit daily limit)
+        """
+        # Reset daily counters if new day
+        if self.current_day != date.date():
+            self.current_day = date.date()
+            self.daily_loss = 0.0
+            self.daily_high_mark = self.capital
+            self.daily_trades_count = 0
+            self.day_trading_paused = False
+        
+        # Update daily loss
+        self.daily_loss += net_pnl
+        self.day_trading_paused = False  # Clear pause flag
+        
+        # Check daily loss limit
+        daily_loss_pct = self.daily_loss / self.initial_capital
+        if daily_loss_pct <= self.daily_loss_limit:  # e.g., -2%
+            self.day_trading_paused = True
+            return False  # Stop trading for the day
+        
+        return True  # OK to continue trading
+    
+    def can_add_position(self, symbol):
+        """
+        Check if can add position based on:
+        1. Daily loss limit not hit
+        2. Not at max daily trades
+        3. Basic symbol checks
+        
+        Returns:
+            bool: True if OK to add position
+        """
+        if self.day_trading_paused:
+            return False
+        if self.daily_trades_count >= self.max_daily_trades:
+            return False
+        return True
     
     def execute_trades(self, backtest_result):
         """
@@ -176,6 +263,10 @@ class TradeSimulator:
 
                     # Update capital with P&L
                     self.capital += net_pnl
+                    
+                    # NEW: Update daily loss tracking and check limits
+                    self.update_daily_loss(date, net_pnl)
+                    self.daily_trades_count += 1
 
                     # Record trade (use initial_shares for reporting)
                     trade = Trade(
@@ -213,9 +304,15 @@ class TradeSimulator:
                     stop_loss = signal['stop_loss']
                     target = signal['target']
                     signal_type = signal['signal']
+                    atr_value = signal.get('atr', None)
+                    
+                    # Check daily trading constraints
+                    if not self.can_add_position(symbol):
+                        signal_idx += 1
+                        continue
 
-                    # Calculate position size
-                    shares = self.calculate_position_size(entry_price, stop_loss)
+                    # Calculate position size (WITH VOLATILITY ADJUSTMENT)
+                    shares = self.calculate_position_size(entry_price, stop_loss, atr=atr_value, close_price=entry_price)
 
                     if shares > 0:
                         # Check capital availability

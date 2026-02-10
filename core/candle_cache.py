@@ -119,7 +119,7 @@ def save_candles_to_db(symbol, interval, candles, source='breeze'):
             # Update existing entry
             existing.candles_json = candles_json
             existing.source = source
-            existing.last_fetched = datetime.utcnow()
+            existing.last_fetched = datetime.now(datetime.UTC)
         else:
             # Create new entry
             cache_entry = CandleCache(
@@ -176,7 +176,7 @@ def load_candles_from_db(symbol, interval, max_age_hours=4):
             return None, None
         
         # Check if cache is still valid
-        age = datetime.utcnow() - cache_entry.last_fetched
+        age = datetime.now(datetime.UTC) - cache_entry.last_fetched
         max_age = timedelta(hours=max_age_hours)
         
         if age > max_age:
@@ -209,7 +209,7 @@ def clear_old_cache(max_age_hours=24):
     try:
         session = get_session()
         
-        cutoff_time = datetime.utcnow() - timedelta(hours=max_age_hours)
+        cutoff_time = datetime.now(datetime.UTC) - timedelta(hours=max_age_hours)
         
         deleted = session.query(CandleCache).filter(
             CandleCache.last_fetched < cutoff_time

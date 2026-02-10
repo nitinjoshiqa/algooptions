@@ -95,7 +95,7 @@ class SchedulerConfig:
             errors.append(f"Invalid time format (use HH:MM): {e}")
         
         # Validate universes
-        valid_universes = ["nifty", "nifty100", "banknifty"]
+        valid_universes = ["nifty", "nifty50", "nifty100", "nifty200", "nifty500", "banknifty"]
         universes = self.config["screener"]["universes"]
         for u in universes:
             if u not in valid_universes:

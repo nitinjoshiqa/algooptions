@@ -1,3 +1,6 @@
+# MCP (Model Context Protocol)
+mcp>=1.26.0
+
 # NIFTY Bearnness Screener - Production Requirements
 # Python 3.12+
 
@@ -29,6 +32,9 @@ jinja2>=3.1.0
 pytest>=7.4.0  # For testing
 black>=23.0.0  # Code formatting
 mypy>=1.0.0    # Type checking
+
+# Scheduling
+APScheduler>=3.10.0  # Background job scheduling
 
 # Database
 # sqlite3 is built-in, no need to install separately

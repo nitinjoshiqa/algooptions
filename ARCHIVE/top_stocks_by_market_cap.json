@@ -1,0 +1,714 @@
+{
+  "timestamp": "2026-02-06T11:23:48.876180",
+  "valid_stocks": [
+    {
+      "ticker": "RELIANCE.NS",
+      "symbol": "RELIANCE",
+      "name": "Reliance Industries Limited",
+      "market_cap_b": 19593.67,
+      "price": 1447.9,
+      "status": "VALID"
+    },
+    {
+      "ticker": "HDFCBANK.NS",
+      "symbol": "HDFCBANK",
+      "name": "HDFC Bank Limited",
+      "market_cap_b": 14507.82,
+      "price": 942.8,
+      "status": "VALID"
+    },
+    {
+      "ticker": "BHARTIARTL.NS",
+      "symbol": "BHARTIARTL",
+      "name": "Bharti Airtel Limited",
+      "market_cap_b": 12329.14,
+      "price": 2024.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "TCS.NS",
+      "symbol": "TCS",
+      "name": "Tata Consultancy Services Limited",
+      "market_cap_b": 10566.62,
+      "price": 2920.5,
+      "status": "VALID"
+    },
+    {
+      "ticker": "ICICIBANK.NS",
+      "symbol": "ICICIBANK",
+      "name": "ICICI Bank Limited",
+      "market_cap_b": 10007.48,
+      "price": 1399.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "SBIN.NS",
+      "symbol": "SBIN",
+      "name": "State Bank of India",
+      "market_cap_b": 9763.22,
+      "price": 1057.7,
+      "status": "VALID"
+    },
+    {
+      "ticker": "INFY.NS",
+      "symbol": "INFY",
+      "name": "Infosys Limited",
+      "market_cap_b": 6068.54,
+      "price": 1500.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "BAJFINANCE.NS",
+      "symbol": "BAJFINANCE",
+      "name": "Bajaj Finance Limited",
+      "market_cap_b": 6043.84,
+      "price": 972.25,
+      "status": "VALID"
+    },
+    {
+      "ticker": "LICI.NS",
+      "symbol": "LICI",
+      "name": "Life Insurance Corporation of India",
+      "market_cap_b": 5661.19,
+      "price": 895.05,
+      "status": "VALID"
+    },
+    {
+      "ticker": "LT.NS",
+      "symbol": "LT",
+      "name": "Larsen & Toubro Limited",
+      "market_cap_b": 5588.83,
+      "price": 4062.8,
+      "status": "VALID"
+    },
+    {
+      "ticker": "MARUTI.NS",
+      "symbol": "MARUTI",
+      "name": "Maruti Suzuki India Limited",
+      "market_cap_b": 4738.05,
+      "price": 15070.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "M&M.NS",
+      "symbol": "M&M",
+      "name": "Mahindra & Mahindra Limited",
+      "market_cap_b": 4292.29,
+      "price": 3575.5,
+      "status": "VALID"
+    },
+    {
+      "ticker": "HCLTECH.NS",
+      "symbol": "HCLTECH",
+      "name": "HCL Technologies Limited",
+      "market_cap_b": 4285.75,
+      "price": 1584.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "KOTAKBANK.NS",
+      "symbol": "KOTAKBANK",
+      "name": "Kotak Mahindra Bank Limited",
+      "market_cap_b": 4170.14,
+      "price": 419.3,
+      "status": "VALID"
+    },
+    {
+      "ticker": "AXISBANK.NS",
+      "symbol": "AXISBANK",
+      "name": "Axis Bank Limited",
+      "market_cap_b": 4158.18,
+      "price": 1338.8,
+      "status": "VALID"
+    },
+    {
+      "ticker": "SUNPHARMA.NS",
+      "symbol": "SUNPHARMA",
+      "name": "Sun Pharmaceutical Industries Limited",
+      "market_cap_b": 4067.83,
+      "price": 1695.4,
+      "status": "VALID"
+    },
+    {
+      "ticker": "ITC.NS",
+      "symbol": "ITC",
+      "name": "ITC Limited",
+      "market_cap_b": 4011.86,
+      "price": 320.2,
+      "status": "VALID"
+    },
+    {
+      "ticker": "ADANIPORTS.NS",
+      "symbol": "ADANIPORTS",
+      "name": "Adani Ports and Special Economic Zone Limited",
+      "market_cap_b": 3564.46,
+      "price": 1547.2,
+      "status": "VALID"
+    },
+    {
+      "ticker": "NTPC.NS",
+      "symbol": "NTPC",
+      "name": "NTPC Limited",
+      "market_cap_b": 3522.8,
+      "price": 363.3,
+      "status": "VALID"
+    },
+    {
+      "ticker": "NTPC.NS",
+      "symbol": "NTPC",
+      "name": "NTPC Limited",
+      "market_cap_b": 3522.8,
+      "price": 363.3,
+      "status": "VALID"
+    },
+    {
+      "ticker": "ONGC.NS",
+      "symbol": "ONGC",
+      "name": "Oil and Natural Gas Corporation Limited",
+      "market_cap_b": 3380.32,
+      "price": 268.7,
+      "status": "VALID"
+    },
+    {
+      "ticker": "BAJAJFINSV.NS",
+      "symbol": "BAJAJFINSV",
+      "name": "Bajaj Finserv Ltd.",
+      "market_cap_b": 3187.01,
+      "price": 1995.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "BAJAJFINSV.NS",
+      "symbol": "BAJAJFINSV",
+      "name": "Bajaj Finserv Ltd.",
+      "market_cap_b": 3182.21,
+      "price": 1992.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "BEL.NS",
+      "symbol": "BEL",
+      "name": "Bharat Electronics Limited",
+      "market_cap_b": 3153.8,
+      "price": 431.45,
+      "status": "VALID"
+    },
+    {
+      "ticker": "JSWSTEEL.NS",
+      "symbol": "JSWSTEEL",
+      "name": "JSW Steel Limited",
+      "market_cap_b": 3007.9,
+      "price": 1231.3,
+      "status": "VALID"
+    },
+    {
+      "ticker": "ADANIPOWER.NS",
+      "symbol": "ADANIPOWER",
+      "name": "Adani Power Limited",
+      "market_cap_b": 2969.09,
+      "price": 153.95,
+      "status": "VALID"
+    },
+    {
+      "ticker": "ADANIENT.NS",
+      "symbol": "ADANIENT",
+      "name": "Adani Enterprises Limited",
+      "market_cap_b": 2872.6,
+      "price": 2222.2,
+      "status": "VALID"
+    },
+    {
+      "ticker": "POWERGRID.NS",
+      "symbol": "POWERGRID",
+      "name": "Power Grid Corporation of India Limited",
+      "market_cap_b": 2721.36,
+      "price": 292.6,
+      "status": "VALID"
+    },
+    {
+      "ticker": "COALINDIA.NS",
+      "symbol": "COALINDIA",
+      "name": "Coal India Limited",
+      "market_cap_b": 2653.98,
+      "price": 430.65,
+      "status": "VALID"
+    },
+    {
+      "ticker": "VEDL.NS",
+      "symbol": "VEDL",
+      "name": "Vedanta Limited",
+      "market_cap_b": 2580.37,
+      "price": 660.25,
+      "status": "VALID"
+    },
+    {
+      "ticker": "NESTLEIND.NS",
+      "symbol": "NESTLEIND",
+      "name": "Nestl\u00e9 India Limited",
+      "market_cap_b": 2485.98,
+      "price": 1289.2,
+      "status": "VALID"
+    },
+    {
+      "ticker": "IOC.NS",
+      "symbol": "IOC",
+      "name": "Indian Oil Corporation Limited",
+      "market_cap_b": 2473.76,
+      "price": 175.18,
+      "status": "VALID"
+    },
+    {
+      "ticker": "TATASTEEL.NS",
+      "symbol": "TATASTEEL",
+      "name": "Tata Steel Limited",
+      "market_cap_b": 2448.85,
+      "price": 196.35,
+      "status": "VALID"
+    },
+    {
+      "ticker": "WIPRO.NS",
+      "symbol": "WIPRO",
+      "name": "Wipro Limited",
+      "market_cap_b": 2407.46,
+      "price": 229.81,
+      "status": "VALID"
+    },
+    {
+      "ticker": "HINDALCO.NS",
+      "symbol": "HINDALCO",
+      "name": "Hindalco Industries Limited",
+      "market_cap_b": 2097.81,
+      "price": 938.25,
+      "status": "VALID"
+    },
+    {
+      "ticker": "SBILIFE.NS",
+      "symbol": "SBILIFE",
+      "name": "SBI Life Insurance Company Limited",
+      "market_cap_b": 1990.92,
+      "price": 1985.3,
+      "status": "VALID"
+    },
+    {
+      "ticker": "GRASIM.NS",
+      "symbol": "GRASIM",
+      "name": "Grasim Industries Limited",
+      "market_cap_b": 1929.93,
+      "price": 2844.8,
+      "status": "VALID"
+    },
+    {
+      "ticker": "INDIGO.NS",
+      "symbol": "INDIGO",
+      "name": "InterGlobe Aviation Limited",
+      "market_cap_b": 1890.93,
+      "price": 4891.3,
+      "status": "VALID"
+    },
+    {
+      "ticker": "BPCL.NS",
+      "symbol": "BPCL",
+      "name": "Bharat Petroleum Corporation Limited",
+      "market_cap_b": 1665.34,
+      "price": 383.85,
+      "status": "VALID"
+    },
+    {
+      "ticker": "LTIM.NS",
+      "symbol": "LTIM",
+      "name": "LTIMindtree Limited",
+      "market_cap_b": 1635.16,
+      "price": 5516.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "DLF.NS",
+      "symbol": "DLF",
+      "name": "DLF Limited",
+      "market_cap_b": 1632.69,
+      "price": 659.35,
+      "status": "VALID"
+    },
+    {
+      "ticker": "DIVISLAB.NS",
+      "symbol": "DIVISLAB",
+      "name": "Divi's Laboratories Limited",
+      "market_cap_b": 1592.15,
+      "price": 5997.5,
+      "status": "VALID"
+    },
+    {
+      "ticker": "ADANIGREEN.NS",
+      "symbol": "ADANIGREEN",
+      "name": "Adani Green Energy Limited",
+      "market_cap_b": 1584.5,
+      "price": 961.95,
+      "status": "VALID"
+    },
+    {
+      "ticker": "HDFCLIFE.NS",
+      "symbol": "HDFCLIFE",
+      "name": "HDFC Life Insurance Company Limited",
+      "market_cap_b": 1534.0,
+      "price": 711.15,
+      "status": "VALID"
+    },
+    {
+      "ticker": "PIDILITIND.NS",
+      "symbol": "PIDILITIND",
+      "name": "Pidilite Industries Limited",
+      "market_cap_b": 1503.16,
+      "price": 1477.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "BANKBARODA.NS",
+      "symbol": "BANKBARODA",
+      "name": "Bank of Baroda Limited",
+      "market_cap_b": 1483.41,
+      "price": 286.85,
+      "status": "VALID"
+    },
+    {
+      "ticker": "IRFC.NS",
+      "symbol": "IRFC",
+      "name": "Indian Railway Finance Corporation Limited",
+      "market_cap_b": 1481.32,
+      "price": 113.35,
+      "status": "VALID"
+    },
+    {
+      "ticker": "TRENT.NS",
+      "symbol": "TRENT",
+      "name": "Trent Limited",
+      "market_cap_b": 1453.52,
+      "price": 4088.8,
+      "status": "VALID"
+    },
+    {
+      "ticker": "TECHM.NS",
+      "symbol": "TECHM",
+      "name": "Tech Mahindra Limited",
+      "market_cap_b": 1431.25,
+      "price": 1616.3,
+      "status": "VALID"
+    },
+    {
+      "ticker": "BRITANNIA.NS",
+      "symbol": "BRITANNIA",
+      "name": "Britannia Industries Limited",
+      "market_cap_b": 1406.79,
+      "price": 5840.5,
+      "status": "VALID"
+    },
+    {
+      "ticker": "PNB.NS",
+      "symbol": "PNB",
+      "name": "Punjab National Bank",
+      "market_cap_b": 1403.75,
+      "price": 122.12,
+      "status": "VALID"
+    },
+    {
+      "ticker": "CANBK.NS",
+      "symbol": "CANBK",
+      "name": "Canara Bank",
+      "market_cap_b": 1327.04,
+      "price": 146.3,
+      "status": "VALID"
+    },
+    {
+      "ticker": "AMBUJACEM.NS",
+      "symbol": "AMBUJACEM",
+      "name": "Ambuja Cements Limited",
+      "market_cap_b": 1304.13,
+      "price": 527.6,
+      "status": "VALID"
+    },
+    {
+      "ticker": "MOTHERSON.NS",
+      "symbol": "MOTHERSON",
+      "name": "Samvardhana Motherson International Limited",
+      "market_cap_b": 1234.27,
+      "price": 117.11,
+      "status": "VALID"
+    },
+    {
+      "ticker": "ADANIENSOL.NS",
+      "symbol": "ADANIENSOL",
+      "name": "Adani Energy Solutions Limited",
+      "market_cap_b": 1225.65,
+      "price": 1018.4,
+      "status": "VALID"
+    },
+    {
+      "ticker": "GODREJCP.NS",
+      "symbol": "GODREJCP",
+      "name": "Godrej Consumer Products Limited",
+      "market_cap_b": 1199.96,
+      "price": 1172.7,
+      "status": "VALID"
+    },
+    {
+      "ticker": "ASHOKLEY.NS",
+      "symbol": "ASHOKLEY",
+      "name": "Ashok Leyland Limited",
+      "market_cap_b": 1177.06,
+      "price": 200.39,
+      "status": "VALID"
+    },
+    {
+      "ticker": "HEROMOTOCO.NS",
+      "symbol": "HEROMOTOCO",
+      "name": "Hero MotoCorp Limited",
+      "market_cap_b": 1162.72,
+      "price": 5811.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "CIPLA.NS",
+      "symbol": "CIPLA",
+      "name": "Cipla Limited",
+      "market_cap_b": 1073.14,
+      "price": 1328.5,
+      "status": "VALID"
+    },
+    {
+      "ticker": "GAIL.NS",
+      "symbol": "GAIL",
+      "name": "GAIL (India) Limited",
+      "market_cap_b": 1054.64,
+      "price": 160.4,
+      "status": "VALID"
+    },
+    {
+      "ticker": "LODHA.NS",
+      "symbol": "LODHA",
+      "name": "Lodha Developers Limited",
+      "market_cap_b": 1031.01,
+      "price": 1032.3,
+      "status": "VALID"
+    },
+    {
+      "ticker": "DRREDDY.NS",
+      "symbol": "DRREDDY",
+      "name": "Dr. Reddy's Laboratories Limited",
+      "market_cap_b": 1025.97,
+      "price": 1232.3,
+      "status": "VALID"
+    },
+    {
+      "ticker": "APOLLOHOSP.NS",
+      "symbol": "APOLLOHOSP",
+      "name": "Apollo Hospitals Enterprise Limited",
+      "market_cap_b": 1012.53,
+      "price": 7042.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "MAXHEALTH.NS",
+      "symbol": "MAXHEALTH",
+      "name": "Max Healthcare Institute Limited",
+      "market_cap_b": 999.95,
+      "price": 1026.75,
+      "status": "VALID"
+    },
+    {
+      "ticker": "LUPIN.NS",
+      "symbol": "LUPIN",
+      "name": "Lupin Limited",
+      "market_cap_b": 997.38,
+      "price": 2182.6,
+      "status": "VALID"
+    },
+    {
+      "ticker": "RECLTD.NS",
+      "symbol": "RECLTD",
+      "name": "REC Limited",
+      "market_cap_b": 974.43,
+      "price": 370.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "INDHOTEL.NS",
+      "symbol": "INDHOTEL",
+      "name": "The Indian Hotels Company Limited",
+      "market_cap_b": 970.99,
+      "price": 682.15,
+      "status": "VALID"
+    },
+    {
+      "ticker": "MARICO.NS",
+      "symbol": "MARICO",
+      "name": "Marico Limited",
+      "market_cap_b": 964.93,
+      "price": 744.95,
+      "status": "VALID"
+    },
+    {
+      "ticker": "ICICIGI.NS",
+      "symbol": "ICICIGI",
+      "name": "ICICI Lombard General Insurance Company Limited",
+      "market_cap_b": 925.5,
+      "price": 1857.9,
+      "status": "VALID"
+    },
+    {
+      "ticker": "DABUR.NS",
+      "symbol": "DABUR",
+      "name": "Dabur India Limited",
+      "market_cap_b": 893.94,
+      "price": 504.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "SRF.NS",
+      "symbol": "SRF",
+      "name": "SRF Limited",
+      "market_cap_b": 853.41,
+      "price": 2879.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "JSWENERGY.NS",
+      "symbol": "JSWENERGY",
+      "name": "JSW Energy Limited",
+      "market_cap_b": 822.13,
+      "price": 468.15,
+      "status": "VALID"
+    },
+    {
+      "ticker": "IDFCFIRSTB.NS",
+      "symbol": "IDFCFIRSTB",
+      "name": "IDFC First Bank Limited",
+      "market_cap_b": 726.94,
+      "price": 84.55,
+      "status": "VALID"
+    },
+    {
+      "ticker": "FEDERALBNK.NS",
+      "symbol": "FEDERALBNK",
+      "name": "The Federal Bank Limited",
+      "market_cap_b": 702.55,
+      "price": 285.65,
+      "status": "VALID"
+    },
+    {
+      "ticker": "AUROPHARMA.NS",
+      "symbol": "AUROPHARMA",
+      "name": "Aurobindo Pharma Limited",
+      "market_cap_b": 680.99,
+      "price": 1172.5,
+      "status": "VALID"
+    },
+    {
+      "ticker": "FORTIS.NS",
+      "symbol": "FORTIS",
+      "name": "Fortis Healthcare Limited",
+      "market_cap_b": 640.47,
+      "price": 848.35,
+      "status": "VALID"
+    },
+    {
+      "ticker": "BIOCON.NS",
+      "symbol": "BIOCON",
+      "name": "Biocon Limited",
+      "market_cap_b": 587.09,
+      "price": 362.55,
+      "status": "VALID"
+    },
+    {
+      "ticker": "COLPAL.NS",
+      "symbol": "COLPAL",
+      "name": "Colgate-Palmolive (India) Limited",
+      "market_cap_b": 575.79,
+      "price": 2117.0,
+      "status": "VALID"
+    },
+    {
+      "ticker": "LAURUSLABS.NS",
+      "symbol": "LAURUSLABS",
+      "name": "Laurus Labs Limited",
+      "market_cap_b": 510.18,
+      "price": 944.85,
+      "status": "VALID"
+    },
+    {
+      "ticker": "VOLTAS.NS",
+      "symbol": "VOLTAS",
+      "name": "Voltas Limited",
+      "market_cap_b": 467.08,
+      "price": 1411.6,
+      "status": "VALID"
+    },
+    {
+      "ticker": "MRPL.NS",
+      "symbol": "MRPL",
+      "name": "Mangalore Refinery and Petrochemicals Limited",
+      "market_cap_b": 324.58,
+      "price": 184.99,
+      "status": "VALID"
+    },
+    {
+      "ticker": "KPITTECH.NS",
+      "symbol": "KPITTECH",
+      "name": "KPIT Technologies Limited",
+      "market_cap_b": 259.3,
+      "price": 951.9,
+      "status": "VALID"
+    }
+  ],
+  "failed_stocks": [
+    {
+      "ticker": "INDUSIND.NS",
+      "reason": "No market cap data",
+      "market_cap_b": 0
+    },
+    {
+      "ticker": "TATAMOTORS.NS",
+      "reason": "No market cap data",
+      "market_cap_b": 0
+    },
+    {
+      "ticker": "NALCO.NS",
+      "reason": "No market cap data",
+      "market_cap_b": 0
+    },
+    {
+      "ticker": "JINDALSTEEL.NS",
+      "reason": "No market cap data",
+      "market_cap_b": 0
+    },
+    {
+      "ticker": "ULTRACEM.NS",
+      "reason": "No market cap data",
+      "market_cap_b": 0
+    },
+    {
+      "ticker": "DALBHUMI.NS",
+      "reason": "No market cap data",
+      "market_cap_b": 0
+    },
+    {
+      "ticker": "UNILEVER.NS",
+      "reason": "No market cap data",
+      "market_cap_b": 0
+    },
+    {
+      "ticker": "JIOTOWER.NS",
+      "reason": "No market cap data",
+      "market_cap_b": 0
+    },
+    {
+      "ticker": "GRAPHITE.NS",
+      "reason": "Market cap 122.2B < 200B",
+      "market_cap_b": 122.195632128
+    }
+  ],
+  "summary": {
+    "total_tested": 91,
+    "valid_count": 82,
+    "failed_count": 9,
+    "minimum_market_cap_b": 200
+  }
+}

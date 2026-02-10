@@ -129,52 +129,57 @@ class SupportResistanceDetector:
         zone_signals = []
         signal_details = []
         
-        # ===== RSI Analysis =====
+        # ===== RSI Analysis (extreme values always HIGH risk) =====
+        rsi_extreme = False
         if rsi is not None:
-            if rsi > 75:
+            if rsi >= 85:
                 zone_signals.append('overbought')
-                signal_details.append(f"RSI {rsi:.0f} (>75)")
-            elif rsi > 70:
-                # Warning level
-                signal_details.append(f"RSI {rsi:.0f} (approaching overbought)")
-            elif rsi < 25:
+                signal_details.append(f"RSI {rsi:.0f} (>=85 EXTREME)")
+                rsi_extreme = True
+            elif rsi >= 70:
+                zone_signals.append('overbought')
+                signal_details.append(f"RSI {rsi:.0f} (>=70)")
+            elif rsi <= 15:
                 zone_signals.append('oversold')
-                signal_details.append(f"RSI {rsi:.0f} (<25)")
-            elif rsi < 30:
-                # Warning level
+                signal_details.append(f"RSI {rsi:.0f} (<=15 EXTREME)")
+                rsi_extreme = True
+            elif rsi <= 30:
+                zone_signals.append('oversold')
+                signal_details.append(f"RSI {rsi:.0f} (<=30)")
+            elif rsi >= 65:
+                signal_details.append(f"RSI {rsi:.0f} (approaching overbought)")
+            elif rsi <= 35:
                 signal_details.append(f"RSI {rsi:.0f} (approaching oversold)")
         
         # ===== Bollinger Band Analysis (score: -1 at lower, +1 at upper) =====
         if bb_score is not None:
-            if bb_score > 0.85:
-                # At or near upper band = overbought risk
+            if bb_score >= 0.8:
                 zone_signals.append('overbought')
                 signal_details.append(f"BB upper band ({bb_score:.2f})")
-            elif bb_score > 0.7:
+            elif bb_score >= 0.6:
                 signal_details.append(f"BB approaching upper ({bb_score:.2f})")
-            elif bb_score < -0.85:
-                # At or near lower band = oversold risk
+            elif bb_score <= -0.8:
                 zone_signals.append('oversold')
                 signal_details.append(f"BB lower band ({bb_score:.2f})")
-            elif bb_score < -0.7:
+            elif bb_score <= -0.6:
                 signal_details.append(f"BB approaching lower ({bb_score:.2f})")
         
-        # ===== EMA Trend Confirmation =====
+        # ===== EMA Trend Confirmation (more sensitive) =====
         if ema_score is not None:
-            if abs(ema_score) > 0.85:
-                # Very strong trend = confirms extreme
-                if ema_score > 0.85:
+            if abs(ema_score) >= 0.7:
+                # Strong trend = confirms extreme
+                if ema_score > 0.7:
                     zone_signals.append('overbought')
-                    signal_details.append(f"EMA extreme bull ({ema_score:.2f})")
+                    signal_details.append(f"EMA strong bull ({ema_score:.2f})")
                 else:
                     zone_signals.append('oversold')
-                    signal_details.append(f"EMA extreme bear ({ema_score:.2f})")
+                    signal_details.append(f"EMA strong bear ({ema_score:.2f})")
         
-        # ===== MACD Momentum Confirmation =====
+        # ===== MACD Momentum Confirmation (more sensitive) =====
         if macd_score is not None:
-            if abs(macd_score) > 0.8:
+            if abs(macd_score) >= 0.7:
                 # Strong momentum = confirms extreme
-                if macd_score > 0.8:
+                if macd_score > 0.7:
                     zone_signals.append('overbought')
                     signal_details.append(f"MACD strong bull ({macd_score:.2f})")
                 else:
@@ -200,23 +205,30 @@ class SupportResistanceDetector:
         
         # Determine final zone (majority)
         primary_zone = max(zone_counts, key=zone_counts.get)
-        
-        # Risk level based on number of confirmations
         signal_count = len(zone_signals)
-        
-        if signal_count >= 3:
-            # 3+ indicators confirm = VERY HIGH RISK
+
+        # If RSI is extreme, always HIGH risk
+        if rsi_extreme:
+            risk_level = 'HIGH'
+            reason = f"EXTREME {primary_zone.upper()} (RSI): {', '.join(signal_details)}"
+        elif signal_count >= 3:
             risk_level = 'HIGH'
             reason = f"CONFIRMED {primary_zone.upper()}: {signal_count} indicators converging. {', '.join(signal_details)}"
         elif signal_count >= 2:
-            # 2 indicators confirm = HIGH RISK
             risk_level = 'HIGH'
             reason = f"CONFIRMED {primary_zone.upper()}: {signal_count} indicators converging. {', '.join(signal_details)}"
+        elif signal_count == 1:
+            # If the only signal is RSI (non-extreme), MEDIUM risk
+            if 'RSI' in ''.join(signal_details):
+                risk_level = 'MEDIUM'
+                reason = f"RSI {primary_zone.upper()} zone: {', '.join(signal_details)}"
+            else:
+                risk_level = 'MEDIUM'
+                reason = f"Alert {primary_zone.upper()}: {', '.join(signal_details)}"
         else:
-            # 1 indicator = MEDIUM RISK (warning)
-            risk_level = 'MEDIUM'
-            reason = f"Alert {primary_zone.upper()}: {', '.join(signal_details)}"
-        
+            risk_level = 'LOW'
+            reason = f"Normal zone: {', '.join(signal_details)}"
+
         return {
             'is_extreme': True,
             'zone_type': primary_zone,

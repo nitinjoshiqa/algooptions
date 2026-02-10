@@ -227,7 +227,7 @@ class BreezeProvider(DataProvider):
             # Validate interval before API call
             valid_intervals = ['1minute', '5minute', '15minute', '30minute', '1hour', '1day', '1week']
             if interval not in valid_intervals:
-                print(f"[WARN] {symbol}: Invalid interval '{interval}'")
+                print(f"[WARN] {symbol}: Invalid interval '{interval}'", file=sys.stderr)
                 return [], None
             
             # Handle 15-minute specially: fetch 5-min and aggregate
@@ -275,18 +275,18 @@ class BreezeProvider(DataProvider):
                 )
                 api_version = "v1"
             except Exception as e:
-                print(f"[WARN] {symbol}: Breeze API v1 error: {str(e)[:100]}")
+                print(f"[WARN] {symbol}: Breeze API v1 error: {str(e)[:100]}", file=sys.stderr)
                 return [], None
             
             # Validate response
             if not res:
-                print(f"[WARN] {symbol}: No response from Breeze API {api_version} (timeout or connection issue)")
+                print(f"[WARN] {symbol}: No response from Breeze API {api_version} (timeout or connection issue)", file=sys.stderr)
                 return [], None
             
             # Check API status
             if res.get('Status') != 200:
                 error_msg = res.get('Error', 'Unknown error')
-                print(f"[WARN] {symbol}: Breeze API {api_version} error {res.get('Status')}: {error_msg}")
+                print(f"[WARN] {symbol}: Breeze API {api_version} error {res.get('Status')}: {error_msg}", file=sys.stderr)
                 return [], None
             
             # Extract candles
@@ -298,9 +298,9 @@ class BreezeProvider(DataProvider):
             if not raw:
                 # If we were trying to aggregate 15min from 5min and it failed, let fallback handle it
                 if needs_aggregation:
-                    print(f"[DEBUG] {symbol}: No 5-min candles from Breeze, will fall back to yFinance for 15min")
+                    print(f"[DEBUG] {symbol}: No 5-min candles from Breeze, will fall back to yFinance for 15min", file=sys.stderr)
                 else:
-                    print(f"[DEBUG] {symbol}: No candles returned for interval {interval}")
+                    print(f"[DEBUG] {symbol}: No candles returned for interval {interval}", file=sys.stderr)
                 return [], None
             
             # Parse candles with error handling
@@ -331,7 +331,7 @@ class BreezeProvider(DataProvider):
                     continue
             
             if not candles:
-                print(f"[WARN] {symbol}: No valid candles after parsing")
+                print(f"[WARN] {symbol}: No valid candles after parsing", file=sys.stderr)
                 return [], None
             
             # Sort by datetime and return
@@ -345,32 +345,32 @@ class BreezeProvider(DataProvider):
                 from indicators.candle_aggregator import create_15min_from_5min
                 candles_sorted = create_15min_from_5min(candles_sorted)
                 try:
-                    print(f"[OK] {symbol}: Aggregated {len(candles)} 5-min -> {len(candles_sorted)} 15-min")
+                    print(f"[OK] {symbol}: Aggregated {len(candles)} 5-min -> {len(candles_sorted)} 15-min", file=sys.stderr)
                 except (UnicodeEncodeError, UnicodeDecodeError):
-                    print(f"[OK] {symbol}: Aggregated 5m to 15m: {len(candles_sorted)} bars")
+                    print(f"[OK] {symbol}: Aggregated 5m to 15m: {len(candles_sorted)} bars", file=sys.stderr)
             
             # Success!
             result = candles_sorted[-max_bars:]
             try:
-                print(f"[OK] {symbol}: Got {len(result)} candles from Breeze {api_version} ({interval})")
+                print(f"[OK] {symbol}: Got {len(result)} candles from Breeze {api_version} ({interval})", file=sys.stderr)
             except (UnicodeEncodeError, UnicodeDecodeError):
-                print(f"[OK] {symbol}: Got {len(result)} candles from Breeze")
+                print(f"[OK] {symbol}: Got {len(result)} candles from Breeze", file=sys.stderr)
             return result, 'breeze'
             
         except TimeoutError:
             try:
-                print(f"[TIMEOUT] {symbol}: Breeze API timeout after 5 seconds")
+                print(f"[TIMEOUT] {symbol}: Breeze API timeout after 5 seconds", file=sys.stderr)
             except (UnicodeEncodeError, UnicodeDecodeError):
-                print(f"[TIMEOUT] {symbol}: API timeout")
+                print(f"[TIMEOUT] {symbol}: API timeout", file=sys.stderr)
             return [], None
         except Exception as e:
             try:
                 err_msg = str(e)[:80]
                 # Replace unicode chars that cause encoding issues
                 err_msg = err_msg.replace('\u2192', '->').replace('\u2190', '<-').replace('\u2191', '^').replace('\u2193', 'v')
-                print(f"[ERROR] {symbol}: Breeze exception: {type(e).__name__}: {err_msg}")
+                print(f"[ERROR] {symbol}: Breeze exception: {type(e).__name__}: {err_msg}", file=sys.stderr)
             except (UnicodeEncodeError, UnicodeDecodeError):
-                print(f"[ERROR] {symbol}: Breeze API failed")
+                print(f"[ERROR] {symbol}: Breeze API failed", file=sys.stderr)
             return [], None
 
 
@@ -498,7 +498,7 @@ class YFinanceProvider(DataProvider):
                     is_rate_limit_error = True
                     if attempt < max_retries:
                         wait_time = min(backoff + random.uniform(0, 2), _rate_limit_max_backoff)
-                        print(f"    Rate limited on {symbol}. Waiting {wait_time:.1f}s before retry (attempt {attempt+1}/{max_retries})...")
+                        print(f"    Rate limited on {symbol}. Waiting {wait_time:.1f}s before retry (attempt {attempt+1}/{max_retries})...", file=sys.stderr)
                         time.sleep(wait_time)
                         backoff = min(backoff * 2.0, _rate_limit_max_backoff)
                         continue
@@ -612,7 +612,7 @@ def get_provider(use_yf=False, force_yf=False):
     return BreezeProvider()
 
 
-def get_spot_price(symbol, use_yf=False, force_yf=False):
+def get_spot_price(symbol, use_yf=False, force_yf=False, force_breeze=False):
     """Get spot price using appropriate provider fallback chain.
     
     Fallback order:
@@ -624,6 +624,7 @@ def get_spot_price(symbol, use_yf=False, force_yf=False):
     """
     
     # If force_yf is set, skip Breeze, go straight to yFinance
+    # If force_breeze is set, skip yFinance fallback
     if not force_yf:
         # Try Breeze first
         try:
@@ -632,10 +633,10 @@ def get_spot_price(symbol, use_yf=False, force_yf=False):
             if price is not None:
                 return price
         except Exception:
-            pass  # Fall through to yFinance
+            pass  # Fall through to yFinance (unless force_breeze)
     
-    # Try yFinance as fallback or primary (if force_yf)
-    if HAVE_YFINANCE:
+    # Try yFinance as fallback or primary (if force_yf), but skip if force_breeze
+    if not force_breeze and HAVE_YFINANCE:
         try:
             provider = YFinanceProvider()
             price = provider.get_spot_price(symbol)
@@ -648,7 +649,131 @@ def get_spot_price(symbol, use_yf=False, force_yf=False):
     return None
 
 
-def get_intraday_candles_for(symbol, interval="5minute", max_bars=200, use_yf=False, force_yf=False):
+def get_fundamentals(symbol, use_yf=False, force_yf=False, force_breeze=False):
+    """Fetch fundamental data for a symbol.
+    
+    Returns dict with:
+    - marketCap: Market capitalization
+    - peRatio: Price-to-earnings ratio
+    - pbRatio: Price-to-book ratio  
+    - dividendYield: Dividend yield percentage
+    - eps: Earnings per share
+    - roe: Return on equity
+    - debtToEquity: Debt to equity ratio
+    - revenueGrowth: Revenue growth rate
+    - profitMargins: Profit margins
+    """
+    # Try yFinance first (most comprehensive fundamentals)
+    if HAVE_YFINANCE and (use_yf or force_yf or not force_breeze):
+        try:
+            ticker = yf.Ticker(f"{symbol}.NS", session=get_yf_session())
+            info = ticker.info
+            
+            if info and isinstance(info, dict):
+                fundamentals = {
+                    'marketCap': info.get('marketCap'),
+                    'peRatio': info.get('trailingPE'),
+                    'pbRatio': info.get('priceToBook'),
+                    'dividendYield': info.get('dividendYield'),
+                    'eps': info.get('trailingEps'),
+                    'roe': info.get('returnOnEquity'),
+                    'debtToEquity': info.get('debtToEquity'),
+                    'revenueGrowth': info.get('revenueGrowth'),
+                    'profitMargins': info.get('profitMargins'),
+                    'source': 'yfinance'
+                }
+                return fundamentals
+        except Exception as e:
+            pass
+    
+    # Fallback: Breeze API (if available and not forced to yFinance)
+    if not force_yf:
+        try:
+            from utils.breeze_api import get_breeze_instance
+            breeze = get_breeze_instance()
+            if breeze:
+                # Note: Breeze API may not have comprehensive fundamentals
+                # This is a placeholder for future implementation
+                pass
+        except Exception:
+            pass
+    
+    return None
+
+
+def get_news_sentiment(symbol, max_news=10):
+    """
+    Fetch recent news for a symbol and calculate sentiment score.
+    
+    Returns dict with:
+    - sentiment_score: -1.0 (very negative) to +1.0 (very positive)
+    - news_count: Number of news articles analyzed
+    - recent_news: List of recent news headlines
+    """
+    if not HAVE_YFINANCE:
+        return None
+    
+    try:
+        ticker = yf.Ticker(f"{symbol}.NS", session=get_yf_session())
+        news = ticker.news
+        
+        if not news or len(news) == 0:
+            return {'sentiment_score': 0, 'news_count': 0, 'recent_news': []}
+        
+        # Limit to max_news most recent
+        recent_news = news[:max_news]
+        headlines = []
+        sentiment_scores = []
+        
+        # Filter news to only include last 2 days
+        from datetime import datetime, timedelta
+        cutoff_date = datetime.now() - timedelta(days=2)
+        
+        # Simple sentiment analysis based on keywords
+        positive_words = ['up', 'rise', 'gain', 'profit', 'growth', 'bullish', 'buy', 'upgrade', 'beat', 'surge', 'rally', 'boost']
+        negative_words = ['down', 'fall', 'loss', 'decline', 'bearish', 'sell', 'downgrade', 'miss', 'drop', 'plunge', 'crash', 'slump']
+        
+        for item in recent_news:
+            # Check if news is within 2 days
+            pub_date_str = item.get('content', {}).get('pubDate', '')
+            if pub_date_str:
+                try:
+                    pub_date = datetime.fromisoformat(pub_date_str.replace('Z', '+00:00'))
+                    if pub_date < cutoff_date:
+                        continue  # Skip old news
+                except:
+                    pass  # If date parsing fails, include the news
+            
+            title = item.get('content', {}).get('title', '').lower()
+            headlines.append(item.get('content', {}).get('title', ''))
+            
+            pos_count = sum(1 for word in positive_words if word in title)
+            neg_count = sum(1 for word in negative_words if word in title)
+            
+            # Calculate sentiment: +1 for positive, -1 for negative, 0 for neutral
+            if pos_count > neg_count:
+                sentiment = 0.5  # Positive
+            elif neg_count > pos_count:
+                sentiment = -0.5  # Negative
+            else:
+                sentiment = 0.0  # Neutral
+            
+            sentiment_scores.append(sentiment)
+        
+        # Average sentiment across all news
+        avg_sentiment = sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0
+        
+        return {
+            'sentiment_score': avg_sentiment,
+            'news_count': len(recent_news),
+            'recent_news': headlines
+        }
+        
+    except Exception as e:
+        return None
+
+
+def get_intraday_candles_for(symbol, interval="5minute", max_bars=200, use_yf=False, force_yf=False, force_breeze=False):
     """Fetch candles using enhanced fallback chain with smart caching.
     
     Caching Strategy:
@@ -690,6 +815,7 @@ def get_intraday_candles_for(symbol, interval="5minute", max_bars=200, use_yf=Fa
             return cached[-max_bars:], 'disk_cache'
     
     # If force_yf is set, skip Breeze and NSE, go straight to yFinance
+    # If force_breeze is set, skip yFinance fallback
     if not force_yf:
         # Try Breeze first
         try:
@@ -707,8 +833,8 @@ def get_intraday_candles_for(symbol, interval="5minute", max_bars=200, use_yf=Fa
         except Exception:
             pass  # Fall through to NSE
         
-        # Try NSE Direct API with timeout protection
-        if HAVE_NSEPYTHON:
+        # Try NSE Direct API with timeout protection (skip if force_breeze)
+        if not force_breeze and HAVE_NSEPYTHON:
             try:
                 provider = NSEProvider()
                 candles, src = provider.get_candles(symbol, interval, max_bars)
@@ -724,8 +850,8 @@ def get_intraday_candles_for(symbol, interval="5minute", max_bars=200, use_yf=Fa
             except Exception:
                 pass  # Fall through to yFinance
     
-    # Try yFinance as fallback or primary (if force_yf)
-    if HAVE_YFINANCE:
+    # Try yFinance as fallback or primary (if force_yf), but skip if force_breeze
+    if not force_breeze and HAVE_YFINANCE:
         try:
             provider = YFinanceProvider()
             candles, src = provider.get_candles(symbol, interval, max_bars)

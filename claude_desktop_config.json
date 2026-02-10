@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "nifty-bearnness": {
+      "command": "d:\\DreamProject\\algooptions\\venv\\Scripts\\python.exe",
+      "args": ["d:\\DreamProject\\algooptions\\mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "d:\\DreamProject\\algooptions"
+      }
+    }
+  }
+}

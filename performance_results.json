@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-02-09T10:03:28.613424",
+  "benchmarks": [
+    {
+      "description": "Test with 10 symbols (baseline)",
+      "elapsed_seconds": 120.04,
+      "success": false,
+      "timeout": true
+    },
+    {
+      "description": "Nifty50 with --quick mode (optimized)",
+      "elapsed_seconds": 116.54,
+      "start_time": "2026-02-09T09:56:38.038902",
+      "exit_code": 0,
+      "success": true,
+      "config": "[WAIT STRATEGY] Enabled - Intelligent API rate limiting active"
+    },
+    {
+      "description": "NiftyLarge (186 symbols) with optimizations",
+      "elapsed_seconds": 410.66,
+      "start_time": "2026-02-09T10:03:28.609344",
+      "exit_code": 0,
+      "success": true,
+      "config": "[WAIT STRATEGY] Enabled - Intelligent API rate limiting active"
+    }
+  ]
+}

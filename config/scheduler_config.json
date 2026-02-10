@@ -1,15 +1,15 @@
 {
     "scheduler": {
         "enabled": true,
-        "interval_minutes": 1440,
-        "start_time": "15:30",
-        "end_time": "15:35",
+        "interval_minutes": 15,
+        "start_time": "09:15",
+        "end_time": "15:30",
         "skip_weekends": true,
         "max_retries": 3,
         "retry_delay_seconds": 60
     },
     "screener": {
-        "universes": ["nifty200", "banknifty"],
+        "universes": ["nifty50", "banknifty"],
         "mode": "swing",
         "force_yf": true,
         "parallel_workers": 2,
